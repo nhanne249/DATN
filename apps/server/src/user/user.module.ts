@@ -4,9 +4,11 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { User } from './entities/user.entity';
 import { UserAddress } from './entities/user-address.entity';
+import { UserPasswordHistory } from './entities/user-password-history.entity';
+import { AuditLog } from './entities/audit-log.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, UserAddress])],
+    imports: [TypeOrmModule.forFeature([User, UserAddress, UserPasswordHistory, AuditLog])],
     controllers: [UserController],
     providers: [UserService],
     exports: [UserService, TypeOrmModule],

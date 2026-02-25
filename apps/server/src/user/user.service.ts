@@ -7,6 +7,8 @@ import { CreateUserAddressDto } from './dto/create-user-address.dto';
 import { UpdateUserAddressDto } from './dto/update-user-address.dto';
 import { User } from './entities/user.entity';
 import { UserAddress } from './entities/user-address.entity';
+import { UserPasswordHistory } from './entities/user-password-history.entity';
+import { AuditLog } from './entities/audit-log.entity';
 import { ROLE } from './enum/role';
 import * as bcrypt from 'bcrypt';
 
@@ -15,14 +17,16 @@ export class UserService {
     constructor(
         @InjectRepository(User) private readonly repo: Repository<User>,
         @InjectRepository(UserAddress) private readonly addressRepo: Repository<UserAddress>,
+        @InjectRepository(UserPasswordHistory) private readonly passwordHistoryRepo: Repository<UserPasswordHistory>,
+        @InjectRepository(AuditLog) private readonly auditLogRepo: Repository<AuditLog>,
     ) { }
 
     async create(dto: CreateUserDto, creatorRole: ROLE) {
-        // Only ADMIN can create users with role admin/employee
+        // Only ADMIN can create users with roles other than CUSTOMER
         let roleToSet = dto.role ?? ROLE.CUSTOMER;
-        if (dto.role && [ROLE.ADMIN, ROLE.EMPLOYEE].includes(dto.role)) {
+        if (dto.role && dto.role !== ROLE.CUSTOMER) {
             if (creatorRole !== ROLE.ADMIN) {
-                throw new ForbiddenException('Only admin can create admin or employee');
+                throw new ForbiddenException('Only admin can create users with specific roles');
             }
             roleToSet = dto.role;
         }
@@ -38,6 +42,7 @@ export class UserService {
             role: roleToSet,
         });
         const saved = await this.repo.save(user);
+        await this.addToPasswordHistory(saved.id, passwordHash);
         return this.stripSensitive(saved);
     }
 
@@ -83,7 +88,6 @@ export class UserService {
         const fullName = `${googleProfile.firstName || ''} ${googleProfile.lastName || ''}`.trim();
 
         if (user) {
-            // Update existing user
             user.googleId = googleProfile.googleId;
             user.email = googleProfile.email;
             user.picture = googleProfile.picture || user.picture;
@@ -92,7 +96,6 @@ export class UserService {
             }
             return await this.repo.save(user);
         } else {
-            // Create new user
             const newUser = this.repo.create({
                 googleId: googleProfile.googleId,
                 email: googleProfile.email,
@@ -138,10 +141,66 @@ export class UserService {
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
         if (!isPasswordValid) throw new ForbiddenException('Current password is incorrect');
 
+        // Check password history (last 3)
+        const histories = await this.passwordHistoryRepo.find({
+            where: { user: { id: userId } },
+            order: { createdAt: 'DESC' },
+            take: 3,
+        });
+
+        for (const history of histories) {
+            const matchesOld = await bcrypt.compare(newPassword, history.passwordHash);
+            if (matchesOld) {
+                throw new ConflictException('New password cannot match any of the last 3 used passwords');
+            }
+        }
+
         const newPasswordHash = await bcrypt.hash(newPassword, 10);
         user.password = newPasswordHash;
         await this.repo.save(user);
+        await this.addToPasswordHistory(userId, newPasswordHash);
+
         return { message: 'Password changed successfully' };
+    }
+
+    private async addToPasswordHistory(userId: string, passwordHash: string) {
+        const history = this.passwordHistoryRepo.create({
+            user: { id: userId },
+            passwordHash,
+        });
+        await this.passwordHistoryRepo.save(history);
+    }
+
+    async handleFailedLogin(userId: string) {
+        const user = await this.repo.findOne({ where: { id: userId } });
+        if (!user) return;
+        user.failCount += 1;
+        if (user.failCount >= 5 && !user.isLocked) {
+            user.isLocked = true;
+            user.lockedAt = new Date();
+            await this.logAction(userId, 'LOCK_ACCOUNT', undefined, { reason: 'Exceeded 5 failed login attempts' });
+        }
+        await this.repo.save(user);
+    }
+
+    async resetFailedLogin(userId: string) {
+        const user = await this.repo.findOne({ where: { id: userId } });
+        if (user && user.failCount > 0) {
+            user.failCount = 0;
+            user.isLocked = false;
+            user.lockedAt = null;
+            await this.repo.save(user);
+        }
+    }
+
+    async logAction(userId: string | undefined, action: string, ipAddress?: string, details?: any) {
+        const log = this.auditLogRepo.create({
+            userId,
+            action,
+            ipAddress,
+            details,
+        });
+        await this.auditLogRepo.save(log);
     }
 
     // User Address Management

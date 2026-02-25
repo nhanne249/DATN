@@ -12,8 +12,10 @@ export class RegisterDto {
     @Length(2, 100)
     name: string;
 
-    @ApiProperty({ example: 'Password123' })
+    @ApiProperty({ example: 'Password@123', description: 'At least 8 characters, containing letters, numbers, and special characters' })
     @IsString()
-    @Length(6, 100)
+    @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
+        message: 'Password must be at least 8 characters long and contain letters, numbers, and special characters',
+    })
     password: string;
 }

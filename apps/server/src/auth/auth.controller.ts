@@ -31,8 +31,12 @@ export class AuthController {
     })
     @ApiOkResponse({ description: 'User authenticated, returns tokens' })
     @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-    login(@Body() dto: LoginDto) {
-        return this.auth.login(dto);
+    login(@Body() dto: LoginDto, @Req() req: Request) {
+        // Extract IP address from request
+        const ipstr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const ipAddress = Array.isArray(ipstr) ? ipstr[0] : (typeof ipstr === 'string' ? ipstr.split(',')[0] : ipstr);
+
+        return this.auth.login(dto, ipAddress);
     }
 
     @Get('google')

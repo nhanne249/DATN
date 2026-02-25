@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, ForbiddenException, Req } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { ROLE } from '../user/enum/role';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { OAuth2Client } from 'google-auth-library';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -28,17 +29,38 @@ export class AuthService {
         const tokens = await this.generateTokens(created.id, created.role);
         const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
         await this.users.setHashedRefreshToken(created.id, refreshHash);
+
+        await this.users.logAction(created.id, 'REGISTER_SUCCESS', undefined, { phone: dto.phone });
+
         return { user: created, ...tokens };
     }
 
-    async login(dto: LoginDto) {
+    async login(dto: LoginDto, ipAddress?: string) {
         const user = await this.users.findByPhone(dto.phone);
-        if (!user) throw new UnauthorizedException('Invalid credentials');
+        if (!user) {
+            await this.users.logAction(undefined, 'LOGIN_FAIL', ipAddress, { phone: dto.phone, reason: 'User not found' });
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        if (user.isLocked) {
+            await this.users.logAction(user.id, 'LOGIN_FAIL', ipAddress, { reason: 'Account locked' });
+            throw new ForbiddenException('Account is locked due to too many failed login attempts.');
+        }
+
         const match = await bcrypt.compare(dto.password, user.password);
-        if (!match) throw new UnauthorizedException('Invalid credentials');
+        if (!match) {
+            await this.users.handleFailedLogin(user.id);
+            await this.users.logAction(user.id, 'LOGIN_FAIL', ipAddress, { reason: 'Incorrect password' });
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        await this.users.resetFailedLogin(user.id);
         const tokens = await this.generateTokens(user.id, user.role);
         const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
         await this.users.setHashedRefreshToken(user.id, refreshHash);
+
+        await this.users.logAction(user.id, 'LOGIN_SUCCESS', ipAddress, { role: user.role });
+
         const safe = this.stripSensitive(user);
         return { user: safe, ...tokens };
     }
