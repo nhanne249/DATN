@@ -31,7 +31,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
           synchronize: true, // Note: Set to false in production
           ssl: isSsl ? {
             rejectUnauthorized: config.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
-            // ca: config.get<string>('DB_SSL_CA_PATH') ? require('fs').readFileSync(config.get<string>('DB_SSL_CA_PATH')).toString() : undefined,
+            ca: config.get<string>('DB_SSL_CA_PATH') ? require('fs').readFileSync(config.get<string>('DB_SSL_CA_PATH')).toString() : undefined,
           } : false,
         };
       },
