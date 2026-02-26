@@ -20,8 +20,12 @@ app.use('/api', createProxyMiddleware({
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // SPA fallback - serve index.html for all other routes
-app.get(/^(.*)$/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    } else {
+        next();
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
