@@ -9,6 +9,7 @@ import { ROLE } from './enum/role';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CreateUserAddressDto } from './dto/create-user-address.dto';
 import { UpdateUserAddressDto } from './dto/update-user-address.dto';
+import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -20,6 +21,7 @@ export class UserController {
     @Roles(ROLE.ADMIN)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Create user (Admin only)' })
+    @AuditLog('CREATE_USER')
     create(@Body() dto: CreateUserDto, @Request() req: any) {
         return this.userService.create(dto, req.user.role);
     }
@@ -55,6 +57,7 @@ export class UserController {
     @Roles(ROLE.ADMIN)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Update user (Admin only)' })
+    @AuditLog('UPDATE_USER')
     update(@Param('id') id: string, @Body() dto: UpdateUserDto, @Request() req: any) {
         return this.userService.update(id, dto, req.user.role);
     }
@@ -64,6 +67,7 @@ export class UserController {
     @Roles(ROLE.ADMIN)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Delete user (Admin only)' })
+    @AuditLog('DELETE_USER')
     remove(@Param('id') id: string) {
         return this.userService.remove(id);
     }
@@ -73,6 +77,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Add a new address' })
+    @AuditLog('CREATE_USER_ADDRESS')
     addAddress(@Request() req: any, @Body() dto: CreateUserAddressDto) {
         return this.userService.createUserAddress(req.user.id, dto);
     }
@@ -105,6 +110,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Delete address' })
+    @AuditLog('DELETE_USER_ADDRESS')
     deleteAddress(@Request() req: any, @Param('id') addressId: string) {
         return this.userService.deleteUserAddress(req.user.id, addressId);
     }

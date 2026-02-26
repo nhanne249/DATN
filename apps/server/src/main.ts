@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AppModule } from './app.module';
+import { Reflector } from '@nestjs/core';
+import { AuditLogService } from './audit-log/audit-log.service';
+import { AuditLogInterceptor } from './audit-log/interceptors/audit-log.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiResponseDto } from './common/dto/api-response.dto';
 import { ConfigService } from '@nestjs/config';
@@ -49,7 +52,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
   // Global response shaping & error handling
-  app.useGlobalInterceptors(new TransformResponseInterceptor());
+  app.useGlobalInterceptors(
+    new TransformResponseInterceptor(),
+    new AuditLogInterceptor(app.get(Reflector), app.get(AuditLogService))
+  );
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // Swagger configuration

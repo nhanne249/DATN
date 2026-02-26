@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
 
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -38,6 +39,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     }),
     AuthModule,
     UserModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

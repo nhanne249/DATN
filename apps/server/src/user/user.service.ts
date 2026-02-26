@@ -8,7 +8,7 @@ import { UpdateUserAddressDto } from './dto/update-user-address.dto';
 import { User } from './entities/user.entity';
 import { UserAddress } from './entities/user-address.entity';
 import { UserPasswordHistory } from './entities/user-password-history.entity';
-import { AuditLog } from './entities/audit-log.entity';
+import { AuditLogService } from '../audit-log/audit-log.service';
 import { ROLE } from './enum/role';
 import * as bcrypt from 'bcrypt';
 
@@ -18,7 +18,7 @@ export class UserService {
         @InjectRepository(User) private readonly repo: Repository<User>,
         @InjectRepository(UserAddress) private readonly addressRepo: Repository<UserAddress>,
         @InjectRepository(UserPasswordHistory) private readonly passwordHistoryRepo: Repository<UserPasswordHistory>,
-        @InjectRepository(AuditLog) private readonly auditLogRepo: Repository<AuditLog>,
+        private readonly auditLogService: AuditLogService,
     ) { }
 
     async create(dto: CreateUserDto, creatorRole: ROLE) {
@@ -194,13 +194,7 @@ export class UserService {
     }
 
     async logAction(userId: string | undefined, action: string, ipAddress?: string, details?: any) {
-        const log = this.auditLogRepo.create({
-            userId,
-            action,
-            ipAddress,
-            details,
-        });
-        await this.auditLogRepo.save(log);
+        await this.auditLogService.logAction(userId, action, ipAddress, details);
     }
 
     // User Address Management
