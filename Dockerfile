@@ -29,6 +29,7 @@ RUN npm install -g pm2
 # Don't run as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+RUN mkdir -p /app/apps/server/public/uploads && chown -R nextjs:nodejs /app
 USER nextjs
 
 # Copy workspace root deps (hoisted)
