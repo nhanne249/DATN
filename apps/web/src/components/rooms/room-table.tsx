@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import api from '@/lib/axios';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -25,8 +25,8 @@ export function RoomTable({ propertyId = 'clouq2m1q00003b6w5z8s6xy9' }) {
                 api.get(`/rooms/types?propertyId=${propertyId}`)
             ]);
 
-            setRooms(roomsData as any[]);
-            setRoomTypes(typesData as any[]);
+            setRooms(roomsData as unknown as any[]);
+            setRoomTypes(typesData as unknown as any[]);
         } catch (error) {
             console.error("Failed to load rooms", error);
         } finally {

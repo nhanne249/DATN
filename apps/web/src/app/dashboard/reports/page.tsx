@@ -18,6 +18,8 @@ import {
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { subDays, startOfMonth, endOfMonth, format } from 'date-fns';
+import { useAuthStore } from '@/store/use-auth-store';
+import { useMonthlyReport, usePerformanceReport } from '@/features/bookings/hooks/use-reports';
 
 export default function ReportsPage() {
     const { activePropertyId: propertyId } = useAuthStore();

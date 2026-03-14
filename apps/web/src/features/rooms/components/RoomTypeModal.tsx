@@ -151,7 +151,7 @@ export function RoomTypeModal({ isOpen, onClose, roomType, propertyId }: RoomTyp
                             <ImageUpload
                                 value={formData.photos}
                                 onChange={(urls) => setFormData({ ...formData, photos: urls })}
-                                onRemove={(url) => setFormData({ ...formData, photos: formData.photos.filter(u => u !== url) })}
+                                onRemove={(url) => setFormData((prev: any) => ({ ...prev, photos: (prev.photos || []).filter((u: string) => u !== url) }))}
                             />
                         </div>
                     </div>

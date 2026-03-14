@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   initialData: {
     roomId?: string;
     roomTypeId?: string;
@@ -26,7 +27,7 @@ interface BookingModalProps {
 
 const TEST_PROPERTY_ID = 'clouq2m1q00003b6w5z8s6xy9';
 
-export function BookingModal({ isOpen, onClose, initialData }: BookingModalProps) {
+export function BookingModal({ isOpen, onClose, onSuccess, initialData }: BookingModalProps) {
   const { createBooking, addPayment } = useBookingMutation();
   const [loading, setLoading] = useState(false);
   const [guests, setGuests] = useState<any[]>([]);
@@ -147,6 +148,7 @@ export function BookingModal({ isOpen, onClose, initialData }: BookingModalProps
         });
       }
 
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       console.error(error);
