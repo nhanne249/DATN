@@ -27,10 +27,6 @@ import * as fs from 'fs';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '../..', 'client', 'dist'),
-      exclude: ['/api/(.*)'],
-    }),
-    ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'apps/server/public/uploads'),
       serveRoot: '/api/uploads',
     }),
@@ -51,14 +47,14 @@ import * as fs from 'fs';
           synchronize: true, // Note: Set to false in production
           ssl: isSsl
             ? {
-                rejectUnauthorized:
-                  config.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
-                ca: config.get<string>('DB_SSL_CA_PATH')
-                  ? fs
-                      .readFileSync(config.get<string>('DB_SSL_CA_PATH')!)
-                      .toString()
-                  : undefined,
-              }
+              rejectUnauthorized:
+                config.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
+              ca: config.get<string>('DB_SSL_CA_PATH')
+                ? fs
+                  .readFileSync(config.get<string>('DB_SSL_CA_PATH')!)
+                  .toString()
+                : undefined,
+            }
             : false,
         };
       },
@@ -83,4 +79,4 @@ import * as fs from 'fs';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

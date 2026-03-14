@@ -31,13 +31,15 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 USER nextjs
 
-COPY --from=installer /app/apps/web/next.config.ts .
-COPY --from=installer /app/apps/web/package.json .
+# Copy workspace root deps (hoisted)
+COPY --from=installer /app/node_modules ./node_modules
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+# Copy web app files needed for next start
+COPY --from=installer /app/apps/web/package.json ./apps/web/package.json
+COPY --from=installer /app/apps/web/next.config.ts ./apps/web/next.config.ts
+
+# Next.js build output for runtime
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next ./apps/web/.next
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 # Copy server assets
@@ -53,8 +55,8 @@ COPY --chown=nextjs:nodejs <<EOF start.sh
 #!/bin/sh
 # Start server on 3000
 PORT=3000 pm2 start "node apps/server/dist/main" --name server
-# Start web on 3001 (Next.js standalone listens on PORT)
-PORT=3001 pm2-runtime start "node server.js" --name web
+# Start web on 3001
+PORT=3001 pm2-runtime start "node /app/node_modules/next/dist/bin/next start -p 3001" --name web --cwd /app/apps/web
 EOF
 
 RUN chmod +x start.sh
