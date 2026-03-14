@@ -25,6 +25,20 @@ export class AuditLogService {
     await this.auditLogRepo.save(log);
   }
 
+  async log(params: {
+    userId: string | undefined;
+    action: string;
+    details?: Record<string, unknown>;
+    ipAddress?: string;
+    [key: string]: any;
+  }) {
+    const { userId, action, ipAddress, details, ...rest } = params;
+    return this.logAction(userId, action, ipAddress, {
+      ...details,
+      ...rest,
+    });
+  }
+
   async findAll(query: {
     limit?: number;
     offset?: number;

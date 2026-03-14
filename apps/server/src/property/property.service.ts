@@ -53,7 +53,7 @@ export class PropertyService {
       allowHourlyBooking,
       requirePaymentBeforeCheckOut,
       calendarEventColor,
-      calendarDefaultView,
+      defaultCalendarView,
     } = property;
     return {
       checkInTime,
@@ -61,7 +61,7 @@ export class PropertyService {
       allowHourlyBooking,
       requirePaymentBeforeCheckOut,
       calendarEventColor,
-      calendarDefaultView,
+      defaultCalendarView,
     };
   }
 

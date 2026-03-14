@@ -57,11 +57,51 @@ export class ReportsController {
   @Get('operations')
   @ApiOperation({ summary: 'Get operations report' })
   @ApiQuery({ name: 'propertyId', required: true })
-  @ApiQuery({ name: 'date', required: true })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
   getOperations(
     @Query('propertyId') propertyId: string,
-    @Query('date') date: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
   ) {
-    return this.reportsService.getOperationsReport(propertyId, new Date(date));
+    return this.reportsService.getOperationsReport(
+      propertyId,
+      new Date(startDate),
+      new Date(endDate),
+    );
+  }
+
+  @Get('payments')
+  @ApiOperation({ summary: 'Get payments report' })
+  @ApiQuery({ name: 'propertyId', required: true })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
+  getPayments(
+    @Query('propertyId') propertyId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.reportsService.getPaymentsReport(
+      propertyId,
+      new Date(startDate),
+      new Date(endDate),
+    );
+  }
+
+  @Get('performance')
+  @ApiOperation({ summary: 'Get performance report' })
+  @ApiQuery({ name: 'propertyId', required: true })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
+  getPerformance(
+    @Query('propertyId') propertyId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.reportsService.getPerformanceReport(
+      propertyId,
+      new Date(startDate),
+      new Date(endDate),
+    );
   }
 }
