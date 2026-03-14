@@ -8,20 +8,23 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-    imports: [
-        ConfigModule,
-        UserModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                secret: config.get<string>('JWT_ACCESS_SECRET'),
-                signOptions: { expiresIn: config.get<string>('JWT_ACCESS_EXPIRES', '25h') as any },
-            }),
-        }),
-    ],
-    controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, GoogleStrategy],
-    exports: [AuthService],
+  imports: [
+    ConfigModule,
+    UserModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_ACCESS_SECRET'),
+        signOptions: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          expiresIn: config.get<string>('JWT_ACCESS_EXPIRES', '25h') as any,
+        },
+      }),
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

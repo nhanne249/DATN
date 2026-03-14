@@ -1,49 +1,62 @@
-FROM node:20-slim
+# Build stage
+FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+RUN npm install -g turbo
+COPY . .
+RUN turbo prune web server --docker
 
+# Installer stage
+FROM node:20-alpine AS installer
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy root configs
-COPY package*.json ./
-COPY turbo.json ./
-
-# Copy apps package.json to leverage docker caching
-COPY apps/server/package*.json ./apps/server/
-COPY apps/client/package*.json ./apps/client/
-
-# Install dependencies at the root workspace
+# First copy only the json files to install dependencies
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/package-lock.json ./package-lock.json
 RUN npm ci --legacy-peer-deps
 
-# Copy all source code
-COPY . .
-
-# Build both applications using turbo
+# Build the project
+COPY --from=builder /app/out/full/ .
+COPY turbo.json turbo.json
 RUN npm run build
 
-# Install pm2 for process management
+# Runner stage
+FROM node:20-alpine AS runner
+WORKDIR /app
 RUN npm install -g pm2
 
-# Create startup script to run both backend and frontend proxy
-RUN printf '#!/bin/sh\n\
-set -e\n\
-echo "Starting backend on port 3000..."\n\
-cd /app/apps/server\n\
-pm2 start npm --name backend --no-autorestart -- run start:prod\n\
-sleep 3\n\
-echo "Backend started"\n\
-\n\
-echo "Starting frontend preview server on port 5173..."\n\
-cd /app/apps/client\n\
-pm2 start npm --name frontend --no-autorestart -- run start\n\
-sleep 2\n\
-echo "Frontend started"\n\
-\n\
-echo "Showing PM2 status..."\n\
-pm2 list\n\
-\n\
-echo "Following logs..."\n\
-pm2 logs --no-daemon\n' > /app/start.sh && chmod +x /app/start.sh
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+USER nextjs
 
-# Expose ports
-EXPOSE 3000 5173
+COPY --from=installer /app/apps/web/next.config.ts .
+COPY --from=installer /app/apps/web/package.json .
 
-CMD ["/bin/sh", "/app/start.sh"]
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+
+# Copy server assets
+COPY --from=installer /app/apps/server/dist ./apps/server/dist
+COPY --from=installer /app/apps/server/node_modules ./apps/server/node_modules
+COPY --from=installer /app/apps/server/package.json ./apps/server/package.json
+
+# Expose ports for both apps
+EXPOSE 3000 3001
+
+# Orchestration script
+COPY --chown=nextjs:nodejs <<EOF start.sh
+#!/bin/sh
+# Start server on 3000
+PORT=3000 pm2 start "node apps/server/dist/main" --name server
+# Start web on 3001 (Next.js standalone listens on PORT)
+PORT=3001 pm2-runtime start "node server.js" --name web
+EOF
+
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]

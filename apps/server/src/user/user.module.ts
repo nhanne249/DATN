@@ -7,9 +7,9 @@ import { UserAddress } from './entities/user-address.entity';
 import { UserPasswordHistory } from './entities/user-password-history.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, UserAddress, UserPasswordHistory])],
-    controllers: [UserController],
-    providers: [UserService],
-    exports: [UserService, TypeOrmModule],
+  imports: [TypeOrmModule.forFeature([User, UserAddress, UserPasswordHistory])],
+  controllers: [UserController],
+  providers: [UserService],
+  exports: [UserService, TypeOrmModule],
 })
-export class UserModule { }
+export class UserModule {}

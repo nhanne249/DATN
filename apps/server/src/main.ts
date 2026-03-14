@@ -26,7 +26,10 @@ async function bootstrap() {
   console.log('CORS Origins configured:', originList);
 
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // Allow requests with no origin (same-origin, mobile apps, Postman, etc.)
       if (!origin) {
         callback(null, true);
@@ -54,7 +57,7 @@ async function bootstrap() {
   // Global response shaping & error handling
   app.useGlobalInterceptors(
     new TransformResponseInterceptor(),
-    new AuditLogInterceptor(app.get(Reflector), app.get(AuditLogService))
+    new AuditLogInterceptor(app.get(Reflector), app.get(AuditLogService)),
   );
   app.useGlobalFilters(new AllExceptionsFilter());
 
