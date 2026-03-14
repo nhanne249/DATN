@@ -55,7 +55,12 @@ export class FinanceService {
   async findAllPayments(propertyId: string): Promise<Payment[]> {
     const payments = await this.paymentRepository.find({
       where: { propertyId },
-      relations: ['booking', 'booking.guest', 'booking.rooms', 'booking.rooms.room'],
+      relations: [
+        'booking',
+        'booking.guest',
+        'booking.rooms',
+        'booking.rooms.room',
+      ],
       order: { createdAt: 'DESC' },
     });
 
@@ -86,7 +91,10 @@ export class FinanceService {
           (sum, payment) => sum + Number(payment.amount || 0),
           0,
         );
-        const remainingAmount = Math.max(0, Number(booking.totalAmount || 0) - paidAmount);
+        const remainingAmount = Math.max(
+          0,
+          Number(booking.totalAmount || 0) - paidAmount,
+        );
 
         if (remainingAmount <= 0) return null;
 

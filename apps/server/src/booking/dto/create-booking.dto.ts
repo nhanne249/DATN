@@ -60,6 +60,11 @@ export class CreateBookingDto {
   @IsOptional()
   notes?: string;
 
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  source?: string;
+
   @ApiProperty()
   @IsString()
   guestId: string;

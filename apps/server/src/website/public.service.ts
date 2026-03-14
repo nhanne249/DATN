@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BookingService } from '../booking/booking.service';
+import { CreateBookingDto } from '../booking/dto/create-booking.dto';
 import { BookingRoom } from '../booking/entities/booking-room.entity';
 import { BookingStatus } from '../booking/entities/booking.entity';
 import { Guest } from '../guest/entities/guest.entity';
@@ -15,6 +16,11 @@ import { RoomType } from '../room/entities/room-type.entity';
 import { WebsiteConfig } from './entities/website-config.entity';
 import { WebsiteService } from './website.service';
 import { CreatePublicBookingDto } from './dto/public-booking.dto';
+
+export interface PublicRoomType extends RoomType {
+  rooms: Room[];
+  availableCount: number;
+}
 
 @Injectable()
 export class PublicService {
@@ -49,6 +55,11 @@ export class PublicService {
       .replace(/^-+|-+$/g, '');
   }
 
+  private pickString(record: Record<string, unknown>, key: string): string {
+    const value = record[key];
+    return typeof value === 'string' ? value : '';
+  }
+
   private async resolvePropertyBySlug(slug: string): Promise<Property> {
     if (this.isUuid(slug)) {
       const property = await this.propertyRepo.findOne({ where: { id: slug } });
@@ -62,7 +73,9 @@ export class PublicService {
     if (config?.property) return config.property;
 
     const properties = await this.propertyRepo.find();
-    const byName = properties.find((property) => this.slugify(property.name) === slug);
+    const byName = properties.find(
+      (property) => this.slugify(property.name) === slug,
+    );
     if (byName) return byName;
 
     throw new NotFoundException('Property not found');
@@ -71,18 +84,22 @@ export class PublicService {
   async getPublicConfig(slug: string) {
     const property = await this.resolvePropertyBySlug(slug);
     const config = await this.websiteService.getConfig(property.id);
-    const hero = config.heroSection || {};
+    const hero =
+      config.heroSection && typeof config.heroSection === 'object'
+        ? (config.heroSection as Record<string, unknown>)
+        : {};
+    const features = Array.isArray(config.features) ? config.features : [];
 
     return {
       ...config,
       property,
-      hotelName: hero.title || property.name,
-      tagline: hero.subtitle || '',
-      description: hero.description || '',
-      bannerUrl: hero.bannerUrl || null,
-      primaryColor: hero.primaryColor || '#2563eb',
-      accentColor: hero.accentColor || '#10b981',
-      amenities: Array.isArray(config.features) ? config.features : [],
+      hotelName: this.pickString(hero, 'title') || property.name,
+      tagline: this.pickString(hero, 'subtitle'),
+      description: this.pickString(hero, 'description'),
+      bannerUrl: this.pickString(hero, 'bannerUrl') || null,
+      primaryColor: this.pickString(hero, 'primaryColor') || '#2563eb',
+      accentColor: this.pickString(hero, 'accentColor') || '#10b981',
+      amenities: features,
       promotions: [],
     };
   }
@@ -113,7 +130,7 @@ export class PublicService {
     return new Set(available);
   }
 
-  async getPublicRooms(slug: string) {
+  async getPublicRooms(slug: string): Promise<PublicRoomType[]> {
     const property = await this.resolvePropertyBySlug(slug);
 
     const roomTypes = await this.roomTypeRepo.find({
@@ -122,9 +139,11 @@ export class PublicService {
       order: { sortOrder: 'ASC', createdAt: 'ASC' },
     });
 
-    return roomTypes.map((roomType) => {
+    return roomTypes.map((roomType): PublicRoomType => {
       const activeRooms = (roomType.rooms || []).filter(
-        (room) => room.status !== RoomStatus.MAINTENANCE && room.status !== RoomStatus.BLOCKED,
+        (room) =>
+          room.status !== RoomStatus.MAINTENANCE &&
+          room.status !== RoomStatus.BLOCKED,
       );
       const availableCount = activeRooms.filter(
         (room) => room.status === RoomStatus.AVAILABLE,
@@ -149,7 +168,7 @@ export class PublicService {
     const roomTypes = await this.getPublicRooms(slug);
 
     const mapped = await Promise.all(
-      roomTypes.map(async (roomType: any) => {
+      roomTypes.map(async (roomType) => {
         const rooms: Room[] = (roomType.rooms || []).filter(
           (room: Room) => room.status === RoomStatus.AVAILABLE,
         );
@@ -158,7 +177,9 @@ export class PublicService {
           checkIn,
           checkOut,
         );
-        const availableRooms = rooms.filter((room) => availableRoomIds.has(room.id));
+        const availableRooms = rooms.filter((room) =>
+          availableRoomIds.has(room.id),
+        );
 
         return {
           ...roomType,
@@ -189,7 +210,9 @@ export class PublicService {
       dto.checkIn,
       dto.checkOut,
     );
-    const selectedRoom = (roomType.rooms || []).find((room) => availableRoomIds.has(room.id));
+    const selectedRoom = (roomType.rooms || []).find((room) =>
+      availableRoomIds.has(room.id),
+    );
     if (!selectedRoom) {
       throw new BadRequestException('No available room for selected dates');
     }
@@ -217,7 +240,7 @@ export class PublicService {
       );
     }
 
-    const booking = await this.bookingService.create({
+    const createBookingPayload: CreateBookingDto = {
       guestId: guest.id,
       propertyId: property.id,
       checkIn: new Date(dto.checkIn),
@@ -230,11 +253,12 @@ export class PublicService {
           priceAtBooking: Number(roomType.basePrice || 0),
         },
       ],
-    } as any);
+    };
+    const booking = await this.bookingService.create(createBookingPayload);
 
     return {
       id: booking.id,
-      code: (booking as any).bookingCode || (booking as any).code,
+      code: booking.bookingCode,
       status: booking.status,
       message: 'Booking created successfully',
     };

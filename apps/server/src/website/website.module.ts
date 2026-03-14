@@ -14,7 +14,14 @@ import { WebsiteController } from './website.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WebsiteConfig, Property, RoomType, Room, BookingRoom, Guest]),
+    TypeOrmModule.forFeature([
+      WebsiteConfig,
+      Property,
+      RoomType,
+      Room,
+      BookingRoom,
+      Guest,
+    ]),
     BookingModule,
   ],
   controllers: [WebsiteController, PublicController],

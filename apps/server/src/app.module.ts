@@ -22,10 +22,12 @@ import { AutomationModule } from './automation/automation.module';
 import { WebsiteModule } from './website/website.module';
 import { MediaModule } from './media/media.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PropertyAccessGuard } from './auth/guards/property-access.guard';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
 
-const UPLOAD_ROOT = process.env.UPLOAD_DIR || join(tmpdir(), 'hotel-management-uploads');
+const UPLOAD_ROOT =
+  process.env.UPLOAD_DIR || join(tmpdir(), 'hotel-management-uploads');
 
 @Module({
   imports: [
@@ -50,14 +52,14 @@ const UPLOAD_ROOT = process.env.UPLOAD_DIR || join(tmpdir(), 'hotel-management-u
           synchronize: true, // Note: Set to false in production
           ssl: isSsl
             ? {
-              rejectUnauthorized:
-                config.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
-              ca: config.get<string>('DB_SSL_CA_PATH')
-                ? fs
-                  .readFileSync(config.get<string>('DB_SSL_CA_PATH')!)
-                  .toString()
-                : undefined,
-            }
+                rejectUnauthorized:
+                  config.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
+                ca: config.get<string>('DB_SSL_CA_PATH')
+                  ? fs
+                      .readFileSync(config.get<string>('DB_SSL_CA_PATH')!)
+                      .toString()
+                  : undefined,
+              }
             : false,
         };
       },
@@ -80,6 +82,6 @@ const UPLOAD_ROOT = process.env.UPLOAD_DIR || join(tmpdir(), 'hotel-management-u
     DashboardModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PropertyAccessGuard],
 })
-export class AppModule { }
+export class AppModule {}

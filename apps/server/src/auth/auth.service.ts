@@ -31,7 +31,11 @@ export class AuthService {
       { phone: dto.phone, name: dto.name, password: dto.password },
       ROLE.ADMIN, // bypass role check by passing ADMIN for default customer creation
     );
-    const tokens = await this.generateTokens(created.id, created.role);
+    const tokens = await this.generateTokens(
+      created.id,
+      created.role,
+      created.propertyId,
+    );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.users.setHashedRefreshToken(created.id, refreshHash);
 
@@ -71,7 +75,11 @@ export class AuthService {
     }
 
     await this.users.resetFailedLogin(user.id);
-    const tokens = await this.generateTokens(user.id, user.role);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.role,
+      user.propertyId,
+    );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.users.setHashedRefreshToken(user.id, refreshHash);
 
@@ -98,7 +106,11 @@ export class AuthService {
         userRaw.hashedRefreshToken,
       );
       if (!match) throw new ForbiddenException('Access denied');
-      const tokens = await this.generateTokens(payload.sub, payload.role);
+      const tokens = await this.generateTokens(
+        payload.sub,
+        payload.role,
+        userRaw.propertyId || payload.propertyId,
+      );
       const newRefreshHash = await bcrypt.hash(tokens.refreshToken, 10);
       await this.users.setHashedRefreshToken(payload.sub, newRefreshHash);
       return tokens;
@@ -120,7 +132,11 @@ export class AuthService {
     picture?: string;
   }) {
     const user = await this.users.createOrUpdateGoogleUser(googleProfile);
-    const tokens = await this.generateTokens(user.id, user.role);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.role,
+      user.propertyId,
+    );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.users.setHashedRefreshToken(user.id, refreshHash);
     const safe = this.stripSensitive(user);
@@ -165,7 +181,11 @@ export class AuthService {
     }
   }
 
-  private async generateTokens(sub: string, role: ROLE) {
+  private async generateTokens(
+    sub: string,
+    role: ROLE,
+    propertyId?: string,
+  ) {
     const accessSecret = this.config.get<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
     const accessExpiresIn = this.config.get<string>(
@@ -176,7 +196,7 @@ export class AuthService {
       'JWT_REFRESH_EXPIRES',
       '90d',
     );
-    const payload = { sub, role };
+    const payload = { sub, role, propertyId };
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const accessToken = await this.jwt.signAsync(payload, {
       secret: accessSecret,

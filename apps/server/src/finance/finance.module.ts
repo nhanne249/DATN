@@ -9,7 +9,10 @@ import { FinanceService } from './finance.service';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Expense, Payment, Booking]), AuditLogModule],
+  imports: [
+    TypeOrmModule.forFeature([Expense, Payment, Booking]),
+    AuditLogModule,
+  ],
   controllers: [FinanceController],
   providers: [FinanceService],
   exports: [TypeOrmModule, FinanceService],

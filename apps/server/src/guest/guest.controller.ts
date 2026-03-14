@@ -7,18 +7,33 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { GuestService } from './guest.service';
 import { CreateGuestDto } from './dto/create-guest.dto';
 import { UpdateGuestDto } from './dto/update-guest.dto';
 import { Guest } from './entities/guest.entity';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 
 @ApiTags('Guests')
 @Controller('guests')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@Roles(...STAFF_ROLES)
 @UseInterceptors(AuditLogInterceptor)
 export class GuestController {
   constructor(private readonly guestService: GuestService) {}

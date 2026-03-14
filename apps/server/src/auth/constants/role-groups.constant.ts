@@ -1,0 +1,16 @@
+import { ROLE } from '../../user/enum/role';
+
+export const MANAGEMENT_ROLES: ROLE[] = [
+  ROLE.ADMIN,
+  ROLE.HOTEL_OWNER,
+  ROLE.HOTEL_MANAGER,
+];
+
+export const STAFF_ROLES: ROLE[] = [
+  ...MANAGEMENT_ROLES,
+  ROLE.FRONT_DESK,
+  ROLE.HOUSEKEEPING,
+  ROLE.MAINTENANCE,
+  ROLE.LAUNDRY,
+  ROLE.WAREHOUSE,
+];

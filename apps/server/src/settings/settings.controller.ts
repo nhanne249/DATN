@@ -7,11 +7,22 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
 import { CreatePrintTemplateDto } from './dto/settings.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MANAGEMENT_ROLES } from '../auth/constants/role-groups.constant';
 
+@ApiTags('Settings')
 @Controller('settings')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@Roles(...MANAGEMENT_ROLES)
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 

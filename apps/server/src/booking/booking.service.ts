@@ -37,22 +37,17 @@ export class BookingService {
     if (!method) return PaymentMethod.CASH;
 
     const normalized = method.toUpperCase().trim();
-    switch (normalized) {
-      case PaymentMethod.CASH:
-        return PaymentMethod.CASH;
-      case PaymentMethod.TRANSFER:
-        return PaymentMethod.TRANSFER;
-      case PaymentMethod.CREDIT_CARD:
-      case 'CARD':
-        return PaymentMethod.CREDIT_CARD;
-      case PaymentMethod.MOMO:
-        return PaymentMethod.MOMO;
-      case PaymentMethod.VN_PAY:
-      case 'VNPAY':
-        return PaymentMethod.VN_PAY;
-      default:
-        return PaymentMethod.OTHER;
-    }
+    const paymentMethodMap: Record<string, PaymentMethod> = {
+      CASH: PaymentMethod.CASH,
+      TRANSFER: PaymentMethod.TRANSFER,
+      CREDIT_CARD: PaymentMethod.CREDIT_CARD,
+      CARD: PaymentMethod.CREDIT_CARD,
+      MOMO: PaymentMethod.MOMO,
+      VN_PAY: PaymentMethod.VN_PAY,
+      VNPAY: PaymentMethod.VN_PAY,
+    };
+
+    return paymentMethodMap[normalized] || PaymentMethod.OTHER;
   }
 
   private normalizeBooking(booking: Booking) {
@@ -76,9 +71,15 @@ export class BookingService {
 
     const paidAmount = Number(
       booking.paidAmount ??
-      normalizedPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
+        normalizedPayments.reduce(
+          (sum, payment) => sum + Number(payment.amount || 0),
+          0,
+        ),
     );
-    const remainingAmount = Math.max(0, Number(booking.totalAmount || 0) - paidAmount);
+    const remainingAmount = Math.max(
+      0,
+      Number(booking.totalAmount || 0) - paidAmount,
+    );
     const paymentStatus =
       remainingAmount <= 0 ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'UNPAID';
 
@@ -118,11 +119,11 @@ export class BookingService {
       const bookingRooms = rooms
         .filter((r) => !!r.roomId)
         .map((r) =>
-        this.bookingRoomRepo.create({
-          ...r,
-          bookingId: savedBooking.id,
-        }),
-      );
+          this.bookingRoomRepo.create({
+            ...r,
+            bookingId: savedBooking.id,
+          }),
+        );
 
       if (bookingRooms.length > 0) {
         await queryRunner.manager.save(bookingRooms);
@@ -161,12 +162,17 @@ export class BookingService {
     }
 
     if (params?.startDate && params?.endDate) {
-      qb.andWhere('booking.checkIn <= :endDate AND booking.checkOut >= :startDate', {
-        startDate: params.startDate,
-        endDate: params.endDate,
-      });
+      qb.andWhere(
+        'booking.checkIn <= :endDate AND booking.checkOut >= :startDate',
+        {
+          startDate: params.startDate,
+          endDate: params.endDate,
+        },
+      );
     } else if (params?.startDate) {
-      qb.andWhere('booking.checkOut >= :startDate', { startDate: params.startDate });
+      qb.andWhere('booking.checkOut >= :startDate', {
+        startDate: params.startDate,
+      });
     } else if (params?.endDate) {
       qb.andWhere('booking.checkIn <= :endDate', { endDate: params.endDate });
     }
@@ -209,7 +215,9 @@ export class BookingService {
   }
 
   async addPayment(bookingId: string, dto: CreatePaymentDto): Promise<Payment> {
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking) throw new NotFoundException('Booking not found');
 
     const payment = this.paymentRepo.create({
@@ -222,7 +230,8 @@ export class BookingService {
     });
     const savedPayment = await this.paymentRepo.save(payment);
 
-    booking.paidAmount = Number(booking.paidAmount || 0) + Number(dto.amount || 0);
+    booking.paidAmount =
+      Number(booking.paidAmount || 0) + Number(dto.amount || 0);
     booking.remainingAmount = Math.max(
       0,
       Number(booking.totalAmount || 0) - Number(booking.paidAmount || 0),
@@ -263,12 +272,16 @@ export class BookingService {
     });
     const savedUsage = await this.serviceUsageRepo.save(serviceUsage);
 
-    const bookingEntity = await this.bookingRepo.findOne({ where: { id: booking.id } });
+    const bookingEntity = await this.bookingRepo.findOne({
+      where: { id: booking.id },
+    });
     if (bookingEntity) {
-      bookingEntity.totalAmount = Number(bookingEntity.totalAmount || 0) + Number(amount || 0);
+      bookingEntity.totalAmount =
+        Number(bookingEntity.totalAmount || 0) + Number(amount || 0);
       bookingEntity.remainingAmount = Math.max(
         0,
-        Number(bookingEntity.totalAmount || 0) - Number(bookingEntity.paidAmount || 0),
+        Number(bookingEntity.totalAmount || 0) -
+          Number(bookingEntity.paidAmount || 0),
       );
       await this.bookingRepo.save(bookingEntity);
     }
@@ -299,10 +312,14 @@ export class BookingService {
 
     const updated = await this.serviceUsageRepo.save(usage);
 
-    const booking = await this.bookingRepo.findOne({ where: { id: usage.bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: usage.bookingId },
+    });
     if (booking) {
       booking.totalAmount =
-        Number(booking.totalAmount || 0) - previousAmount + Number(updated.amount || 0);
+        Number(booking.totalAmount || 0) -
+        previousAmount +
+        Number(updated.amount || 0);
       booking.remainingAmount = Math.max(
         0,
         Number(booking.totalAmount || 0) - Number(booking.paidAmount || 0),
@@ -317,7 +334,9 @@ export class BookingService {
     const usage = await this.serviceUsageRepo.findOne({ where: { id } });
     if (!usage) throw new NotFoundException('Service usage not found');
 
-    const booking = await this.bookingRepo.findOne({ where: { id: usage.bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: usage.bookingId },
+    });
     await this.serviceUsageRepo.remove(usage);
 
     if (booking) {

@@ -7,23 +7,36 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { FinanceService } from './finance.service';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  MANAGEMENT_ROLES,
+  STAFF_ROLES,
+} from '../auth/constants/role-groups.constant';
 
 @ApiTags('finance')
 @Controller('finance')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@Roles(...STAFF_ROLES)
 @UseInterceptors(AuditLogInterceptor)
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}
 
   @Post('expenses')
   @ApiOperation({ summary: 'Create a new expense' })
+  @Roles(...MANAGEMENT_ROLES)
   @AuditLog('CREATE_EXPENSE')
   createExpense(@Body() createDto: CreateExpenseDto) {
     return this.financeService.createExpense(createDto);
@@ -43,6 +56,7 @@ export class FinanceController {
 
   @Patch('expenses/:id')
   @ApiOperation({ summary: 'Update an expense' })
+  @Roles(...MANAGEMENT_ROLES)
   @AuditLog('UPDATE_EXPENSE')
   updateExpense(@Param('id') id: string, @Body() updateDto: UpdateExpenseDto) {
     return this.financeService.updateExpense(id, updateDto);
@@ -50,6 +64,7 @@ export class FinanceController {
 
   @Delete('expenses/:id')
   @ApiOperation({ summary: 'Delete an expense' })
+  @Roles(...MANAGEMENT_ROLES)
   @AuditLog('DELETE_EXPENSE')
   removeExpense(@Param('id') id: string) {
     return this.financeService.removeExpense(id);

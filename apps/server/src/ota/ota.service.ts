@@ -135,14 +135,16 @@ export class OtaService {
       await this.syncLogRepo.save(syncLog);
 
       return { success: true, message: 'Webhook processed' };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unknown webhook error';
       syncLog.status = SyncStatus.FAILED;
-      syncLog.details = { error: error.message, payload };
+      syncLog.details = { error: message, payload };
       syncLog.duration = Date.now() - startTime;
       await this.syncLogRepo.save(syncLog);
-      
-      this.logger.error(`Webhook processing failed: ${error.message}`);
-      throw new BadRequestException(error.message);
+
+      this.logger.error(`Webhook processing failed: ${message}`);
+      throw new BadRequestException(message);
     }
   }
 }

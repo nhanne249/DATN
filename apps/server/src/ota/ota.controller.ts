@@ -12,8 +12,12 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLE } from '../user/enum/role';
+import {
+  MANAGEMENT_ROLES,
+  STAFF_ROLES,
+} from '../auth/constants/role-groups.constant';
 import { OtaService } from './ota.service';
 import {
   CreateOtaChannelDto,
@@ -28,7 +32,8 @@ export class OtaController {
   constructor(private readonly otaService: OtaService) {}
 
   @Get('channels')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all OTA channels for a property' })
   findAllChannels(@Query('propertyId') propertyId: string) {
@@ -36,7 +41,8 @@ export class OtaController {
   }
 
   @Get('channels/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get OTA channel details' })
   findChannelById(@Param('id') id: string) {
@@ -44,8 +50,8 @@ export class OtaController {
   }
 
   @Post('channels')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new OTA channel' })
   createChannel(@Body() dto: CreateOtaChannelDto) {
@@ -53,8 +59,8 @@ export class OtaController {
   }
 
   @Put('channels/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update OTA channel' })
   updateChannel(@Param('id') id: string, @Body() dto: UpdateOtaChannelDto) {
@@ -62,8 +68,8 @@ export class OtaController {
   }
 
   @Delete('channels/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete OTA channel' })
   deleteChannel(@Param('id') id: string) {
@@ -71,8 +77,8 @@ export class OtaController {
   }
 
   @Post('mappings')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create OTA room mapping' })
   createMapping(@Body() dto: CreateOtaMappingDto) {
@@ -80,8 +86,8 @@ export class OtaController {
   }
 
   @Delete('mappings/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete OTA room mapping' })
   deleteMapping(@Param('id') id: string) {
@@ -89,7 +95,8 @@ export class OtaController {
   }
 
   @Get('channels/:id/logs')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+  @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get sync logs for a channel' })
   getSyncLogs(@Param('id') id: string, @Query('limit') limit?: number) {

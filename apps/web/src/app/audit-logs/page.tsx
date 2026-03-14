@@ -2,7 +2,11 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuditLogs } from '@/features/audit-log/hooks/use-audit-logs';
+import { useAuthStore } from '@/store/use-auth-store';
+import { canAccessPath, getDefaultPathForRole } from '@/lib/route-access';
 import { format } from 'date-fns';
 import { 
     Table, 
@@ -27,6 +31,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function AuditLogPage() {
+    const router = useRouter();
+    const { refreshToken, user, hasHydrated } = useAuthStore();
+
+    useEffect(() => {
+        if (!hasHydrated) return;
+
+        if (!refreshToken) {
+            router.replace('/login');
+            return;
+        }
+
+        if (!canAccessPath(user?.role, '/audit-logs')) {
+            router.replace(getDefaultPathForRole(user?.role));
+        }
+    }, [hasHydrated, refreshToken, router, user?.role]);
+
     const [params, setParams] = useState({
         limit: 50,
         offset: 0,
@@ -35,6 +55,10 @@ export default function AuditLogPage() {
     });
 
     const { data, isLoading, refetch } = useAuditLogs(params);
+
+    if (!hasHydrated || !refreshToken || !canAccessPath(user?.role, '/audit-logs')) {
+        return null;
+    }
 
     const getActionBadgeColor = (action: string) => {
         if (action.includes('FAIL')) return 'bg-red-500/10 text-red-500 border-red-500/20';

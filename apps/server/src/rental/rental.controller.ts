@@ -12,8 +12,12 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLE } from '../user/enum/role';
+import {
+  MANAGEMENT_ROLES,
+  STAFF_ROLES,
+} from '../auth/constants/role-groups.constant';
 import { RentalService } from './rental.service';
 import {
   CreateVehicleDto,
@@ -24,8 +28,9 @@ import {
 
 @ApiTags('Rental')
 @Controller('rentals')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
 @ApiBearerAuth()
+@Roles(...STAFF_ROLES)
 export class RentalController {
   constructor(private readonly rentalService: RentalService) {}
 
@@ -36,16 +41,14 @@ export class RentalController {
   }
 
   @Post('vehicles')
-  @UseGuards(RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Create a new vehicle' })
   createVehicle(@Body() dto: CreateVehicleDto) {
     return this.rentalService.createVehicle(dto);
   }
 
   @Patch('vehicles/:id')
-  @UseGuards(RolesGuard)
-  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Update vehicle information' })
   updateVehicle(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
     return this.rentalService.updateVehicle(id, dto);
@@ -77,10 +80,7 @@ export class RentalController {
 
   @Patch('rentals/:id/status')
   @ApiOperation({ summary: 'Update rental status' })
-  updateStatus(
-    @Param('id') id: string,
-    @Body() dto: UpdateRentalStatusDto,
-  ) {
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateRentalStatusDto) {
     return this.rentalService.updateStatus(id, dto.status);
   }
 }

@@ -7,7 +7,6 @@ import {
     LayoutDashboard,
     Calendar,
     CheckSquare,
-    Zap,
     ClipboardList,
     Link2,
     Wallet,
@@ -23,13 +22,13 @@ import {
     UserCircle,
     HelpCircle,
     ChevronDown,
-    ChevronLeft,
     PanelLeftClose,
     PanelLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuthStore } from '@/store/use-auth-store';
+import { canAccessPath } from '@/lib/route-access';
 
 interface SubItem {
     label: string;
@@ -178,6 +177,31 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const pathname = usePathname();
     const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+    const { user } = useAuthStore();
+
+    const visibleMenuItems = React.useMemo(() => {
+        return menuItems
+            .map((item) => {
+                if (item.href) {
+                    return canAccessPath(user?.role, item.href) ? item : null;
+                }
+
+                if (!item.children?.length) {
+                    return item;
+                }
+
+                const children = item.children.filter((child) => canAccessPath(user?.role, child.href));
+                if (!children.length) {
+                    return null;
+                }
+
+                return {
+                    ...item,
+                    children,
+                };
+            })
+            .filter(Boolean) as MenuItem[];
+    }, [user?.role]);
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) =>
@@ -223,7 +247,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {/* Menu */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-3 py-4 pb-24">
                 <nav className="flex flex-col gap-1">
-                    {menuItems.map((item) => {
+                    {visibleMenuItems.map((item) => {
                         const Icon = item.icon;
                         const hasChildren = !!item.children;
                         const active = hasChildren ? isGroupActive(item) : isActive(item.href);

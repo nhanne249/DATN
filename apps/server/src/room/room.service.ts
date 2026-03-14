@@ -54,8 +54,14 @@ export class RoomService {
     return await this.roomRepo.save(room);
   }
 
-  async findAllRooms(roomTypeId?: string, propertyId?: string): Promise<Room[]> {
-    const where: any = {};
+  async findAllRooms(
+    roomTypeId?: string,
+    propertyId?: string,
+  ): Promise<Room[]> {
+    const where: {
+      roomTypeId?: string;
+      roomType?: { propertyId: string };
+    } = {};
     if (roomTypeId) where.roomTypeId = roomTypeId;
     if (propertyId) where.roomType = { propertyId };
 

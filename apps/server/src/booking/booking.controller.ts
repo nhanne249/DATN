@@ -7,9 +7,16 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -18,9 +25,17 @@ import { CreateServiceUsageDto } from './dto/create-service-usage.dto';
 import { Booking } from './entities/booking.entity';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 
 @ApiTags('Bookings')
 @Controller('bookings')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@Roles(...STAFF_ROLES)
 @UseInterceptors(AuditLogInterceptor)
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
@@ -94,10 +109,7 @@ export class BookingController {
   @Post(':id/cancel')
   @AuditLog('CANCEL_BOOKING')
   @ApiOperation({ summary: 'Cancel a booking' })
-  cancel(
-    @Param('id') id: string,
-    @Body() dto: { reason?: string },
-  ) {
+  cancel(@Param('id') id: string, @Body() dto: { reason?: string }) {
     return this.bookingService.cancelBooking(id, dto?.reason);
   }
 

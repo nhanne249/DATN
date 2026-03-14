@@ -5,6 +5,12 @@ import * as path from 'path';
 import { randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 
+export interface MediaUploadFile {
+  originalname: string;
+  buffer: Buffer;
+  size: number;
+}
+
 @Injectable()
 export class MediaService {
   private readonly logger = new Logger(MediaService.name);
@@ -19,7 +25,7 @@ export class MediaService {
   }
 
   async uploadFile(
-    file: any,
+    file: MediaUploadFile,
     userId: string,
   ): Promise<{ url: string; filename: string }> {
     const fileExt = path.extname(file.originalname);
@@ -28,10 +34,14 @@ export class MediaService {
 
     fs.writeFileSync(filePath, file.buffer);
 
-    const apiBase =
-      (process.env.PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || '/api')
-        .replace(/\/+$/, '');
-    const normalizedApiBase = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+    const apiBase = (
+      process.env.PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      '/api'
+    ).replace(/\/+$/, '');
+    const normalizedApiBase = apiBase.endsWith('/api')
+      ? apiBase
+      : `${apiBase}/api`;
     const fileUrl = `${normalizedApiBase}/uploads/${fileName}`;
 
     await this.auditLogService.log({
@@ -52,7 +62,7 @@ export class MediaService {
   }
 
   async uploadFiles(
-    files: any[],
+    files: MediaUploadFile[],
     userId: string,
   ): Promise<{ url: string; filename: string }[]> {
     const uploadPromises = files.map((file) => this.uploadFile(file, userId));

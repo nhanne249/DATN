@@ -7,9 +7,16 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { RoomService } from './room.service';
 import { CreateRoomTypeDto } from './dto/create-room-type.dto';
 import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
@@ -19,9 +26,17 @@ import { RoomType } from './entities/room-type.entity';
 import { Room } from './entities/room.entity';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 
 @ApiTags('Rooms')
 @Controller('rooms')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@Roles(...STAFF_ROLES)
 @UseInterceptors(AuditLogInterceptor)
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
@@ -57,7 +72,7 @@ export class RoomController {
   updateType(@Param('id') id: string, @Body() dto: UpdateRoomTypeDto) {
     return this.roomService.updateType(id, dto);
   }
-  
+
   @Delete('types/:id')
   @AuditLog('DELETE_ROOM_TYPE')
   @ApiOperation({ summary: 'Delete a room type' })

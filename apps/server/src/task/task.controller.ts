@@ -7,17 +7,26 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { TaskService } from './task.service';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 
 @ApiTags('tasks')
 @Controller('tasks')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@Roles(...STAFF_ROLES)
 @UseInterceptors(AuditLogInterceptor)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}

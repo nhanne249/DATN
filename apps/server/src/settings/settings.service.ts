@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentMethod } from './entities/payment-method.entity';
@@ -145,10 +142,7 @@ export class SettingsService {
     return this.printTemplateRepo.save(created);
   }
 
-  async updatePrintTemplate(
-    id: string,
-    dto: Partial<CreatePrintTemplateDto>,
-  ) {
+  async updatePrintTemplate(id: string, dto: Partial<CreatePrintTemplateDto>) {
     const template = await this.printTemplateRepo.findOne({ where: { id } });
     if (!template) throw new NotFoundException('Print template not found');
 
