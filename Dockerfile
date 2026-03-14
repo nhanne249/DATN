@@ -10,6 +10,8 @@ RUN turbo prune web server clientpage --docker
 FROM node:20-alpine AS installer
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # First copy only the json files to install dependencies
 COPY --from=builder /app/out/json/ .
