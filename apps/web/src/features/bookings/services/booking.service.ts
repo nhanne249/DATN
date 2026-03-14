@@ -70,13 +70,13 @@ export const bookingService = {
     axiosInstance.post(`/bookings/${id}/cancel`, { reason }),
 
   getServiceUsages: (bookingId: string) =>
-    axiosInstance.get<any[]>(`/services/usages/${bookingId}`),
+    axiosInstance.get<any[]>(`/bookings/service-usages/${bookingId}`),
 
   updateServiceUsage: (id: string, data: any) =>
-    axiosInstance.patch(`/services/usages/${id}`, data),
+    axiosInstance.patch(`/bookings/service-usages/${id}`, data),
 
   deleteServiceUsage: (id: string) =>
-    axiosInstance.delete(`/services/usages/${id}`),
+    axiosInstance.delete(`/bookings/service-usages/${id}`),
 
   createGuest: (data: any) =>
     axiosInstance.post('/guests', data),

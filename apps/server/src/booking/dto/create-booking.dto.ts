@@ -24,7 +24,8 @@ class BookingRoomDto {
 export class CreateBookingDto {
   @ApiProperty({ example: 'BK-001' })
   @IsString()
-  bookingCode: string;
+  @IsOptional()
+  bookingCode?: string;
 
   @ApiProperty()
   @IsDateString()

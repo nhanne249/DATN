@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Body,
   Param,
   Query,
@@ -14,7 +15,12 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ROLE } from '../user/enum/role';
 import { RentalService } from './rental.service';
-import { CreateVehicleDto, CreateRentalDto } from './dto/rental.dto';
+import {
+  CreateVehicleDto,
+  CreateRentalDto,
+  UpdateVehicleDto,
+  UpdateRentalStatusDto,
+} from './dto/rental.dto';
 
 @ApiTags('Rental')
 @Controller('rentals')
@@ -35,6 +41,14 @@ export class RentalController {
   @ApiOperation({ summary: 'Create a new vehicle' })
   createVehicle(@Body() dto: CreateVehicleDto) {
     return this.rentalService.createVehicle(dto);
+  }
+
+  @Patch('vehicles/:id')
+  @UseGuards(RolesGuard)
+  @Roles(ROLE.ADMIN, ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER)
+  @ApiOperation({ summary: 'Update vehicle information' })
+  updateVehicle(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
+    return this.rentalService.updateVehicle(id, dto);
   }
 
   @Get('rentals')
@@ -59,5 +73,14 @@ export class RentalController {
   @ApiOperation({ summary: 'Record vehicle return' })
   recordReturn(@Param('id') id: string) {
     return this.rentalService.recordReturn(id);
+  }
+
+  @Patch('rentals/:id/status')
+  @ApiOperation({ summary: 'Update rental status' })
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateRentalStatusDto,
+  ) {
+    return this.rentalService.updateStatus(id, dto.status);
   }
 }

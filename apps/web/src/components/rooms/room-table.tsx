@@ -9,7 +9,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { RoomModal } from './room-modal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
-export function RoomTable({ propertyId = 'clouq2m1q00003b6w5z8s6xy9' }) {
+export function RoomTable({ propertyId = process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '' }) {
     const [rooms, setRooms] = useState<any[]>([]);
     const [roomTypes, setRoomTypes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

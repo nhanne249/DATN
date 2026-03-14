@@ -22,6 +22,6 @@ export interface AuditLogParams {
 }
 
 export const auditLogService = {
-    getLogs: (params: AuditLogParams) => 
-        axiosInstance.get<AuditLogResponse>('/audit-logs', { params }) as unknown as Promise<AuditLogResponse>,
+    getLogs: (params: AuditLogParams): Promise<AuditLogResponse> =>
+        axiosInstance.get('/audit-logs', { params }).then((res: any) => res.data),
 };

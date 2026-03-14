@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/store/use-auth-store';
 
 export default function ExpensesPage() {
+    const { activePropertyId } = useAuthStore();
     const [expenses, setExpenses] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -19,7 +21,12 @@ export default function ExpensesPage() {
     const [isOpen, setIsOpen] = useState(false);
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [categoryForm, setCategoryForm] = useState({ id: '', name: '' });
-    const propertyId = 'clouq2m1q00003b6w5z8s6xy9';
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
+    const apiBase = (() => {
+        const url = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
+        if (!url) return '/api';
+        return url.endsWith('/api') ? url : `${url}/api`;
+    })();
 
     const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -35,14 +42,15 @@ export default function ExpensesPage() {
     });
 
     useEffect(() => {
+        if (!propertyId) return;
         fetchExpenses();
         fetchCategories();
-    }, []);
+    }, [propertyId]);
 
     const fetchExpenses = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost:3001/api/finance/expenses?propertyId=${propertyId}`);
+            const res = await fetch(`${apiBase}/finance/expenses?propertyId=${propertyId}`);
             const data = await res.json();
             setExpenses(Array.isArray(data) ? data : data.data || []);
         } catch (error) {
@@ -54,7 +62,7 @@ export default function ExpensesPage() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch(`http://localhost:3001/api/settings/categories?propertyId=${propertyId}`);
+            const res = await fetch(`${apiBase}/settings/categories?propertyId=${propertyId}`);
             const data = await res.json();
             setCategories(Array.isArray(data) ? data.filter((c: any) => c.type === 'expense') : []);
         } catch (error) {
@@ -67,7 +75,7 @@ export default function ExpensesPage() {
 
         if (formData.category === 'new' && formData.newCategoryName.trim()) {
             try {
-                const catRes = await fetch('http://localhost:3001/api/settings/categories', {
+                const catRes = await fetch(`${apiBase}/settings/categories`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -93,8 +101,8 @@ export default function ExpensesPage() {
         try {
             const isEditing = !!formData.id;
             const url = isEditing
-                ? `http://localhost:3001/api/finance/expenses/${formData.id}`
-                : 'http://localhost:3001/api/finance/expenses';
+                ? `${apiBase}/finance/expenses/${formData.id}`
+                : `${apiBase}/finance/expenses`;
             const method = isEditing ? 'PATCH' : 'POST';
 
             const expenseRes = await fetch(url, {
@@ -144,7 +152,7 @@ export default function ExpensesPage() {
     const handleDeleteExpense = async (id: string) => {
         if (!confirm('Bạn có chắc chắn muốn xóa phiếu chi này? Hành động này không thể hoàn tác.')) return;
         try {
-            const res = await fetch(`http://localhost:3001/api/finance/expenses/${id}`, {
+            const res = await fetch(`${apiBase}/finance/expenses/${id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
@@ -164,7 +172,7 @@ export default function ExpensesPage() {
         if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedExpenses.length} phiếu chi đã chọn? Hành động này không thể hoàn tác.`)) return;
 
         try {
-            const promises = selectedExpenses.map(id => fetch(`http://localhost:3001/api/finance/expenses/${id}`, { method: 'DELETE' }));
+            const promises = selectedExpenses.map(id => fetch(`${apiBase}/finance/expenses/${id}`, { method: 'DELETE' }));
             const results = await Promise.all(promises);
             const success = results.every(res => res.ok);
 
@@ -185,14 +193,14 @@ export default function ExpensesPage() {
     const handleSaveCategory = async () => {
         try {
             if (categoryForm.id) {
-                const patchRes = await fetch(`http://localhost:3001/api/settings/categories/${categoryForm.id}`, {
+                const patchRes = await fetch(`${apiBase}/settings/categories/${categoryForm.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: categoryForm.name.trim() })
                 });
                 if (!patchRes.ok) throw new Error(await patchRes.text());
             } else {
-                const postRes = await fetch('http://localhost:3001/api/settings/categories', {
+                const postRes = await fetch(`${apiBase}/settings/categories`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -216,7 +224,7 @@ export default function ExpensesPage() {
     const handleDeleteCategory = async (id: string) => {
         if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
         try {
-            await fetch(`http://localhost:3001/api/settings/categories/${id}`, {
+            await fetch(`${apiBase}/settings/categories/${id}`, {
                 method: 'DELETE'
             });
             fetchCategories();
@@ -230,7 +238,7 @@ export default function ExpensesPage() {
         if (!selectedCategories.length) return;
         if (!confirm(`Bạn có chắc muốn xóa ${selectedCategories.length} danh mục đã chọn?`)) return;
         try {
-            const promises = selectedCategories.map(id => fetch(`http://localhost:3001/api/settings/categories/${id}`, { method: 'DELETE' }));
+            const promises = selectedCategories.map(id => fetch(`${apiBase}/settings/categories/${id}`, { method: 'DELETE' }));
             const results = await Promise.all(promises);
             const success = results.every(res => res.ok);
             if (success) {

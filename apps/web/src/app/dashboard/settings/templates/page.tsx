@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs as RadixTabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Save, PenSquare, X, Type, Code } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-
-const propertyId = 'clouq2m1q00003b6w5z8s6xy9';
+import { useAuthStore } from '@/store/use-auth-store';
 
 const DEFAULT_INVOICE_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #333;">
@@ -148,6 +147,13 @@ const DEFAULT_DEPOSIT_TEMPLATE = `
 `;
 
 export default function TemplatesPage() {
+    const { activePropertyId } = useAuthStore();
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
+    const apiBase = (() => {
+        const url = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
+        if (!url) return '/api';
+        return url.endsWith('/api') ? url : `${url}/api`;
+    })();
     const [templates, setTemplates] = useState<{ id?: string, type: string, content: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewingType, setViewingType] = useState('invoice');
@@ -162,13 +168,14 @@ export default function TemplatesPage() {
     const editorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        if (!propertyId) return;
         fetchData();
-    }, []);
+    }, [propertyId]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost:3001/api/settings/print-templates?propertyId=${propertyId}`);
+            const res = await fetch(`${apiBase}/settings/print-templates?propertyId=${propertyId}`);
             const data = await res.json();
             setTemplates(data || []);
         } catch (error) {
@@ -219,7 +226,7 @@ export default function TemplatesPage() {
                 content: editorContent
             };
 
-            const res = await fetch('http://localhost:3001/api/settings/print-templates', {
+            const res = await fetch(`${apiBase}/settings/print-templates`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

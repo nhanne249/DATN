@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ArrowLeft, User, Phone, MapPin, Calendar, Clock, CreditCard, Tag, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import axiosInstance from '@/lib/axios';
 
 export default function BookingDetailPage() {
     const params = useParams();
@@ -18,9 +19,8 @@ export default function BookingDetailPage() {
     const fetchBookingDetails = async () => {
         try {
             const id = params.id as string;
-            const res = await fetch(`http://localhost:3001/api/bookings/${id}`);
-            if (!res.ok) throw new Error('Failed to fetch');
-            const data = await res.json();
+            const res = await axiosInstance.get(`/bookings/${id}`);
+            const data = res.data;
             setBooking(data);
         } catch (error) {
             toast.error("Không thể tải thông tin đặt phòng");

@@ -5,21 +5,26 @@ import { format } from 'date-fns';
 import { FileWarning, Search, Filter, Download, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import axiosInstance from '@/lib/axios';
+import { useAuthStore } from '@/store/use-auth-store';
 
 export default function ReceivablesPage() {
+    const { activePropertyId } = useAuthStore();
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
     const [receivables, setReceivables] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
+        if (!propertyId) return;
         fetchReceivables();
-    }, []);
+    }, [propertyId]);
 
     const fetchReceivables = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3001/api/finance/receivables?propertyId=clouq2m1q00003b6w5z8s6xy9');
-            const data = await res.json();
+            const res = await axiosInstance.get('/finance/receivables', { params: { propertyId } });
+            const data = res.data;
             setReceivables(Array.isArray(data) ? data : data.data || []);
         } catch (error) {
             console.error("Failed to load receivables", error);

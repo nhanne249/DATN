@@ -4,23 +4,23 @@ import { Expense, CreateExpenseDto, UpdateExpenseDto, Payment } from '../types';
 export const financeService = {
   // Expenses
   getExpenses: (propertyId: string): Promise<Expense[]> =>
-    axiosInstance.get(`/finance/expenses`, { params: { propertyId } }),
+    axiosInstance.get(`/finance/expenses`, { params: { propertyId } }).then((res: any) => res.data),
 
   getExpense: (id: string): Promise<Expense> =>
-    axiosInstance.get(`/finance/expenses/${id}`),
+    axiosInstance.get(`/finance/expenses/${id}`).then((res: any) => res.data),
 
   createExpense: (dto: CreateExpenseDto): Promise<Expense> =>
-    axiosInstance.post(`/finance/expenses`, dto),
+    axiosInstance.post(`/finance/expenses`, dto).then((res: any) => res.data),
 
   updateExpense: (id: string, dto: UpdateExpenseDto): Promise<Expense> =>
-    axiosInstance.patch(`/finance/expenses/${id}`, dto),
+    axiosInstance.patch(`/finance/expenses/${id}`, dto).then((res: any) => res.data),
 
   removeExpense: (id: string): Promise<void> =>
-    axiosInstance.delete(`/finance/expenses/${id}`),
+    axiosInstance.delete(`/finance/expenses/${id}`).then((res: any) => res.data),
 
   // Payments (Fetching via bookings or property)
   // Note: Backend might need a dedicated payments controller for global list
   // For now, assume we might need to add it or use a filtered query if available
   getPayments: (propertyId: string): Promise<Payment[]> =>
-    axiosInstance.get(`/finance/payments`, { params: { propertyId } }),
+    axiosInstance.get(`/finance/payments`, { params: { propertyId } }).then((res: any) => res.data),
 };

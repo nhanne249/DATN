@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from '@/lib/axios';
+import { useAuthStore } from '@/store/use-auth-store';
 import {
     Dialog,
     DialogContent,
@@ -20,6 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
+    const { activePropertyId } = useAuthStore();
     const [formData, setFormData] = useState({
         name: "",
         code: "",
@@ -55,6 +57,7 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
         e.preventDefault();
         setLoading(true);
         try {
+            const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
             const endpoint = roomType
                 ? `/rooms/types/${roomType.id}`
                 : `/rooms/types`;
@@ -62,7 +65,15 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
             // Avoid sending propertyId during PATCH because it's not in the DTO
             const payload = roomType
                 ? { ...formData }
-                : { ...formData, propertyId: "clouq2m1q00003b6w5z8s6xy9" };
+                : {
+                    ...formData,
+                    propertyId,
+                };
+
+            if (!roomType && !propertyId) {
+                alert('Thiáº¿u propertyId');
+                return;
+            }
 
             if (roomType) {
                 await api.patch(endpoint, payload);

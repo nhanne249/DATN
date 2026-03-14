@@ -6,12 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-const TEST_PROPERTY_ID = 'clouq2m1q00003b6w5z8s6xy9';
+import { useAuthStore } from '@/store/use-auth-store';
 
 export default function SettingsPage() {
-  const { data: settings, isLoading } = useSettings(TEST_PROPERTY_ID);
-  const { updateSettings, isUpdatingSettings } = useSettingsMutation(TEST_PROPERTY_ID);
+  const { activePropertyId } = useAuthStore();
+  const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
+  const { data: settings, isLoading } = useSettings(propertyId);
+  const { updateSettings, isUpdatingSettings } = useSettingsMutation(propertyId);
   
   const [localSettings, setLocalSettings] = useState<any>(null);
 
@@ -19,7 +20,7 @@ export default function SettingsPage() {
     if (settings) setLocalSettings(settings);
   }, [settings]);
 
-  if (isLoading) return (
+  if (!propertyId || isLoading) return (
     <div className="space-y-6">
       <Skeleton className="h-[200px] w-full bg-zinc-800" />
       <Skeleton className="h-[200px] w-full bg-zinc-800" />

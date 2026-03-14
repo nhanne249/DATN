@@ -36,9 +36,22 @@ export class BookingController {
   @Get()
   @ApiOperation({ summary: 'Get all bookings' })
   @ApiQuery({ name: 'propertyId', required: false })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   @ApiResponse({ status: 200, type: [Booking] })
-  findAll(@Query('propertyId') propertyId?: string) {
-    return this.bookingService.findAll(propertyId);
+  findAll(
+    @Query('propertyId') propertyId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.bookingService.findAll({
+      propertyId,
+      startDate,
+      endDate,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
 
   @Get(':id')
@@ -76,5 +89,36 @@ export class BookingController {
   @ApiOperation({ summary: 'Add a service usage to a booking' })
   addServiceUsage(@Param('id') id: string, @Body() dto: CreateServiceUsageDto) {
     return this.bookingService.addServiceUsage(id, dto);
+  }
+
+  @Post(':id/cancel')
+  @AuditLog('CANCEL_BOOKING')
+  @ApiOperation({ summary: 'Cancel a booking' })
+  cancel(
+    @Param('id') id: string,
+    @Body() dto: { reason?: string },
+  ) {
+    return this.bookingService.cancelBooking(id, dto?.reason);
+  }
+
+  @Get('service-usages/:bookingId')
+  @ApiOperation({ summary: 'Get service usages by booking' })
+  findServiceUsages(@Param('bookingId') bookingId: string) {
+    return this.bookingService.findServiceUsages(bookingId);
+  }
+
+  @Patch('service-usages/:id')
+  @ApiOperation({ summary: 'Update a service usage' })
+  updateServiceUsage(
+    @Param('id') id: string,
+    @Body() dto: { quantity?: number; unitPrice?: number; note?: string },
+  ) {
+    return this.bookingService.updateServiceUsage(id, dto);
+  }
+
+  @Delete('service-usages/:id')
+  @ApiOperation({ summary: 'Delete a service usage' })
+  removeServiceUsage(@Param('id') id: string) {
+    return this.bookingService.removeServiceUsage(id);
   }
 }

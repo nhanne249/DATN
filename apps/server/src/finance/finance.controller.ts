@@ -60,4 +60,10 @@ export class FinanceController {
   findAllPayments(@Query('propertyId') propertyId: string) {
     return this.financeService.findAllPayments(propertyId);
   }
+
+  @Get('receivables')
+  @ApiOperation({ summary: 'Get receivables (unpaid bookings) for a property' })
+  findReceivables(@Query('propertyId') propertyId: string) {
+    return this.financeService.findReceivables(propertyId);
+  }
 }

@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRooms, useRoomTypes, useRoomMutation } from '../hooks/use-rooms';
 import { RoomModal } from './RoomModal';
 
-export function RoomTable({ propertyId = 'clouq2m1q00003b6w5z8s6xy9' }) {
+export function RoomTable({ propertyId = process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '' }) {
     const { data: rooms = [], isLoading: isRoomsLoading } = useRooms(propertyId);
     const { data: roomTypes = [], isLoading: isTypesLoading } = useRoomTypes(propertyId);
     const { deleteRoom } = useRoomMutation(propertyId);

@@ -7,10 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 
 import { useRentalMutation } from '@/features/rentals/hooks/use-rentals';
+import { useAuthStore } from '@/store/use-auth-store';
 import { toast } from 'sonner';
 
 export function RentalModal({ isOpen, onClose, rental, vehicles, bookings, onSaved }: any) {
-    const { createRental, updateRentalStatus } = useRentalMutation() as any; // Using simplified mutate for now
+    const { createRental } = useRentalMutation() as any;
+    const { activePropertyId } = useAuthStore();
     
     const [formData, setFormData] = useState({
         vehicleId: '',
@@ -81,6 +83,12 @@ export function RentalModal({ isOpen, onClose, rental, vehicles, bookings, onSav
         e.preventDefault();
         setLoading(true);
         try {
+            const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
+            if (!propertyId) {
+                toast.error('Thiáº¿u propertyId');
+                return;
+            }
+
             const payload = {
                 vehicleId: (formData.vehicleId && formData.vehicleId !== 'none') ? formData.vehicleId : undefined,
                 bookingId: (formData.bookingId && formData.bookingId !== 'none') ? formData.bookingId : undefined,
@@ -95,7 +103,7 @@ export function RentalModal({ isOpen, onClose, rental, vehicles, bookings, onSav
                 endTime: new Date(formData.endTime).toISOString(),
                 notes: formData.notes,
                 totalAmount: (parseFloat(formData.pricePerDay) || 0), // Default 1 day for now
-                propertyId: 'clouq2m1q00003b6w5z8s6xy9'
+                propertyId,
             };
 
             if (rental) {

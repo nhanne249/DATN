@@ -9,6 +9,8 @@ import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Calendar as CalendarIcon, ConciergeBell, Coffee, Wine, Bath, Utensils } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import axiosInstance from '@/lib/axios';
+import { useAuthStore } from '@/store/use-auth-store';
 
 // static data removed
 
@@ -17,6 +19,8 @@ const formatVND = (value: number) => {
 };
 
 export default function ServicesReportPage() {
+    const { activePropertyId } = useAuthStore();
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
     const [period, setPeriod] = useState('7days');
     const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
     const [data, setData] = useState<any[]>([]);
@@ -25,15 +29,17 @@ export default function ServicesReportPage() {
 
     React.useEffect(() => {
         const fetchData = async () => {
+            if (!propertyId) return;
             try {
-                let url = `http://localhost:3001/api/reports/services?propertyId=clouq2m1q00003b6w5z8s6xy9&period=${period}`;
+                const params: Record<string, string> = { propertyId, period };
                 if (period === 'custom' && customDateRange?.from && customDateRange?.to) {
-                    url += `&startDate=${format(customDateRange.from, 'yyyy-MM-dd')}&endDate=${format(customDateRange.to, 'yyyy-MM-dd')}`;
+                    params.startDate = format(customDateRange.from, 'yyyy-MM-dd');
+                    params.endDate = format(customDateRange.to, 'yyyy-MM-dd');
                 } else if (period === 'custom') {
                     return;
                 }
-                const res = await fetch(url);
-                const json = await res.json();
+                const res = await axiosInstance.get('/reports/services', { params });
+                const json = res.data;
                 if (json.data) setData(json.data);
                 if (json.trendData) setTrendData(json.trendData);
                 if (json.kpi) setKpi(json.kpi);
@@ -42,7 +48,7 @@ export default function ServicesReportPage() {
             }
         };
         fetchData();
-    }, [period, customDateRange]);
+    }, [period, customDateRange, propertyId]);
 
     return (
         <div className="space-y-6">

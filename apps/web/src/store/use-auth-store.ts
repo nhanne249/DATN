@@ -13,7 +13,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       refreshToken: null,
-      activePropertyId: 'clouq2m1q00003b6w5z8s6xy9', // Default mock ID for now
+      activePropertyId: process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || null,
       setRefreshToken: (token) => set({ refreshToken: token }),
       setActivePropertyId: (id) => set({ activePropertyId: id }),
       logout: () => set({ refreshToken: null, activePropertyId: null }),

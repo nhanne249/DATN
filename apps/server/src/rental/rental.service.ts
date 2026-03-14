@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Vehicle, VehicleStatus } from './entities/vehicle.entity';
 import { VehicleRental, RentalStatus } from './entities/vehicle-rental.entity';
-import { CreateVehicleDto, CreateRentalDto } from './dto/rental.dto';
+import {
+  CreateVehicleDto,
+  CreateRentalDto,
+  UpdateVehicleDto,
+} from './dto/rental.dto';
 
 @Injectable()
 export class RentalService {
@@ -25,6 +29,14 @@ export class RentalService {
 
   async createVehicle(dto: CreateVehicleDto) {
     const vehicle = this.vehicleRepo.create(dto);
+    return this.vehicleRepo.save(vehicle);
+  }
+
+  async updateVehicle(id: string, dto: UpdateVehicleDto) {
+    const vehicle = await this.vehicleRepo.findOne({ where: { id } });
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+    Object.assign(vehicle, dto);
     return this.vehicleRepo.save(vehicle);
   }
 
@@ -90,5 +102,13 @@ export class RentalService {
       }
       return this.rentalRepo.findOneBy({ id });
     });
+  }
+
+  async updateStatus(id: string, status: RentalStatus) {
+    const rental = await this.rentalRepo.findOneBy({ id });
+    if (!rental) throw new NotFoundException('Rental not found');
+
+    await this.rentalRepo.update(id, { status });
+    return this.rentalRepo.findOneBy({ id });
   }
 }

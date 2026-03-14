@@ -1,11 +1,21 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/use-auth-store';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.trim() ||
-  (process.env.NODE_ENV === 'development'
-    ? 'http://localhost:3000/api'
-    : '/api');
+const normalizeApiBaseUrl = (url?: string): string => {
+  const trimmed = (url || '').trim();
+  if (!trimmed) {
+    return '/api';
+  }
+
+  const base = trimmed.replace(/\/+$/, '');
+  if (base === '/api' || base.endsWith('/api')) {
+    return base;
+  }
+
+  return `${base}/api`;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -35,7 +45,7 @@ axiosInstance.interceptors.request.use(
 
 // Response interceptor
 axiosInstance.interceptors.response.use(
-  (response) => response.data,
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
@@ -69,7 +79,10 @@ axiosInstance.interceptors.response.use(
           { withCredentials: true }
         );
 
-        const newToken = response.data.refreshToken;
+        const newToken = response.data?.data?.refreshToken;
+        if (!newToken) {
+          throw new Error('Invalid refresh token response');
+        }
         setRefreshToken(newToken);
         
         processQueue(null);
@@ -83,8 +96,8 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    const message = error.response?.data?.message || 'Something went wrong';
-    return Promise.reject(new Error(message));
+    error.message = error.response?.data?.message || error.message || 'Something went wrong';
+    return Promise.reject(error);
   },
 );
 

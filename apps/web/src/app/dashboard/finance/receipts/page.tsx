@@ -5,21 +5,26 @@ import { format } from 'date-fns';
 import { CreditCard, Search, Filter, Download, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import axiosInstance from '@/lib/axios';
+import { useAuthStore } from '@/store/use-auth-store';
 
 export default function ReceiptsPage() {
+    const { activePropertyId } = useAuthStore();
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
     const [payments, setPayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
+        if (!propertyId) return;
         fetchPayments();
-    }, []);
+    }, [propertyId]);
 
     const fetchPayments = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3001/api/finance/payments?propertyId=clouq2m1q00003b6w5z8s6xy9');
-            const data = await res.json();
+            const res = await axiosInstance.get('/finance/payments', { params: { propertyId } });
+            const data = res.data;
             setPayments(Array.isArray(data) ? data : data.data || []);
         } catch (error) {
             console.error("Failed to load payments", error);

@@ -30,6 +30,38 @@ export class CreateVehicleDto {
   propertyId: string;
 }
 
+export class UpdateVehicleDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  plateNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  provider?: string;
+
+  @ApiPropertyOptional({ enum: VehicleType })
+  @IsOptional()
+  @IsEnum(VehicleType)
+  type?: VehicleType;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  dailyPrice?: number;
+
+  @ApiPropertyOptional({ enum: VehicleStatus })
+  @IsOptional()
+  @IsEnum(VehicleStatus)
+  status?: VehicleStatus;
+}
+
 export class CreateRentalDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -81,4 +113,10 @@ export class CreateRentalDto {
   @ApiProperty({ example: 'uuid' })
   @IsUUID()
   propertyId: string;
+}
+
+export class UpdateRentalStatusDto {
+  @ApiProperty({ enum: RentalStatus })
+  @IsEnum(RentalStatus)
+  status: RentalStatus;
 }

@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRoomTypes, useRoomTypeMutation } from '../hooks/use-rooms';
 import { RoomTypeModal } from './RoomTypeModal';
 
-export function RoomTypeTable({ propertyId = 'clouq2m1q00003b6w5z8s6xy9' }) {
+export function RoomTypeTable({ propertyId = process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '' }) {
     const { data: roomTypes = [], isLoading } = useRoomTypes(propertyId);
     const { deleteRoomType } = useRoomTypeMutation(propertyId);
 

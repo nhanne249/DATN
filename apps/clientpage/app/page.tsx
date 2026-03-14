@@ -4,7 +4,11 @@ import { format, addDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Calendar, MapPin, Phone, Mail, Star, ChevronDown, Menu, X, CheckCircle, Clock, Wifi, Car, Coffee, Dumbbell, Waves, Utensils } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = (() => {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
+  if (!raw) return '/api';
+  return raw.endsWith('/api') ? raw : `${raw}/api`;
+})();
 const SLUG = process.env.NEXT_PUBLIC_HOTEL_SLUG || 'my-hotel';
 
 const AMENITY_ICONS: Record<string, any> = {
@@ -42,8 +46,8 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         const [cfgRes, roomsRes] = await Promise.all([
-          fetch(`${API_URL}/api/public/${SLUG}`, { cache: 'no-store' }),
-          fetch(`${API_URL}/api/public/${SLUG}/rooms`, { cache: 'no-store' }),
+          fetch(`${API_BASE}/public/${SLUG}`, { cache: 'no-store' }),
+          fetch(`${API_BASE}/public/${SLUG}/rooms`, { cache: 'no-store' }),
         ]);
         if (cfgRes.ok) setConfig(await cfgRes.json());
         if (roomsRes.ok) setRoomTypes(await roomsRes.json());
@@ -60,7 +64,7 @@ export default function HomePage() {
     setSearching(true);
     setSearched(false);
     try {
-      const res = await fetch(`${API_URL}/api/public/${SLUG}/availability?checkIn=${checkIn}&checkOut=${checkOut}`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE}/public/${SLUG}/availability?checkIn=${checkIn}&checkOut=${checkOut}`, { cache: 'no-store' });
       if (res.ok) {
         setAvailability(await res.json());
         setSearched(true);
@@ -77,7 +81,7 @@ export default function HomePage() {
     if (!guestName || !guestPhone || !bookingRoom) return;
     setBooking(true);
     try {
-      const res = await fetch(`${API_URL}/api/public/${SLUG}/bookings`, {
+      const res = await fetch(`${API_BASE}/public/${SLUG}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

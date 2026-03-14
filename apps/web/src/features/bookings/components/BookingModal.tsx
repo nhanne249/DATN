@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import axiosInstance from '@/lib/axios';
 import { useBookingMutation } from '../hooks/use-bookings';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/store/use-auth-store';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -25,9 +26,9 @@ interface BookingModalProps {
   } | null;
 }
 
-const TEST_PROPERTY_ID = 'clouq2m1q00003b6w5z8s6xy9';
-
 export function BookingModal({ isOpen, onClose, onSuccess, initialData }: BookingModalProps) {
+  const { activePropertyId } = useAuthStore();
+  const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
   const { createBooking, addPayment } = useBookingMutation();
   const [loading, setLoading] = useState(false);
   const [guests, setGuests] = useState<any[]>([]);
@@ -52,11 +53,13 @@ export function BookingModal({ isOpen, onClose, onSuccess, initialData }: Bookin
   // Fetch guests when modal opens
   useEffect(() => {
     if (isOpen) {
-      axiosInstance.get('/guests?limit=50')
+      if (!propertyId) return;
+
+      axiosInstance.get('/guests', { params: { propertyId, limit: 50 } })
         .then((res: any) => setGuests(Array.isArray(res.data) ? res.data : res.data.data || []))
         .catch(err => console.error("Failed to load guests", err));
     }
-  }, [isOpen]);
+  }, [isOpen, propertyId]);
 
   // Pre-fill dates from timeline drag
   useEffect(() => {
@@ -88,6 +91,14 @@ export function BookingModal({ isOpen, onClose, onSuccess, initialData }: Bookin
       toast.error("Vui lòng nhập tên khách hàng");
       return;
     }
+    if (!propertyId) {
+      toast.error('Thiáº¿u propertyId');
+      return;
+    }
+    if (!initialData?.roomId) {
+      toast.error('Vui lÃ²ng chá»n phÃ²ng cá»¥ thá»ƒ trÆ°á»›c khi táº¡o Ä‘áº·t phÃ²ng');
+      return;
+    }
     if (!isNewGuest && !guestId) {
       toast.error("Vui lòng chọn khách hàng");
       return;
@@ -106,7 +117,7 @@ export function BookingModal({ isOpen, onClose, onSuccess, initialData }: Bookin
         const guestRes: any = await axiosInstance.post('/guests', {
           name: newGuestName,
           phone: newGuestPhone,
-          propertyId: TEST_PROPERTY_ID
+          propertyId,
         });
         finalGuestId = guestRes.data?.id;
       }
@@ -118,19 +129,20 @@ export function BookingModal({ isOpen, onClose, onSuccess, initialData }: Bookin
       }
 
       const payload = {
+        bookingCode: `BK-${Date.now().toString().slice(-6)}`,
         guestId: finalGuestId,
-        propertyId: TEST_PROPERTY_ID,
+        propertyId,
         source: source,
         checkIn: new Date(checkIn).toISOString(),
         checkOut: new Date(checkOut).toISOString(),
-        totalAmount: totalAmount,
-        rooms: initialData?.roomTypeId ? [{
-          roomTypeId: initialData.roomTypeId,
-          roomId: initialData.roomId,
+        adults: 1,
+        children: 0,
+        infants: 0,
+        notes: '',
+        rooms: [{
+          roomId: initialData?.roomId || '',
           priceAtBooking: roomPrice,
-          checkIn: new Date(checkIn).toISOString(),
-          checkOut: new Date(checkOut).toISOString()
-        }] : []
+        }]
       };
 
       const bookRes: any = await createBooking(payload);

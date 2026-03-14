@@ -181,7 +181,7 @@ export class ReportsService {
         propertyId,
         checkIn: Between(startDate, endDate),
       },
-      relations: ['bookingRooms', 'bookingRooms.room'],
+      relations: ['rooms', 'rooms.room'],
     });
 
     // Simple occupancy logic - can be improved
@@ -288,7 +288,7 @@ export class ReportsService {
         propertyId,
         checkIn: Between(startDate, endDate),
       },
-      relations: ['bookingRooms'],
+      relations: ['rooms'],
     });
 
     const totalRooms = 10;

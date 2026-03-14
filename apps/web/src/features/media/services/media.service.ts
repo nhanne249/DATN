@@ -14,7 +14,7 @@ export const mediaService = {
   uploadMultiple: (files: File[]) => {
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file));
-    return axiosInstance.post<{ url: string; filename: string }[]>('/media/uploads', formData, {
+    return axiosInstance.post<{ url: string; filename: string }[]>('/media/upload-multiple', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -27,6 +27,8 @@ export const mediaService = {
   getFileUrl: (filename: string) => {
     if (!filename) return '';
     if (filename.startsWith('http')) return filename;
-    return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/uploads/${filename}`;
+    const raw = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
+    const base = !raw ? '/api' : raw.endsWith('/api') ? raw : `${raw}/api`;
+    return `${base}/uploads/${filename}`;
   },
 };

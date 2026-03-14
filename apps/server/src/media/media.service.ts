@@ -3,13 +3,13 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
+import { tmpdir } from 'os';
 
 @Injectable()
 export class MediaService {
   private readonly logger = new Logger(MediaService.name);
   private readonly uploadPath = path.join(
-    process.cwd(),
-    'apps/server/public/uploads',
+    process.env.UPLOAD_DIR || path.join(tmpdir(), 'hotel-management-uploads'),
   );
 
   constructor(private readonly auditLogService: AuditLogService) {
@@ -18,14 +18,21 @@ export class MediaService {
     }
   }
 
-  async uploadFile(file: any, userId: string): Promise<string> {
+  async uploadFile(
+    file: any,
+    userId: string,
+  ): Promise<{ url: string; filename: string }> {
     const fileExt = path.extname(file.originalname);
     const fileName = `${randomUUID()}${fileExt}`;
     const filePath = path.join(this.uploadPath, fileName);
 
     fs.writeFileSync(filePath, file.buffer);
 
-    const fileUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/uploads/${fileName}`;
+    const apiBase =
+      (process.env.PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || '/api')
+        .replace(/\/+$/, '');
+    const normalizedApiBase = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+    const fileUrl = `${normalizedApiBase}/uploads/${fileName}`;
 
     await this.auditLogService.log({
       userId,
@@ -38,10 +45,16 @@ export class MediaService {
       },
     });
 
-    return fileUrl;
+    return {
+      url: fileUrl,
+      filename: fileName,
+    };
   }
 
-  async uploadFiles(files: any[], userId: string): Promise<string[]> {
+  async uploadFiles(
+    files: any[],
+    userId: string,
+  ): Promise<{ url: string; filename: string }[]> {
     const uploadPromises = files.map((file) => this.uploadFile(file, userId));
     return Promise.all(uploadPromises);
   }

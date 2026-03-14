@@ -79,6 +79,10 @@ export class Booking {
   @Column({ type: 'text', nullable: true })
   notes?: string;
 
+  @ApiProperty({ required: false })
+  @Column({ type: 'text', nullable: true })
+  cancellationReason?: string;
+
   @ApiProperty({ default: 1 })
   @Column({ default: 1 })
   adults: number;

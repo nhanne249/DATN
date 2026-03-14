@@ -77,7 +77,7 @@ export default function WebsitePage() {
         );
     }
 
-    const clientUrl = `http://localhost:3002`;
+    const clientUrl = process.env.NEXT_PUBLIC_CLIENTPAGE_URL?.trim().replace(/\/+$/, '') || '';
 
     return (
         <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -91,11 +91,17 @@ export default function WebsitePage() {
                     <p className="text-zinc-400 mt-1 text-sm">Cấu hình giao diện và nội dung trang clientpage của khách sạn</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <a href={clientUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 gap-2">
-                            <ExternalLink className="w-4 h-4" /> Xem website
+                    {clientUrl ? (
+                        <a href={clientUrl} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 gap-2">
+                                <ExternalLink className="w-4 h-4" /> Xem website
+                            </Button>
+                        </a>
+                    ) : (
+                        <Button variant="outline" disabled className="bg-zinc-900 border-zinc-700 text-zinc-500 gap-2">
+                            <ExternalLink className="w-4 h-4" /> Thiáº¿u NEXT_PUBLIC_CLIENTPAGE_URL
                         </Button>
-                    </a>
+                    )}
                     <Button
                         variant="outline"
                         onClick={togglePublish}
@@ -121,7 +127,7 @@ export default function WebsitePage() {
                         </p>
                         <p className="text-zinc-500 text-xs">
                             {config.isPublished
-                                ? `URL công khai: ${clientUrl} — Slug: /${config.slug}`
+                                ? `URL công khai: ${clientUrl || '[chưa cấu hình]'} — Slug: /${config.slug}`
                                 : 'Nhấn "Đang công khai" để website có thể được truy cập bởi khách hàng'}
                         </p>
                     </div>

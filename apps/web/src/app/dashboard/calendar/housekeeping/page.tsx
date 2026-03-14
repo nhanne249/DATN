@@ -35,6 +35,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
+import axiosInstance from '@/lib/axios';
+import { useAuthStore } from '@/store/use-auth-store';
 
 const mockTemplates = [
     { id: 'TPL-1', name: 'Dọn phòng tiêu chuẩn', type: 'HOUSEKEEPING', subtasks: 5, active: true },
@@ -43,13 +45,16 @@ const mockTemplates = [
 ];
 
 export default function HousekeepingPage() {
+    const { activePropertyId } = useAuthStore();
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
     const [activeTab, setActiveTab] = useState('list');
     const [tasks, setTasks] = useState<any[]>([]);
 
     const fetchTasks = async () => {
+        if (!propertyId) return;
         try {
-            const res = await fetch(`http://localhost:3001/api/tasks?propertyId=clouq2m1q00003b6w5z8s6xy9`);
-            const json = await res.json();
+            const res = await axiosInstance.get('/tasks', { params: { propertyId } });
+            const json = res.data;
             setTasks(Array.isArray(json) ? json : (json.data || []));
         } catch (error) {
             console.error(error);
@@ -58,16 +63,12 @@ export default function HousekeepingPage() {
 
     useEffect(() => {
         fetchTasks();
-    }, []);
+    }, [propertyId]);
 
     const handleCompleteTask = async (id: string) => {
         try {
-            const res = await fetch(`http://localhost:3001/api/tasks/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'COMPLETED' })
-            });
-            if (res.ok) fetchTasks();
+            await axiosInstance.patch(`/tasks/${id}`, { status: 'COMPLETED' });
+            fetchTasks();
         } catch (error) {
             console.error(error);
         }

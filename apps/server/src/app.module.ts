@@ -23,11 +23,14 @@ import { WebsiteModule } from './website/website.module';
 import { MediaModule } from './media/media.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import * as fs from 'fs';
+import { tmpdir } from 'os';
+
+const UPLOAD_ROOT = process.env.UPLOAD_DIR || join(tmpdir(), 'hotel-management-uploads');
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'apps/server/public/uploads'),
+      rootPath: UPLOAD_ROOT,
       serveRoot: '/api/uploads',
     }),
     ConfigModule.forRoot({ isGlobal: true }),

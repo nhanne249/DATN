@@ -10,10 +10,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-const propertyId = 'clouq2m1q00003b6w5z8s6xy9';
+import axiosInstance from '@/lib/axios';
+import { useAuthStore } from '@/store/use-auth-store';
 
 export default function GuestsPage() {
+    const { activePropertyId } = useAuthStore();
+    const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
     const defaultTomorrow = addDays(new Date(), 1);
     const [selectedDate, setSelectedDate] = useState<Date>(defaultTomorrow);
     const [rooms, setRooms] = useState<any[]>([]);
@@ -26,8 +28,9 @@ export default function GuestsPage() {
     const today = startOfDay(new Date());
 
     useEffect(() => {
+        if (!propertyId) return;
         fetchData();
-    }, [selectedDate, sortOrder]);
+    }, [selectedDate, sortOrder, propertyId]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -38,8 +41,10 @@ export default function GuestsPage() {
             const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
 
             // Fetch rooms
-            const roomsRes = await fetch(`http://localhost:3001/api/rooms?propertyId=${propertyId}&limit=1000&sortOrder=${sortOrder}`);
-            const roomsData = await roomsRes.json();
+            const roomsRes = await axiosInstance.get('/rooms', {
+                params: { propertyId, limit: 1000, sortOrder },
+            });
+            const roomsData = roomsRes.data;
 
             // Adjust to API response format
             if (roomsData.data) {
@@ -52,8 +57,10 @@ export default function GuestsPage() {
             // limit=1000 to get all
             const sdIso = minDate.toISOString();
             const edIso = maxDate.toISOString();
-            const bookingsRes = await fetch(`http://localhost:3001/api/bookings?propertyId=${propertyId}&limit=1000&startDate=${sdIso}&endDate=${edIso}`);
-            const bookingsData = await bookingsRes.json();
+            const bookingsRes = await axiosInstance.get('/bookings', {
+                params: { propertyId, limit: 1000, startDate: sdIso, endDate: edIso },
+            });
+            const bookingsData = bookingsRes.data;
 
             if (bookingsData.data) {
                 setBookings(bookingsData.data);
