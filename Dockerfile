@@ -56,7 +56,7 @@ COPY --chown=nextjs:nodejs <<EOF start.sh
 # Start server on 3000
 PORT=3000 pm2 start "node apps/server/dist/main" --name server
 # Start web on 3001
-PORT=3001 pm2-runtime start --name web --cwd /app/apps/web /app/node_modules/next/dist/bin/next -- start -p 3001
+PORT=3001 pm2-runtime start --name web "cd /app/apps/web && node /app/node_modules/next/dist/bin/next start -p 3001"
 EOF
 
 RUN chmod +x start.sh
