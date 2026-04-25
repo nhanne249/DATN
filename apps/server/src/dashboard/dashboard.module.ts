@@ -21,10 +21,12 @@ import { AuditLog } from '../audit-log/entities/audit-log.entity';
 import { WebsiteConfig } from '../website/entities/website-config.entity';
 import { PortalRecord } from './entities/portal-record.entity';
 import { UserModule } from '../user/user.module';
+import { OtaModule } from '../ota/ota.module';
 
 @Module({
   imports: [
     UserModule,
+    OtaModule,
     TypeOrmModule.forFeature([
       Booking,
       Room,

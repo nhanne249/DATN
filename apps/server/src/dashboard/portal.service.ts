@@ -23,6 +23,8 @@ import { AuditLog } from '../audit-log/entities/audit-log.entity';
 import { WebsiteConfig } from '../website/entities/website-config.entity';
 import { PortalRecord } from './entities/portal-record.entity';
 import { UserService } from '../user/user.service';
+import { OtaService } from '../ota/ota.service';
+import { UserPayload } from '../common/interfaces/request-with-user.interface';
 
 @Injectable()
 export class PortalService {
@@ -51,6 +53,7 @@ export class PortalService {
     private readonly websiteConfigRepo: Repository<WebsiteConfig>,
     @InjectRepository(PortalRecord)
     private readonly portalRecordRepo: Repository<PortalRecord>,
+    private readonly otaService: OtaService,
     private readonly userService: UserService,
   ) {}
 
@@ -928,19 +931,20 @@ export class PortalService {
 
   async connectChannel(
     propertyId: string,
-    userId: string,
+    actor: UserPayload,
     dto: { name: string; type: string; credentials?: Record<string, unknown> },
   ) {
     const pid = this.requirePropertyId(propertyId);
-    const channel = this.otaChannelRepo.create({
-      propertyId: pid,
-      name: dto.name,
-      type: dto.type,
-      credentials: dto.credentials || {},
-      isActive: true,
-      lastSyncAt: new Date(),
-    });
-    const saved = await this.otaChannelRepo.save(channel);
+    const saved = await this.otaService.createChannel(
+      {
+        propertyId: pid,
+        name: dto.name,
+        type: dto.type,
+        credentials: dto.credentials || {},
+        isActive: true,
+      },
+      actor,
+    );
 
     await this.createRecord({
       propertyId: pid,
@@ -948,34 +952,22 @@ export class PortalService {
       type: 'connect-channel',
       title: `Connected ${saved.name}`,
       status: 'Success',
-      createdBy: userId,
+      createdBy: actor.id,
       payload: { channelId: saved.id, channelName: saved.name },
     });
 
     return saved;
   }
 
-  async refreshChannel(propertyId: string, channelId: string, userId: string) {
+  async refreshChannel(
+    propertyId: string,
+    channelId: string,
+    actor: UserPayload,
+  ) {
     const pid = this.requirePropertyId(propertyId);
-    const channel = await this.otaChannelRepo.findOne({
-      where: { id: channelId, propertyId: pid },
-    });
-    if (!channel) throw new NotFoundException('Channel not found');
-
-    channel.lastSyncAt = new Date();
-    await this.otaChannelRepo.save(channel);
-
-    const log = this.syncLogRepo.create({
-      channelId: channel.id,
-      action: 'MANUAL_REFRESH',
-      direction: SyncDirection.PULL,
-      status: SyncStatus.SUCCESS,
-      details: { triggeredBy: userId },
-      duration: 0,
-    });
-    await this.syncLogRepo.save(log);
-
-    return { success: true, lastSyncAt: channel.lastSyncAt };
+    const channel = await this.otaService.findChannelById(channelId, actor);
+    if (channel.propertyId !== pid) throw new NotFoundException('Channel not found');
+    return this.otaService.refreshChannel(channelId, actor);
   }
 
   async assignChannelMessage(

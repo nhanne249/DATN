@@ -42,7 +42,7 @@ export const useOtaMutation = () => {
   });
 
   const updateChannel = useMutation({
-    mutationFn: ({ id, dto, propertyId }: { id: string; dto: UpdateOtaChannelDto; propertyId: string }) =>
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateOtaChannelDto; propertyId: string }) =>
       otaService.updateChannel(id, dto),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ota-channels', variables.propertyId] });
@@ -55,7 +55,7 @@ export const useOtaMutation = () => {
   });
 
   const deleteChannel = useMutation({
-    mutationFn: ({ id, propertyId }: { id: string; propertyId: string }) => otaService.deleteChannel(id),
+    mutationFn: ({ id }: { id: string; propertyId: string }) => otaService.deleteChannel(id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ota-channels', variables.propertyId] });
       toast.success('Đã xóa kênh OTA');
@@ -69,6 +69,7 @@ export const useOtaMutation = () => {
     mutationFn: (dto: CreateOtaMappingDto) => otaService.createMapping(dto),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ota-channel', variables.channelId] });
+      queryClient.invalidateQueries({ queryKey: ['ota-channels'] });
       toast.success('Đã tạo liên kết phòng thành công');
     },
     onError: (error: any) => {
@@ -77,9 +78,10 @@ export const useOtaMutation = () => {
   });
 
   const deleteMapping = useMutation({
-    mutationFn: ({ id, channelId }: { id: string; channelId: string }) => otaService.deleteMapping(id),
+    mutationFn: ({ id }: { id: string; channelId: string }) => otaService.deleteMapping(id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ota-channel', variables.channelId] });
+      queryClient.invalidateQueries({ queryKey: ['ota-channels'] });
       toast.success('Đã xóa liên kết phòng');
     },
     onError: (error: any) => {

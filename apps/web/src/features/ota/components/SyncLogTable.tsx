@@ -37,21 +37,32 @@ export function SyncLogTable({ logs }: SyncLogTableProps) {
               </TableCell>
               <TableCell className="text-zinc-200 font-medium">{log.action}</TableCell>
               <TableCell>
-                <Badge variant="outline" className={log.direction === 'PUSH' ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'}>
+                <Badge
+                  variant="outline"
+                  className={log.direction === 'PUSH' ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'}
+                >
                   {log.direction}
                 </Badge>
               </TableCell>
               <TableCell>
                 {log.status === 'SUCCESS' ? (
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-normal">Thành công</Badge>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-normal">
+                    Thành công
+                  </Badge>
                 ) : log.status === 'FAILED' ? (
-                  <Badge variant="outline" className="bg-rose-500/10 text-rose-500 border-rose-500/20 font-normal">Thất bại</Badge>
+                  <Badge variant="outline" className="bg-rose-500/10 text-rose-500 border-rose-500/20 font-normal">
+                    Thất bại
+                  </Badge>
                 ) : (
-                  <Badge variant="outline" className="bg-zinc-500/10 text-zinc-400 border-zinc-800 font-normal">Đang xử lý</Badge>
+                  <Badge variant="outline" className="bg-zinc-500/10 text-zinc-400 border-zinc-800 font-normal">
+                    Đang xử lý
+                  </Badge>
                 )}
               </TableCell>
               <TableCell className="text-zinc-500 text-sm max-w-[300px] truncate">
-                {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details || '-'}
+                {typeof log.details === 'object'
+                  ? JSON.stringify(log.details)
+                  : log.details || '-'}
               </TableCell>
             </TableRow>
           ))}

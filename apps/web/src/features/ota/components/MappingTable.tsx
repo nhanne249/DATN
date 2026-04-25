@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { OtaMapping } from '../types';
@@ -30,25 +29,23 @@ export function MappingTable({ mappings, onDelete }: MappingTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mappings.map((map) => (
-            <TableRow key={map.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors">
+          {mappings.map((mapping) => (
+            <TableRow key={mapping.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors">
               <TableCell className="font-medium text-blue-400">
-                {map.roomType?.name || 'Unknown Room Type'}
+                {mapping.roomType?.name || 'Unknown Room Type'}
               </TableCell>
               <TableCell>
                 <code className="bg-zinc-950 px-2 py-1 rounded text-zinc-300 border border-zinc-800 text-xs font-mono">
-                  {map.externalRoomId || 'N/A'}
+                  {mapping.externalRoomId || 'N/A'}
                 </code>
               </TableCell>
-              <TableCell className="text-zinc-400 text-sm">
-                {map.externalRateId || 'Default'}
-              </TableCell>
+              <TableCell className="text-zinc-400 text-sm">{mapping.externalRateId || 'Default'}</TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  onClick={() => onDelete?.(map.id)}
+                  onClick={() => onDelete?.(mapping.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

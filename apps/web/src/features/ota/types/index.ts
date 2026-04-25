@@ -6,7 +6,7 @@ export interface OtaChannel {
   isActive: boolean;
   propertyId: string;
   lastSyncAt?: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status?: 'connected' | 'disconnected' | 'error';
   otaMappings?: OtaMapping[];
   createdAt: string;
   updatedAt: string;

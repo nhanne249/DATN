@@ -346,7 +346,7 @@ export class PortalController {
       credentials?: Record<string, unknown>;
     },
   ) {
-    return this.portalService.connectChannel(dto.propertyId, req.user.id, dto);
+    return this.portalService.connectChannel(dto.propertyId, req.user, dto);
   }
 
   @Post('channel-manager/channels/:id/refresh')
@@ -356,7 +356,7 @@ export class PortalController {
     @Param('id') id: string,
     @Body() dto: { propertyId: string },
   ) {
-    return this.portalService.refreshChannel(dto.propertyId, id, req.user.id);
+    return this.portalService.refreshChannel(dto.propertyId, id, req.user);
   }
 
   @Get('finance/recurring')

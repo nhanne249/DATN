@@ -25,6 +25,12 @@ export class CreateOtaChannelDto {
   propertyId: string;
 }
 
+export class GetOtaChannelsQueryDto {
+  @ApiProperty({ example: 'uuid' })
+  @IsUUID()
+  propertyId: string;
+}
+
 export class UpdateOtaChannelDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -63,6 +69,11 @@ export class CreateOtaMappingDto {
 }
 
 export class OtaWebhookDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  channelId?: string;
+
   @ApiProperty()
   @IsString()
   channelType: string;
