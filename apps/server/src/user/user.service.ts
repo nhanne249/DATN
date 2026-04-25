@@ -49,6 +49,7 @@ export class UserService {
       name: dto.name,
       password: passwordHash,
       role: roleToSet,
+      propertyId: dto.propertyId ?? null,
     });
     const saved = await this.repo.save(user);
     await this.addToPasswordHistory(saved.id, passwordHash);

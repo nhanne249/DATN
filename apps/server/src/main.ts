@@ -23,7 +23,9 @@ async function bootstrap() {
     .map((o) => o.trim())
     .filter((o) => !!o);
 
-  console.log('CORS Origins configured:', originList);
+  const allowedOrigins = [...new Set([...originList, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'])];
+
+  console.log('CORS Origins configured:', allowedOrigins);
 
   app.enableCors({
     origin: (
@@ -37,7 +39,7 @@ async function bootstrap() {
       }
 
       // Check if origin is in the allowed list
-      if (originList.includes(origin)) {
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
         return;
       }

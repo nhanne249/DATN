@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
+import { PropertyService } from '../property/property.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
@@ -19,22 +20,30 @@ import { Request } from 'express';
 export class AuthService {
   constructor(
     private readonly users: UserService,
+    private readonly properties: PropertyService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
-    // phone unique check
     const exists = await this.users.findByPhone(dto.phone);
     if (exists) throw new ConflictException('Phone already registered');
+
+    // Auto-create a default property for the new hotel owner
+    const property = await this.properties.create({
+      name: `Khách sạn của ${dto.name}`,
+      currency: 'VND',
+      timezone: 'Asia/Ho_Chi_Minh',
+    });
+
     const created = await this.users.create(
-      { phone: dto.phone, name: dto.name, password: dto.password },
-      ROLE.ADMIN, // bypass role check by passing ADMIN for default customer creation
+      { phone: dto.phone, name: dto.name, password: dto.password, role: ROLE.HOTEL_OWNER, propertyId: property.id },
+      ROLE.ADMIN,
     );
     const tokens = await this.generateTokens(
       created.id,
       created.role,
-      created.propertyId,
+      created.propertyId ?? undefined,
     );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.users.setHashedRefreshToken(created.id, refreshHash);
@@ -78,7 +87,7 @@ export class AuthService {
     const tokens = await this.generateTokens(
       user.id,
       user.role,
-      user.propertyId,
+      user.propertyId ?? undefined,
     );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.users.setHashedRefreshToken(user.id, refreshHash);
@@ -135,7 +144,7 @@ export class AuthService {
     const tokens = await this.generateTokens(
       user.id,
       user.role,
-      user.propertyId,
+      user.propertyId ?? undefined,
     );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.users.setHashedRefreshToken(user.id, refreshHash);

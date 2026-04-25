@@ -17,6 +17,7 @@ export interface AuthUser {
   role: UserRole;
   name?: string;
   phone?: string;
+  propertyId?: string | null;
 }
 
 const decodeJwtPayload = (token: string | null): Record<string, unknown> | null => {
@@ -65,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
         const payload = decodeJwtPayload(refreshToken);
         const tokenUserId = typeof payload?.sub === 'string' ? payload.sub : '';
         const tokenRole = typeof payload?.role === 'string' ? (payload.role as UserRole) : undefined;
+        const tokenPropertyId = typeof payload?.propertyId === 'string' ? payload.propertyId : null;
 
         const derivedUser =
           user ||
@@ -75,9 +77,12 @@ export const useAuthStore = create<AuthState>()(
               }
             : null);
 
+        const activePropertyId = user?.propertyId || tokenPropertyId;
+
         set({
           refreshToken,
           user: derivedUser,
+          ...(activePropertyId ? { activePropertyId } : {}),
         });
       },
       setActivePropertyId: (id) => set({ activePropertyId: id }),

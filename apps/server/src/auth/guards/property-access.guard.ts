@@ -141,7 +141,7 @@ export class PropertyAccessGuard implements CanActivate {
     if (!actor) {
       throw new ForbiddenException('User not found');
     }
-    request.user.propertyId = actor.propertyId;
-    return actor.propertyId || undefined;
+    request.user.propertyId = actor.propertyId ?? undefined;
+    return actor.propertyId ?? undefined;
   }
 }

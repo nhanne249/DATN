@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { authService } from '@/features/auth/services/auth.service';
@@ -28,7 +29,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!phone.trim() || !password.trim()) {
-      toast.error('Vui long nhap so dien thoai va mat khau');
+      toast.error('Vui lòng nhập số điện thoại và mật khẩu');
       return;
     }
 
@@ -38,65 +39,104 @@ export default function LoginPage() {
       const payload = response.data;
 
       if (!payload?.refreshToken) {
-        throw new Error('Dang nhap that bai: khong nhan duoc refresh token');
+        throw new Error('Đăng nhập thất bại: không nhận được refresh token');
       }
 
       setSession(payload.refreshToken, payload.user || null);
-      toast.success('Dang nhap thanh cong');
+      toast.success('Đăng nhập thành công');
       router.replace(getDefaultPathForRole(payload.user?.role));
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Dang nhap that bai';
-      toast.error(message);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'Đăng nhập thất bại';
+      toast.error(typeof message === 'string' ? message : message[0]);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-6">
-      <Card className="w-full max-w-md border-zinc-800 bg-zinc-900">
-        <CardHeader>
-          <CardTitle className="text-2xl text-white">Dang nhap he thong</CardTitle>
-          <CardDescription className="text-zinc-400">
-            Nhap so dien thoai va mat khau de truy cap portal.
+    <div className="min-h-screen relative flex items-center justify-center bg-[#09090b] overflow-hidden p-6">
+      {/* Background Effects */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full mix-blend-screen filter blur-[128px] animate-pulse pointer-events-none" style={{ animationDuration: '4s' }}></div>
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full mix-blend-screen filter blur-[128px] animate-pulse pointer-events-none" style={{ animationDuration: '6s' }}></div>
+
+      <Card className="w-full max-w-md relative z-10 border border-white/10 bg-black/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-2xl overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+        <CardHeader className="space-y-3 pb-6 text-center">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full flex items-center justify-center p-[2px] shadow-lg shadow-purple-500/25 mb-2">
+            <div className="w-full h-full bg-black/50 rounded-full backdrop-blur-sm flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
+          <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Chào mừng trở lại</CardTitle>
+          <CardDescription className="text-zinc-400 text-sm font-medium">
+            Đăng nhập vào tài khoản của bạn để tiếp tục
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm text-zinc-300" htmlFor="phone">
-                So dien thoai
-              </label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Nhap so dien thoai"
-                autoComplete="username"
-                className="border-zinc-700 bg-zinc-950 text-white"
-              />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
+              <div className="relative group/input">
+                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block" htmlFor="phone">
+                  Số điện thoại
+                </label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+84901234567"
+                  autoComplete="username"
+                  className="h-12 border-zinc-700/50 bg-zinc-900/50 text-white placeholder:text-zinc-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
+                />
+              </div>
+
+              <div className="relative group/input">
+                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block flex justify-between" htmlFor="password">
+                  <span>Mật khẩu</span>
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu của bạn"
+                  autoComplete="current-password"
+                  className="h-12 border-zinc-700/50 bg-zinc-900/50 text-white placeholder:text-zinc-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm text-zinc-300" htmlFor="password">
-                Mat khau
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nhap mat khau"
-                autoComplete="current-password"
-                className="border-zinc-700 bg-zinc-950 text-white"
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-              {isSubmitting ? 'Dang dang nhap...' : 'Dang nhap'}
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] transition-all duration-300 relative overflow-hidden" 
+              disabled={isSubmitting}
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+              <span className="relative flex items-center justify-center gap-2">
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Đang xử lý...
+                  </>
+                ) : (
+                  'Đăng nhập'
+                )}
+              </span>
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex flex-col items-center justify-center pb-8">
+          <p className="text-zinc-400 text-sm mt-4">
+            Chưa có tài khoản?{' '}
+            <Link href="/register" className="text-purple-400 font-semibold hover:text-purple-300 transition-colors">
+              Đăng ký ngay
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

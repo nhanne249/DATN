@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, Length, Matches } from 'class-validator';
 import { ROLE } from '../enum/role';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -24,5 +24,10 @@ export class CreateUserDto {
   })
   @IsOptional()
   @IsEnum(ROLE)
-  role?: ROLE; // only ADMIN can set (admin or employee)
+  role?: ROLE;
+
+  @ApiPropertyOptional({ example: 'uuid-of-property' })
+  @IsOptional()
+  @IsUUID()
+  propertyId?: string;
 }

@@ -6,13 +6,20 @@ interface LoginDto {
   password: string;
 }
 
-interface LoginResponse {
+interface RegisterDto {
+  phone: string;
+  name: string;
+  password: string;
+}
+
+interface AuthResponse {
   user: AuthUser;
   refreshToken: string;
 }
 
 export const authService = {
-  login: (payload: LoginDto) => axiosInstance.post<LoginResponse>('/auth/login', payload),
+  login: (payload: LoginDto) => axiosInstance.post<AuthResponse>('/auth/login', payload),
+  register: (payload: RegisterDto) => axiosInstance.post<AuthResponse>('/auth/register', payload),
   logout: () => axiosInstance.post('/auth/logout'),
 };
 

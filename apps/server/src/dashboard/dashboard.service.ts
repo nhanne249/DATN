@@ -17,8 +17,11 @@ export class DashboardService {
   ) {}
 
   async getSummary(propertyId: string, startDate?: Date, endDate?: Date) {
-    const start = startDate || subDays(new Date(), 30);
-    const end = endDate || new Date();
+    const start = startDate
+      ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0)
+      : subDays(new Date(), 30);
+    const endBase = endDate || new Date();
+    const end = new Date(endBase.getFullYear(), endBase.getMonth(), endBase.getDate(), 23, 59, 59, 999);
 
     // 1. Fetch Bookings for the period
     const bookings = await this.bookingRepo.find({

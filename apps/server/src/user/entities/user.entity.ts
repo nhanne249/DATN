@@ -59,10 +59,10 @@ export class User {
   @OneToMany(() => UserPasswordHistory, (history) => history.user)
   passwordHistories: UserPasswordHistory[];
 
-  @Column()
-  propertyId: string;
+  @Column({ nullable: true })
+  propertyId: string | null;
 
-  @ManyToOne(() => Property, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Property, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
 

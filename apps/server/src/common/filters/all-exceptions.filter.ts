@@ -20,10 +20,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const res = exception.getResponse();
-      if (typeof res === 'string') message = res;
-      else if (typeof res === 'object' && res !== null && 'message' in res) {
+      if (typeof res === 'string') {
+        message = res;
+      } else if (typeof res === 'object' && res !== null && 'message' in res) {
         const msg = (res as { message?: unknown }).message;
-        if (typeof msg === 'string') message = msg;
+        if (typeof msg === 'string') {
+          message = msg;
+        } else if (Array.isArray(msg) && msg.length > 0) {
+          // ValidationPipe trả về mảng các lỗi — lấy lỗi đầu tiên
+          message = typeof msg[0] === 'string' ? msg[0] : JSON.stringify(msg[0]);
+        }
       }
     } else if (
       exception &&
