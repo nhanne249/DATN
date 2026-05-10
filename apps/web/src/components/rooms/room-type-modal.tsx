@@ -93,7 +93,7 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white">
+            <DialogContent className="sm:max-w-[425px] bg-white border-gray-200 text-gray-900">
                 <DialogHeader>
                     <DialogTitle>
                         {roomType ? "Cập nhật Loại phòng" : "Thêm Loại phòng"}
@@ -102,26 +102,26 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Tên loại phòng</Label>
+                            <Label className="text-gray-700">Tên loại phòng</Label>
                             <Input
                                 value={formData.name}
                                 onChange={(e) =>
                                     setFormData({ ...formData, name: e.target.value })
                                 }
                                 required
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Kiểu phòng</Label>
+                            <Label className="text-gray-700">Kiểu phòng</Label>
                             <Select
                                 value={formData.kind}
                                 onValueChange={(v) => setFormData({ ...formData, kind: v })}
                             >
-                                <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                                     <SelectValue placeholder="Chọn kiểu" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectContent className="bg-gray-50 border-gray-200 text-white">
                                     <SelectItem value="ROOM">Phòng riêng</SelectItem>
                                     <SelectItem value="DORM">Phòng Dorm</SelectItem>
                                 </SelectContent>
@@ -129,20 +129,20 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                         </div>
                     </div>
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Mô tả</Label>
+                        <Label className="text-gray-700">Mô tả</Label>
                         <Textarea
                             value={formData.description}
                             onChange={(e) =>
                                 setFormData({ ...formData, description: e.target.value })
                             }
-                            className="bg-zinc-900 border-zinc-800 text-white resize-none"
+                            className="bg-gray-50 border-gray-200 text-white resize-none"
                             placeholder="Mô tả về loại phòng..."
                             rows={3}
                         />
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Người lớn</Label>
+                            <Label className="text-gray-700">Người lớn</Label>
                             <Input
                                 type="number"
                                 min="1"
@@ -153,11 +153,11 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                                         maxAdults: parseInt(e.target.value) || 1,
                                     })
                                 }
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Trẻ em</Label>
+                            <Label className="text-gray-700">Trẻ em</Label>
                             <Input
                                 type="number"
                                 min="0"
@@ -168,11 +168,11 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                                         maxChildren: parseInt(e.target.value) || 0,
                                     })
                                 }
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Em bé (Infant)</Label>
+                            <Label className="text-gray-700">Em bé (Infant)</Label>
                             <Input
                                 type="number"
                                 min="0"
@@ -183,13 +183,13 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                                         maxInfants: parseInt(e.target.value) || 0,
                                     })
                                 }
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Giá cơ bản (VND)</Label>
+                            <Label className="text-gray-700">Giá cơ bản (VND)</Label>
                             <Input
                                 type="number"
                                 min="0"
@@ -200,11 +200,11 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                                         basePrice: parseFloat(e.target.value) || 0,
                                     })
                                 }
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Giá cuối tuần (VND)</Label>
+                            <Label className="text-gray-700">Giá cuối tuần (VND)</Label>
                             <Input
                                 type="number"
                                 min="0"
@@ -215,7 +215,7 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                                         weekendPrice: parseFloat(e.target.value) || 0,
                                     })
                                 }
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                     </div>
@@ -226,7 +226,7 @@ export function RoomTypeModal({ isOpen, onClose, roomType, onSaved }: any) {
                             type="button"
                             variant="outline"
                             onClick={onClose}
-                            className="border-zinc-800 text-white hover:bg-zinc-800 hover:text-white"
+                            className="border-gray-200 text-white hover:bg-gray-100 hover:text-blue-700"
                         >
                             Hủy
                         </Button>

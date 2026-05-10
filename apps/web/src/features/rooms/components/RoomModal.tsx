@@ -5,12 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
-import axiosInstance from '@/lib/axios';
-import { toast } from 'sonner';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 import { useRoomMutation } from '../hooks/use-rooms';
 import { ImageUpload } from '@/features/media/components/ImageUpload';
 
@@ -22,22 +19,22 @@ interface RoomModalProps {
     propertyId: string;
 }
 
+const defaultForm = () => ({
+    roomNumber: '',
+    roomTypeId: '',
+    area: '',
+    floor: '',
+    status: 'AVAILABLE',
+    notes: '',
+    photos: [] as string[],
+});
+
 export function RoomModal({ isOpen, onClose, room, roomTypes, propertyId }: RoomModalProps) {
     const { createRoom, updateRoom, isCreating, isUpdating } = useRoomMutation(propertyId);
-    
-    const [formData, setFormData] = useState<any>({
-        roomNumber: '',
-        roomTypeId: '',
-        area: '',
-        floor: '',
-        status: 'AVAILABLE',
-        notes: '',
-        photos: [] as string[]
-    });
-
-    const [uploading, setUploading] = useState(false);
+    const [formData, setFormData] = useState(defaultForm());
 
     useEffect(() => {
+        if (!isOpen) return;
         if (room) {
             setFormData({
                 roomNumber: room.roomNumber || '',
@@ -46,31 +43,24 @@ export function RoomModal({ isOpen, onClose, room, roomTypes, propertyId }: Room
                 floor: room.floor || '',
                 status: room.status || 'AVAILABLE',
                 notes: room.notes || '',
-                photos: room.photos || []
+                photos: room.photos || [],
             });
         } else {
-            setFormData({
-                roomNumber: '',
-                roomTypeId: '',
-                area: '',
-                floor: '',
-                status: 'AVAILABLE',
-                notes: '',
-                photos: []
-            });
+            setFormData(defaultForm());
         }
     }, [room, isOpen]);
 
-
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
         const payload = {
-            ...formData,
-            propertyId
+            roomNumber: formData.roomNumber.trim(),
+            roomTypeId: formData.roomTypeId,
+            area: formData.area.trim() || undefined,
+            floor: formData.floor.trim() || undefined,
+            status: formData.status as 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE' | 'BLOCKED',
+            notes: formData.notes.trim() || undefined,
+            photos: formData.photos,
         };
-
         try {
             if (room) {
                 await updateRoom({ id: room.id, data: payload });
@@ -78,119 +68,137 @@ export function RoomModal({ isOpen, onClose, room, roomTypes, propertyId }: Room
                 await createRoom(payload);
             }
             onClose();
-        } catch (error) {
+        } catch {
             // Error toast handled by hook
         }
     };
 
+    const set = (key: keyof ReturnType<typeof defaultForm>, val: string) =>
+        setFormData((f) => ({ ...f, [key]: val }));
+
     const isLoading = isCreating || isUpdating;
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-800 text-white p-0 overflow-hidden">
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-2xl bg-white border-gray-200 text-gray-900 p-0 overflow-hidden">
                 <form onSubmit={handleSubmit}>
-                    <DialogHeader className="p-6 border-b border-zinc-800">
-                        <DialogTitle className="text-xl font-bold">
+                    <DialogHeader className="p-6 border-b border-gray-200">
+                        <DialogTitle className="text-xl font-bold text-gray-900">
                             {room ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                    <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-zinc-400">Số phòng <span className="text-red-500">*</span></Label>
+                            {/* Room number */}
+                            <div className="space-y-1.5">
+                                <Label className="text-gray-600">Số phòng <span className="text-red-500">*</span></Label>
                                 <Input
                                     required
                                     value={formData.roomNumber}
-                                    onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                                    className="bg-zinc-900 border-zinc-800 text-white"
+                                    onChange={(e) => set('roomNumber', e.target.value)}
+                                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
                                     placeholder="VD: 101"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-zinc-400">Loại phòng <span className="text-red-500">*</span></Label>
-                                <Select
-                                    value={formData.roomTypeId}
-                                    onValueChange={(v) => setFormData({ ...formData, roomTypeId: v })}
-                                >
-                                    <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
-                                        <SelectValue placeholder="Chọn loại phòng" />
+
+                            {/* Room type */}
+                            <div className="space-y-1.5">
+                                <Label className="text-gray-600">Loại phòng <span className="text-red-500">*</span></Label>
+                                {roomTypes.length === 0 ? (
+                                    <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                                        Chưa có loại phòng. Hãy tạo loại phòng trước.
+                                    </p>
+                                ) : (
+                                    <Select
+                                        required
+                                        value={formData.roomTypeId}
+                                        onValueChange={(v) => set('roomTypeId', v)}
+                                    >
+                                        <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900">
+                                            <SelectValue placeholder="Chọn loại phòng" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-gray-200 text-gray-900">
+                                            {roomTypes.map((t) => (
+                                                <SelectItem key={t.id} value={t.id}>
+                                                    {t.name}
+                                                    {t.basePrice ? ` · ${Number(t.basePrice).toLocaleString('vi-VN')}đ/đêm` : ''}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            {/* Area */}
+                            <div className="space-y-1.5">
+                                <Label className="text-gray-600">Diện tích (m²)</Label>
+                                <Input
+                                    value={formData.area}
+                                    onChange={(e) => set('area', e.target.value)}
+                                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
+                                    placeholder="VD: 25"
+                                />
+                            </div>
+                            {/* Floor */}
+                            <div className="space-y-1.5">
+                                <Label className="text-gray-600">Tầng</Label>
+                                <Input
+                                    value={formData.floor}
+                                    onChange={(e) => set('floor', e.target.value)}
+                                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
+                                    placeholder="VD: 1"
+                                />
+                            </div>
+                            {/* Status */}
+                            <div className="space-y-1.5">
+                                <Label className="text-gray-600">Trạng thái</Label>
+                                <Select value={formData.status} onValueChange={(v) => set('status', v)}>
+                                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900">
+                                        <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                                        {roomTypes.map(t => (
-                                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                        ))}
+                                    <SelectContent className="bg-white border-gray-200 text-gray-900">
+                                        <SelectItem value="AVAILABLE">Trống</SelectItem>
+                                        <SelectItem value="OCCUPIED">Đang ở</SelectItem>
+                                        <SelectItem value="CLEANING">Đang dọn</SelectItem>
+                                        <SelectItem value="MAINTENANCE">Bảo trì</SelectItem>
+                                        <SelectItem value="BLOCKED">Khóa</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-zinc-400">Diện tích (m²)</Label>
-                                <Input
-                                    value={formData.area}
-                                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                                    className="bg-zinc-900 border-zinc-800 text-white"
-                                    placeholder="VD: 25"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-zinc-400">Tầng</Label>
-                                <Input
-                                    value={formData.floor}
-                                    onChange={(e) => setFormData({ ...formData, floor: e.target.value })}
-                                    className="bg-zinc-900 border-zinc-800 text-white"
-                                    placeholder="VD: 1"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-zinc-400">Trạng thái</Label>
-                            <Select
-                                value={formData.status}
-                                onValueChange={(v) => setFormData({ ...formData, status: v })}
-                            >
-                                <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                                    <SelectItem value="AVAILABLE">Trống</SelectItem>
-                                    <SelectItem value="OCCUPIED">Đang ở</SelectItem>
-                                    <SelectItem value="CLEANING">Đang dọn</SelectItem>
-                                    <SelectItem value="MAINTENANCE">Bảo trì</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-zinc-400">Hình ảnh</Label>
-                            <ImageUpload
-                                value={formData.photos}
-                                onChange={(urls) => setFormData({ ...formData, photos: urls })}
-                                onRemove={(url) => setFormData((prev: any) => ({ ...prev, photos: (prev.photos || []).filter((u: string) => u !== url) }))}
+                        {/* Notes */}
+                        <div className="space-y-1.5">
+                            <Label className="text-gray-600">Ghi chú</Label>
+                            <Textarea
+                                value={formData.notes}
+                                onChange={(e) => set('notes', e.target.value)}
+                                className="bg-gray-50 border-gray-200 text-gray-900 min-h-[80px] placeholder:text-gray-400"
+                                placeholder="Nhập ghi chú chi tiết về phòng..."
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-zinc-400">Ghi chú</Label>
-                            <Textarea
-                                value={formData.notes}
-                                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                className="bg-zinc-900 border-zinc-800 text-white min-h-[100px]"
-                                placeholder="Nhập ghi chú chi tiết về phòng..."
+                        {/* Photos */}
+                        <div className="space-y-1.5">
+                            <Label className="text-gray-600">Hình ảnh</Label>
+                            <ImageUpload
+                                value={formData.photos}
+                                onChange={(urls) => setFormData((f) => ({ ...f, photos: urls }))}
+                                onRemove={(url) => setFormData((f) => ({ ...f, photos: f.photos.filter((u) => u !== url) }))}
                             />
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 border-t border-zinc-800 bg-zinc-900/50">
-                        <Button type="button" variant="ghost" onClick={onClose} className="text-zinc-400 hover:text-white">
+                    <DialogFooter className="p-6 border-t border-gray-200 bg-gray-50">
+                        <Button type="button" variant="ghost" onClick={onClose} className="text-gray-600 hover:text-gray-900">
                             Hủy bỏ
                         </Button>
-                        <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]">
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            {room ? 'Cập nhật' : 'Thêm mới'}
+                        <Button type="submit" disabled={isLoading || (!room && !formData.roomTypeId)} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]">
+                            {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                            {room ? 'Cập nhật' : 'Thêm phòng'}
                         </Button>
                     </DialogFooter>
                 </form>

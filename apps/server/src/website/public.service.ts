@@ -245,8 +245,11 @@ export class PublicService {
       propertyId: property.id,
       checkIn: new Date(dto.checkIn),
       checkOut: new Date(dto.checkOut),
+      status: BookingStatus.PENDING,
       source: 'website',
       notes: dto.notes,
+      adults: dto.adults ?? 1,
+      children: dto.children ?? 0,
       rooms: [
         {
           roomId: selectedRoom.id,

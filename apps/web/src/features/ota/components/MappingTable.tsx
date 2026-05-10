@@ -18,28 +18,28 @@ interface MappingTableProps {
 
 export function MappingTable({ mappings, onDelete }: MappingTableProps) {
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl overflow-hidden">
+    <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
       <Table>
-        <TableHeader className="bg-zinc-900/80">
-          <TableRow className="hover:bg-transparent border-zinc-800">
-            <TableHead className="text-zinc-400 font-medium py-4">Hạng phòng nội bộ</TableHead>
-            <TableHead className="text-zinc-400 font-medium py-4">Room ID trên OTA</TableHead>
-            <TableHead className="text-zinc-400 font-medium py-4">Mã giá (Rate Plan)</TableHead>
-            <TableHead className="text-zinc-400 font-medium py-4 text-right">Hành động</TableHead>
+        <TableHeader className="bg-gray-50/80">
+          <TableRow className="hover:bg-transparent border-gray-200">
+            <TableHead className="text-gray-500 font-medium py-4">Hạng phòng nội bộ</TableHead>
+            <TableHead className="text-gray-500 font-medium py-4">Room ID trên OTA</TableHead>
+            <TableHead className="text-gray-500 font-medium py-4">Mã giá (Rate Plan)</TableHead>
+            <TableHead className="text-gray-500 font-medium py-4 text-right">Hành động</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {mappings.map((mapping) => (
-            <TableRow key={mapping.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors">
+            <TableRow key={mapping.id} className="border-b border-gray-200/60 hover:bg-gray-100/40 transition-colors">
               <TableCell className="font-medium text-blue-400">
                 {mapping.roomType?.name || 'Unknown Room Type'}
               </TableCell>
               <TableCell>
-                <code className="bg-zinc-950 px-2 py-1 rounded text-zinc-300 border border-zinc-800 text-xs font-mono">
+                <code className="bg-white px-2 py-1 rounded text-gray-600 border border-gray-200 text-xs font-mono">
                   {mapping.externalRoomId || 'N/A'}
                 </code>
               </TableCell>
-              <TableCell className="text-zinc-400 text-sm">{mapping.externalRateId || 'Default'}</TableCell>
+              <TableCell className="text-gray-500 text-sm">{mapping.externalRateId || 'Default'}</TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="ghost"
@@ -54,7 +54,7 @@ export function MappingTable({ mappings, onDelete }: MappingTableProps) {
           ))}
           {mappings.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="h-32 text-center text-zinc-500">
+              <TableCell colSpan={4} className="h-32 text-center text-gray-400">
                 Chưa có liên kết phòng nào.
               </TableCell>
             </TableRow>

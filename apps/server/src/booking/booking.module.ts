@@ -5,6 +5,7 @@ import { BookingRoom } from './entities/booking-room.entity';
 import { Payment } from './entities/payment.entity';
 import { Service } from './entities/service.entity';
 import { ServiceUsage } from './entities/service-usage.entity';
+import { MinibarTransaction } from '../minibar/entities/minibar-transaction.entity';
 import { BookingService } from './booking.service';
 import { BookingController } from './booking.controller';
 import { ServiceController } from './service.controller';
@@ -18,6 +19,7 @@ import { AuditLogModule } from '../audit-log/audit-log.module';
       Payment,
       Service,
       ServiceUsage,
+      MinibarTransaction,
     ]),
     AuditLogModule,
   ],

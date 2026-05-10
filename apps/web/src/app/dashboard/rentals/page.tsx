@@ -70,11 +70,11 @@ export default function RentalsPage() {
         <div className="flex-1 space-y-6 p-8 pt-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <h2 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
                         <Bike className="w-8 h-8 text-emerald-500" />
                         Quản lý Thuê xe
                     </h2>
-                    <p className="text-zinc-400 mt-1">
+                    <p className="text-gray-500 mt-1">
                         Ghi nhận các đơn thuê xe từ đối tác hoặc xe nội bộ.
                     </p>
                 </div>
@@ -87,35 +87,35 @@ export default function RentalsPage() {
 
             {/* RENTALS LIST */}
             <div className="mt-6">
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-gray-50 border-gray-200">
                     <CardContent className="p-0">
                         <Table>
-                            <TableHeader className="bg-zinc-900/50">
-                                <TableRow className="border-zinc-800 hover:bg-transparent">
-                                    <TableHead className="text-zinc-400">Khách hàng</TableHead>
-                                    <TableHead className="text-zinc-400">Phương tiện</TableHead>
-                                    <TableHead className="text-zinc-400">Thời gian dự kiến</TableHead>
-                                    <TableHead className="text-zinc-400">Thực tế / Đã thuê</TableHead>
-                                    <TableHead className="text-zinc-400">Tiền thuê</TableHead>
-                                    <TableHead className="text-zinc-400">Trạng thái</TableHead>
-                                    <TableHead className="text-zinc-400 text-right">Thao tác</TableHead>
+                            <TableHeader className="bg-gray-50">
+                                <TableRow className="border-gray-200 hover:bg-transparent">
+                                    <TableHead className="text-gray-500">Khách hàng</TableHead>
+                                    <TableHead className="text-gray-500">Phương tiện</TableHead>
+                                    <TableHead className="text-gray-500">Thời gian dự kiến</TableHead>
+                                    <TableHead className="text-gray-500">Thực tế / Đã thuê</TableHead>
+                                    <TableHead className="text-gray-500">Tiền thuê</TableHead>
+                                    <TableHead className="text-gray-500">Trạng thái</TableHead>
+                                    <TableHead className="text-gray-500 text-right">Thao tác</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
-                                    <TableRow className="border-zinc-800"><TableCell colSpan={7} className="text-center py-8 text-zinc-500">Đang tải...</TableCell></TableRow>
+                                    <TableRow className="border-gray-200"><TableCell colSpan={7} className="text-center py-8 text-gray-400">Đang tải...</TableCell></TableRow>
                                 ) : rentals.length === 0 ? (
-                                    <TableRow className="border-zinc-800"><TableCell colSpan={7} className="text-center py-8 text-zinc-500">Chưa có đơn thuê nào</TableCell></TableRow>
+                                    <TableRow className="border-gray-200"><TableCell colSpan={7} className="text-center py-8 text-gray-400">Chưa có đơn thuê nào</TableCell></TableRow>
                                 ) : rentals.map(r => {
                                     const rentedHours = r.actualPickupTime ? Math.floor((Date.now() - new Date(r.actualPickupTime).getTime()) / (1000 * 60 * 60)) : 0;
                                     const rentedDays = Math.ceil(rentedHours / 24) || 0;
 
                                     return (
-                                        <TableRow key={r.id} className="border-zinc-800 hover:bg-zinc-800/30 transition-colors">
+                                        <TableRow key={r.id} className="border-gray-200 hover:bg-gray-100/30 transition-colors">
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="font-semibold text-white">{r.guestName || r.booking?.guest?.name}</span>
-                                                    <span className="text-xs text-zinc-500">{r.guestPhone || r.booking?.guest?.phone}</span>
+                                                    <span className="font-semibold text-gray-900">{r.guestName || r.booking?.guest?.name}</span>
+                                                    <span className="text-xs text-gray-400">{r.guestPhone || r.booking?.guest?.phone}</span>
                                                     {r.booking && (
                                                         <Badge variant="outline" className="w-fit mt-1 text-[10px] bg-blue-500/10 text-blue-400 border-blue-400/20">
                                                             P.{r.booking.bookingRooms?.[0]?.room?.roomNumber}
@@ -125,11 +125,11 @@ export default function RentalsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="text-zinc-200 font-medium">{r.vehicleName || r.vehicle?.name}</span>
+                                                    <span className="text-gray-700 font-medium">{r.vehicleName || r.vehicle?.name}</span>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-mono text-zinc-500">{r.plateNumber || r.vehicle?.plateNumber}</span>
+                                                        <span className="text-xs font-mono text-gray-400">{r.plateNumber || r.vehicle?.plateNumber}</span>
                                                         {(r.provider || r.vehicle?.provider) && (
-                                                            <span className="text-[10px] text-zinc-600 bg-zinc-800 px-1 rounded">
+                                                            <span className="text-[10px] text-gray-400 bg-gray-100 px-1 rounded">
                                                                 {r.provider || r.vehicle?.provider}
                                                             </span>
                                                         )}
@@ -137,7 +137,7 @@ export default function RentalsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="text-xs text-zinc-300">
+                                                <div className="text-xs text-gray-600">
                                                     <div className="flex items-center gap-1 opacity-60"><Clock className="w-3 h-3" /> {format(new Date(r.startTime), 'dd/MM HH:mm')}</div>
                                                     <div className="flex items-center gap-1 opacity-60"><Clock className="w-3 h-3 " /> {format(new Date(r.endTime), 'dd/MM HH:mm')}</div>
                                                 </div>
@@ -159,11 +159,11 @@ export default function RentalsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="font-bold text-emerald-400">{r.totalAmount.toLocaleString()}đ</div>
-                                                <div className="text-[10px] text-zinc-500">({r.pricePerDay.toLocaleString()}đ/ngày)</div>
+                                                <div className="text-[10px] text-gray-400">({r.pricePerDay.toLocaleString()}đ/ngày)</div>
                                             </TableCell>
                                             <TableCell>
                                                 {r.status === 'ACTIVE' && (
-                                                    <Badge className={r.actualPickupTime ? "bg-blue-600" : "bg-zinc-700"}>
+                                                    <Badge className={r.actualPickupTime ? "bg-blue-600" : "bg-gray-200"}>
                                                         {r.actualPickupTime ? "Đang sử dụng" : "Chờ nhận xe"}
                                                     </Badge>
                                                 )}
@@ -182,7 +182,7 @@ export default function RentalsPage() {
                                                                 Nhận lại xe
                                                             </Button>
                                                         )}
-                                                        <Button size="sm" variant="ghost" onClick={() => handleUpdateStatus(r.id, 'CANCELLED')} className="h-8 text-zinc-500 hover:text-red-400">
+                                                        <Button size="sm" variant="ghost" onClick={() => handleUpdateStatus(r.id, 'CANCELLED')} className="h-8 text-gray-400 hover:text-red-400">
                                                             <XCircle className="w-4 h-4" />
                                                         </Button>
                                                     </div>

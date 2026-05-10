@@ -22,8 +22,8 @@ export default function SettingsPage() {
 
   if (!propertyId || isLoading) return (
     <div className="space-y-6">
-      <Skeleton className="h-[200px] w-full bg-zinc-800" />
-      <Skeleton className="h-[200px] w-full bg-zinc-800" />
+      <Skeleton className="h-[200px] w-full bg-gray-100" />
+      <Skeleton className="h-[200px] w-full bg-gray-100" />
     </div>
   );
 
@@ -45,28 +45,28 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-gray-50 border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white text-base">Nhận / Trả phòng</CardTitle>
+          <CardTitle className="text-gray-900 text-base">Nhận / Trả phòng</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-zinc-400 block mb-2">Giờ nhận phòng</label>
+              <label className="text-sm text-gray-500 block mb-2">Giờ nhận phòng</label>
               <input 
                 type="time" 
                 value={localSettings?.checkInTime || '14:00'} 
                 onChange={(e) => setLocalSettings({...localSettings, checkInTime: e.target.value})}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white" 
+                className="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-900" 
               />
             </div>
             <div>
-              <label className="text-sm text-zinc-400 block mb-2">Giờ trả phòng</label>
+              <label className="text-sm text-gray-500 block mb-2">Giờ trả phòng</label>
               <input 
                 type="time" 
                 value={localSettings?.checkOutTime || '12:00'} 
                 onChange={(e) => setLocalSettings({...localSettings, checkOutTime: e.target.value})}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white" 
+                className="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-900" 
               />
             </div>
           </div>
@@ -76,9 +76,9 @@ export default function SettingsPage() {
               checked={localSettings?.requirePaymentBeforeCheckOut} 
               id="requirePay" 
               onChange={(e) => setLocalSettings({...localSettings, requirePaymentBeforeCheckOut: e.target.checked})}
-              className="rounded border-zinc-600" 
+              className="rounded border-gray-300" 
             />
-            <label htmlFor="requirePay" className="text-sm text-zinc-300">Yêu cầu thanh toán trước khi trả phòng</label>
+            <label htmlFor="requirePay" className="text-sm text-gray-600">Yêu cầu thanh toán trước khi trả phòng</label>
           </div>
           <div className="flex items-center gap-3">
             <input 
@@ -86,36 +86,36 @@ export default function SettingsPage() {
               checked={localSettings?.allowHourlyBooking} 
               id="hourlyBooking" 
               onChange={(e) => setLocalSettings({...localSettings, allowHourlyBooking: e.target.checked})}
-              className="rounded border-zinc-600" 
+              className="rounded border-gray-300" 
             />
-            <label htmlFor="hourlyBooking" className="text-sm text-zinc-300">Cho phép đặt phòng theo giờ</label>
+            <label htmlFor="hourlyBooking" className="text-sm text-gray-600">Cho phép đặt phòng theo giờ</label>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-gray-50 border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white text-base">Lịch</CardTitle>
+          <CardTitle className="text-gray-900 text-base">Lịch</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-zinc-400 block mb-2">Màu sự kiện</label>
+              <label className="text-sm text-gray-500 block mb-2">Màu sự kiện</label>
               <select 
                 value={localSettings?.calendarEventColor || 'status'}
                 onChange={(e) => setLocalSettings({...localSettings, calendarEventColor: e.target.value as any})}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-900"
               >
                 <option value="status">Trạng thái nhận phòng</option>
                 <option value="source">Nguồn đặt phòng</option>
               </select>
             </div>
             <div>
-              <label className="text-sm text-zinc-400 block mb-2">Khoảng thời gian mặc định</label>
+              <label className="text-sm text-gray-500 block mb-2">Khoảng thời gian mặc định</label>
               <select 
                 value={localSettings?.defaultCalendarView || 'month'}
                 onChange={(e) => setLocalSettings({...localSettings, defaultCalendarView: e.target.value as any})}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-900"
               >
                 <option value="week">Tuần</option>
                 <option value="month">Tháng</option>

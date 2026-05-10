@@ -91,7 +91,7 @@ export function ExpenseModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-[500px]">
+            <DialogContent className="bg-gray-50 border-gray-200 text-white sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>{expense ? 'Cập nhật phiếu chi' : 'Tạo phiếu chi mới'}</DialogTitle>
                 </DialogHeader>
@@ -103,10 +103,10 @@ export function ExpenseModal({
                                 onValueChange={(val) => setValue('category', val)}
                                 defaultValue={expense?.category || 'Khác'}
                             >
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-white border-gray-200">
                                     <SelectValue placeholder="Chọn hạng mục" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800">
+                                <SelectContent className="bg-gray-50 border-gray-200">
                                     {CATEGORIES.map((cat) => (
                                         <SelectItem key={cat} value={cat}>
                                             {cat}
@@ -121,7 +121,7 @@ export function ExpenseModal({
                                 id="date"
                                 type="date"
                                 {...register('date')}
-                                className="bg-zinc-950 border-zinc-800"
+                                className="bg-white border-gray-200"
                             />
                         </div>
                     </div>
@@ -132,7 +132,7 @@ export function ExpenseModal({
                             id="title"
                             {...register('title')}
                             placeholder="VD: Tiền điện T10, Lương nhân viên..."
-                            className="bg-zinc-950 border-zinc-800"
+                            className="bg-white border-gray-200"
                         />
                     </div>
 
@@ -142,7 +142,7 @@ export function ExpenseModal({
                             id="amount"
                             type="number"
                             {...register('amount', { valueAsNumber: true })}
-                            className="bg-zinc-950 border-zinc-800"
+                            className="bg-white border-gray-200"
                         />
                     </div>
 
@@ -151,14 +151,14 @@ export function ExpenseModal({
                         <Textarea
                             id="description"
                             {...register('description')}
-                            className="bg-zinc-950 border-zinc-800 min-h-[100px]"
+                            className="bg-white border-gray-200 min-h-[100px]"
                         />
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-950/50">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white/50">
                         <div className="space-y-0.5">
                             <Label>Đặt làm chi phí định kỳ</Label>
-                            <p className="text-xs text-zinc-500">Tự động tạo phiếu chi theo chu kỳ</p>
+                            <p className="text-xs text-gray-400">Tự động tạo phiếu chi theo chu kỳ</p>
                         </div>
                         <Switch
                             checked={isRecurring}
@@ -167,17 +167,17 @@ export function ExpenseModal({
                     </div>
 
                     {isRecurring && (
-                        <div className="grid grid-cols-2 gap-4 p-3 rounded-lg border border-zinc-800 bg-zinc-950/20">
+                        <div className="grid grid-cols-2 gap-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
                             <div className="space-y-2">
                                 <Label>Chu kỳ</Label>
                                 <Select
                                     onValueChange={(val) => setValue('recurringInterval', val)}
                                     defaultValue={expense?.recurringInterval || 'monthly'}
                                 >
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                    <SelectTrigger className="bg-white border-gray-200">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-800">
+                                    <SelectContent className="bg-gray-50 border-gray-200">
                                         <SelectItem value="daily">Hàng ngày</SelectItem>
                                         <SelectItem value="weekly">Hàng tuần</SelectItem>
                                         <SelectItem value="monthly">Hàng tháng</SelectItem>
@@ -190,7 +190,7 @@ export function ExpenseModal({
                                 <Input
                                     type="date"
                                     {...register('recurringEndDate')}
-                                    className="bg-zinc-950 border-zinc-800"
+                                    className="bg-white border-gray-200"
                                 />
                             </div>
                         </div>

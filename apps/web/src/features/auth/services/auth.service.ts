@@ -2,14 +2,18 @@ import axiosInstance from '@/lib/axios';
 import { AuthUser } from '@/store/use-auth-store';
 
 interface LoginDto {
-  phone: string;
+  hotelSlug: string;
+  username: string;
   password: string;
 }
 
 interface RegisterDto {
-  phone: string;
-  name: string;
+  hotelName: string;
+  hotelSlug: string;
+  ownerName: string;
+  username: string;
   password: string;
+  phone?: string;
 }
 
 interface AuthResponse {
@@ -22,4 +26,3 @@ export const authService = {
   register: (payload: RegisterDto) => axiosInstance.post<AuthResponse>('/auth/register', payload),
   logout: () => axiosInstance.post('/auth/logout'),
 };
-

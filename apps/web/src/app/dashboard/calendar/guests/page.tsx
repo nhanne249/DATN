@@ -109,7 +109,7 @@ export default function GuestsPage() {
     };
 
     const StatusBadge = ({ booking, date }: { booking: any, date: Date }) => {
-        if (!booking) return <div className="text-zinc-600 text-sm italic">- Trống -</div>;
+        if (!booking) return <div className="text-gray-400 text-sm italic">- Trống -</div>;
 
         const cIn = startOfDay(new Date(booking.checkIn));
         const cOut = startOfDay(new Date(booking.checkOut));
@@ -126,7 +126,7 @@ export default function GuestsPage() {
                     isCheckInDay ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
                         "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
             )}>
-                <span className="font-semibold text-white truncate" title={guestName}>{guestName}</span>
+                <span className="font-semibold text-gray-900 truncate" title={guestName}>{guestName}</span>
                 <span className="opacity-80">
                     {isCheckOutDay ? 'Khách trả phòng' : isCheckInDay ? 'Khách đến' : 'Đang lưu trú'}
                 </span>
@@ -145,57 +145,57 @@ export default function GuestsPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <Users className="w-6 h-6 text-emerald-500" />
                         Danh sách Khách lưu trú
                     </h1>
-                    <p className="text-zinc-400 mt-1">Theo dõi trạng thái phòng của hôm qua, hôm nay và ngày tùy chọn.</p>
+                    <p className="text-gray-500 mt-1">Theo dõi trạng thái phòng của hôm qua, hôm nay và ngày tùy chọn.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-                        <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800 text-white">
+                        <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200 text-gray-700">
                             <SelectValue placeholder="Sắp xếp" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectContent className="bg-gray-50 border-gray-200 text-gray-900">
                             <SelectItem value="asc">Sắp xếp tên tăng dần (A-Z)</SelectItem>
                             <SelectItem value="desc">Sắp xếp tên giảm dần (Z-A)</SelectItem>
                         </SelectContent>
                     </Select>
 
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300">
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
                         <Download className="w-4 h-4 mr-2" />
                         Xuất Excel
                     </Button>
                 </div>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-900">
+            <Card className="bg-white border-zinc-900">
                 <CardContent className="p-0">
                     <div className="overflow-x-auto rounded-lg border border-zinc-900 custom-scrollbar">
                         <table className="w-full text-left border-collapse min-w-[700px]">
                             <thead>
-                                <tr className="border-b border-zinc-800 bg-zinc-900/50">
-                                    <th className="p-4 text-sm font-medium text-zinc-300 w-[20%] border-r border-zinc-800">
+                                <tr className="border-b border-gray-200 bg-gray-50">
+                                    <th className="p-4 text-sm font-medium text-gray-600 w-[20%] border-r border-gray-200">
                                         LOẠI - PHÒNG
                                     </th>
-                                    <th className="p-4 text-sm font-medium text-zinc-300 w-[26%] border-r border-zinc-800">
+                                    <th className="p-4 text-sm font-medium text-gray-600 w-[26%] border-r border-gray-200">
                                         <div className="flex flex-col">
-                                            <span className="text-zinc-400 uppercase text-xs font-bold mb-1 tracking-wider">Hôm qua</span>
-                                            <span className="text-white bg-zinc-800/80 px-2 py-1 rounded inline-block w-max">
+                                            <span className="text-gray-500 uppercase text-xs font-bold mb-1 tracking-wider">Hôm qua</span>
+                                            <span className="text-gray-700 bg-gray-100/80 px-2 py-1 rounded inline-block w-max">
                                                 {format(yesterday, 'dd/MM/yyyy')}
                                             </span>
                                         </div>
                                     </th>
-                                    <th className="p-4 text-sm font-medium text-zinc-300 w-[26%] border-r border-zinc-800">
+                                    <th className="p-4 text-sm font-medium text-gray-600 w-[26%] border-r border-gray-200">
                                         <div className="flex flex-col">
                                             <span className="text-emerald-400 uppercase text-xs font-bold mb-1 tracking-wider">Hôm nay</span>
-                                            <span className="text-white bg-emerald-500/20 px-2 py-1 rounded inline-block w-max">
+                                            <span className="text-emerald-700 bg-emerald-500/20 px-2 py-1 rounded inline-block w-max">
                                                 {format(today, 'dd/MM/yyyy')}
                                             </span>
                                         </div>
                                     </th>
-                                    <th className="p-4 text-sm font-medium text-zinc-300 w-[28%]">
+                                    <th className="p-4 text-sm font-medium text-gray-600 w-[28%]">
                                         <div className="flex flex-col">
                                             <span className="text-blue-400 uppercase text-xs font-bold mb-1 tracking-wider flex items-center justify-between">
                                                 Ngày chọn (Mặc định NT)
@@ -203,20 +203,20 @@ export default function GuestsPage() {
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <Button variant="outline" className={cn(
-                                                        "w-full justify-start text-left font-normal bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-white h-8 mt-1",
+                                                        "w-full justify-start text-left font-normal bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-700 h-8 mt-1",
                                                         !selectedDate && "text-muted-foreground"
                                                     )}>
                                                         <CalendarIcon className="mr-2 h-4 w-4 text-blue-400" />
                                                         {selectedDate ? format(selectedDate, "dd/MM/yyyy (EEEE)", { locale: vi }) : <span>Chọn ngày</span>}
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-800">
+                                                <PopoverContent className="w-auto p-0 bg-gray-50 border-gray-200">
                                                     <Calendar
                                                         mode="single"
                                                         selected={selectedDate}
                                                         onSelect={(d) => d && setSelectedDate(d)}
                                                         initialFocus
-                                                        className="bg-zinc-900 text-white"
+                                                        className="bg-gray-50 text-gray-900"
                                                     />
                                                 </PopoverContent>
                                             </Popover>
@@ -227,16 +227,16 @@ export default function GuestsPage() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="p-8 text-center text-zinc-500">
+                                        <td colSpan={4} className="p-8 text-center text-gray-400">
                                             <div className="animate-pulse flex flex-col items-center">
-                                                <div className="h-8 w-8 rounded-full border-4 border-t-blue-500 border-zinc-800 animate-spin mb-4" />
+                                                <div className="h-8 w-8 rounded-full border-4 border-t-blue-500 border-gray-200 animate-spin mb-4" />
                                                 Đang tải dữ liệu phòng và khách...
                                             </div>
                                         </td>
                                     </tr>
                                 ) : rooms.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="p-8 text-center text-zinc-500">
+                                        <td colSpan={4} className="p-8 text-center text-gray-400">
                                             Chưa có phòng nào hoặc bị lỗi.
                                         </td>
                                     </tr>
@@ -253,22 +253,22 @@ export default function GuestsPage() {
                                             const bSel = getBookingForRoomDate(room.id, selectedDate);
 
                                             return (
-                                                <tr key={room.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors">
-                                                    <td className="p-4 align-top border-r border-zinc-800/50">
+                                                <tr key={room.id} className="border-b border-gray-200/50 hover:bg-gray-50/30 transition-colors">
+                                                    <td className="p-4 align-top border-r border-gray-200/50">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0">
+                                                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
                                                                 <BookUser size={18} />
                                                             </div>
                                                             <div>
-                                                                <div className="font-semibold text-white">{room.name}</div>
-                                                                <div className="text-xs text-zinc-500">{room.roomType?.name || '---'}</div>
+                                                                <div className="font-semibold text-gray-900">{room.name}</div>
+                                                                <div className="text-xs text-gray-400">{room.roomType?.name || '---'}</div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 align-top border-r border-zinc-800/50">
+                                                    <td className="p-4 align-top border-r border-gray-200/50">
                                                         <StatusBadge booking={bYest} date={yesterday} />
                                                     </td>
-                                                    <td className="p-4 align-top border-r border-zinc-800/50 bg-emerald-950/5">
+                                                    <td className="p-4 align-top border-r border-gray-200/50 bg-emerald-950/5">
                                                         <StatusBadge booking={bTod} date={today} />
                                                     </td>
                                                     <td className="p-4 align-top bg-blue-950/5">

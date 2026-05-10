@@ -6,6 +6,7 @@ export interface UserPayload {
   role: ROLE;
   propertyId?: string;
   email?: string;
+  name?: string;
 }
 
 export interface RequestWithUser extends Request {

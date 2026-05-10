@@ -3,9 +3,10 @@ import axiosInstance from '@/lib/axios';
 export interface AuditLogItem {
     id: string;
     userId?: string;
+    userName?: string;
     action: string;
     ipAddress?: string;
-    details?: any;
+    details?: Record<string, unknown>;
     createdAt: string;
 }
 
@@ -19,6 +20,8 @@ export interface AuditLogParams {
     offset?: number;
     userId?: string;
     action?: string;
+    startDate?: string;
+    endDate?: string;
 }
 
 export const auditLogService = {

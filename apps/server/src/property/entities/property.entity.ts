@@ -26,6 +26,10 @@ export class Property {
   @Column()
   name: string;
 
+  @ApiProperty({ example: 'my-hotel', description: 'URL-safe unique identifier for login' })
+  @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
+  slug: string | null;
+
   @ApiProperty({ example: '0123456789', required: false })
   @Column({ nullable: true })
   phone?: string;

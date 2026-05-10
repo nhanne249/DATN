@@ -41,8 +41,8 @@ export default function HelpPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Tro giup va ho tro</h1>
-          <p className="mt-1 text-sm text-zinc-400">
+          <h1 className="text-2xl font-semibold text-gray-900">Tro giup va ho tro</h1>
+          <p className="mt-1 text-sm text-gray-500">
             Trung tam tai lieu, FAQ va kenh lien he de xu ly su co nhanh.
           </p>
         </div>
@@ -51,15 +51,15 @@ export default function HelpPage() {
         </Badge>
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-gray-200 bg-gray-50">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-white">Tim nhanh tai lieu</CardTitle>
+          <CardTitle className="text-base text-gray-800">Tim nhanh tai lieu</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             <Input
               placeholder="Nhap tu khoa: OTA, booking, invoice..."
-              className="h-10 max-w-xl border-zinc-700 bg-zinc-950 text-zinc-200"
+              className="h-10 max-w-xl border-gray-300 bg-white text-gray-700"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -72,7 +72,7 @@ export default function HelpPage() {
             </Button>
             <Button
               variant="outline"
-              className="border-zinc-700 bg-zinc-950 text-zinc-300"
+              className="border-gray-300 bg-white text-gray-600"
               onClick={handleOpenGuide}
               disabled={trackGuideOpen.isPending}
             >
@@ -83,54 +83,54 @@ export default function HelpPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-gray-200 bg-gray-50">
           <CardHeader>
-            <CardTitle className="text-sm text-white">Onboarding</CardTitle>
+            <CardTitle className="text-sm text-gray-800">Onboarding</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-zinc-400">
+          <CardContent className="text-sm text-gray-500">
             Checklist 7 buoc setup he thong cho property moi.
           </CardContent>
         </Card>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-gray-200 bg-gray-50">
           <CardHeader>
-            <CardTitle className="text-sm text-white">Operations playbook</CardTitle>
+            <CardTitle className="text-sm text-gray-800">Operations playbook</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-zinc-400">
+          <CardContent className="text-sm text-gray-500">
             Quy trinh xu ly check-in, check-out, cleaning va incident.
           </CardContent>
         </Card>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-gray-200 bg-gray-50">
           <CardHeader>
-            <CardTitle className="text-sm text-white">API & Integrations</CardTitle>
+            <CardTitle className="text-sm text-gray-800">API & Integrations</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-zinc-400">
+          <CardContent className="text-sm text-gray-500">
             Huong dan mapping webhooks, retries va monitoring logs.
           </CardContent>
         </Card>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-gray-200 bg-gray-50">
           <CardHeader>
-            <CardTitle className="text-sm text-white">Release notes</CardTitle>
+            <CardTitle className="text-sm text-gray-800">Release notes</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-zinc-400">
+          <CardContent className="text-sm text-gray-500">
             Theo doi thay doi tinh nang moi va migration can thiet.
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-gray-200 bg-gray-50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Cau hoi thuong gap</CardTitle>
+          <CardTitle className="text-base text-gray-800">Cau hoi thuong gap</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3 text-sm text-zinc-400">
+            <div className="rounded-lg border border-gray-200 bg-white/70 p-3 text-sm text-gray-500">
               Dang tai FAQ tu API...
             </div>
           ) : null}
           {faqs.map((faq) => (
-            <div key={faq.question} className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
-              <h3 className="text-sm font-medium text-white">{faq.question}</h3>
-              <p className="mt-1 text-sm text-zinc-400">{faq.answer}</p>
+            <div key={faq.question} className="rounded-lg border border-gray-200 bg-white/70 p-3">
+              <h3 className="text-sm font-medium text-gray-900">{faq.question}</h3>
+              <p className="mt-1 text-sm text-gray-500">{faq.answer}</p>
             </div>
           ))}
         </CardContent>

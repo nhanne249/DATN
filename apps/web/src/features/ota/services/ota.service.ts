@@ -37,4 +37,17 @@ export const otaService = {
     axiosInstance
       .get(`/ota/channels/${channelId}/logs`, { params: { limit } })
       .then((res: any) => res.data),
+
+  // Actions
+  refreshChannel: (channelId: string): Promise<{ success: boolean; lastSyncAt: string }> =>
+    axiosInstance.post(`/ota/channels/${channelId}/refresh`).then((res: any) => res.data),
+
+  pushARI: (
+    channelId: string,
+    body?: { channexPropertyId?: string; channexRatePlanId?: string; dateFrom?: string; dateTo?: string },
+  ): Promise<{ success: boolean }> =>
+    axiosInstance.post(`/ota/channels/${channelId}/push-ari`, body || {}).then((res: any) => res.data),
+
+  pullReservations: (channelId: string): Promise<{ success: boolean; total: number; created: number; updated: number; ignored: number }> =>
+    axiosInstance.post(`/ota/channels/${channelId}/pull-reservations`).then((res: any) => res.data),
 };

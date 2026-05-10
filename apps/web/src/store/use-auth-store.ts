@@ -18,7 +18,11 @@ export interface AuthUser {
   name?: string;
   phone?: string;
   propertyId?: string | null;
+  propertyName?: string;
+  propertySlug?: string;
 }
+
+const FULL_ACCESS_ROLES: UserRole[] = ['admin', 'hotel_owner'];
 
 const decodeJwtPayload = (token: string | null): Record<string, unknown> | null => {
   if (!token) return null;
@@ -45,11 +49,13 @@ interface AuthState {
   activePropertyId: string | null;
   user: AuthUser | null;
   hasHydrated: boolean;
+  allowedModules: string[] | null;
   setRefreshToken: (token: string | null) => void;
   setUser: (user: AuthUser | null) => void;
   setSession: (refreshToken: string | null, user?: AuthUser | null) => void;
   setActivePropertyId: (id: string | null) => void;
   setHasHydrated: (hydrated: boolean) => void;
+  setAllowedModules: (modules: string[] | null) => void;
   logout: () => void;
 }
 
@@ -60,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
       activePropertyId: process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || null,
       user: null,
       hasHydrated: false,
+      allowedModules: null,
       setRefreshToken: (token) => set({ refreshToken: token }),
       setUser: (user) => set({ user }),
       setSession: (refreshToken, user) => {
@@ -79,18 +86,30 @@ export const useAuthStore = create<AuthState>()(
 
         const activePropertyId = user?.propertyId || tokenPropertyId;
 
+        const resolvedRole = derivedUser?.role ?? tokenRole;
+        const allowedModules = resolvedRole && FULL_ACCESS_ROLES.includes(resolvedRole) ? null : undefined;
+
         set({
           refreshToken,
           user: derivedUser,
           ...(activePropertyId ? { activePropertyId } : {}),
+          ...(allowedModules === null ? { allowedModules: null } : {}),
         });
       },
       setActivePropertyId: (id) => set({ activePropertyId: id }),
       setHasHydrated: (hydrated) => set({ hasHydrated: hydrated }),
-      logout: () => set({ refreshToken: null, activePropertyId: null, user: null }),
+      setAllowedModules: (modules) => set({ allowedModules: modules }),
+      logout: () =>
+        set({ refreshToken: null, activePropertyId: null, user: null, allowedModules: null }),
     }),
     {
       name: 'auth-storage',
+      partialize: (state) => ({
+        refreshToken: state.refreshToken,
+        activePropertyId: state.activePropertyId,
+        user: state.user,
+        allowedModules: state.allowedModules,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state?.refreshToken && !state.user) {
           state.setSession(state.refreshToken, null);

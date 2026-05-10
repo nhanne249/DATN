@@ -30,35 +30,35 @@ export default function MonthlyReportPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <CalendarDays className="w-6 h-6 text-teal-500" />
                         Báo cáo Tổng hợp Tháng
                     </h1>
-                    <p className="text-zinc-400 mt-1">So sánh tổng quan kinh doanh giữa các năm theo lũy kế tháng.</p>
+                    <p className="text-gray-500 mt-1">So sánh tổng quan kinh doanh giữa các năm theo lũy kế tháng.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Select value={year} onValueChange={setYear}>
-                        <SelectTrigger className="w-[120px] bg-zinc-900 border-zinc-800 text-white">
+                        <SelectTrigger className="w-[120px] bg-gray-50 border-gray-200 text-gray-700">
                             <SelectValue placeholder="Năm" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectContent className="bg-gray-50 border-gray-200 text-gray-900">
                             <SelectItem value="2026">2026</SelectItem>
                             <SelectItem value="2025">2025</SelectItem>
                             <SelectItem value="2024">2024</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300">
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
                         <Download className="w-4 h-4 mr-2" />
                         Xuất Excel (Toàn bộ)
                     </Button>
                 </div>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-900 shadow-lg mb-6">
-                <CardHeader className="border-b border-zinc-800/50 pb-4">
-                    <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                        <LineChartIcon className="w-5 h-5 text-zinc-400" />
+            <Card className="bg-white border-zinc-900 shadow-lg mb-6">
+                <CardHeader className="border-b border-gray-200/50 pb-4">
+                    <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <LineChartIcon className="w-5 h-5 text-gray-500" />
                         Biến động Doanh Thu (2025 vs 2026)
                     </CardTitle>
                 </CardHeader>
@@ -83,57 +83,57 @@ export default function MonthlyReportPage() {
             </Card>
 
             {/* Data Table */}
-            <Card className="bg-zinc-950 border-zinc-900 shadow-lg">
-                <CardHeader className="border-b border-zinc-800/50 pb-4">
-                    <CardTitle className="text-lg font-semibold text-white">Bảng thống kê Chi tiết KQKD 2026</CardTitle>
+            <Card className="bg-white border-zinc-900 shadow-lg">
+                <CardHeader className="border-b border-gray-200/50 pb-4">
+                    <CardTitle className="text-lg font-semibold text-gray-900">Bảng thống kê Chi tiết KQKD 2026</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="overflow-x-auto rounded-b-lg">
                         <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-zinc-900">
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold text-zinc-300 w-48 border-r border-zinc-800">CÁC CHỈ TIÊU</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600 w-48 border-r border-gray-200">CÁC CHỈ TIÊU</th>
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
-                                        <th key={m} className="px-4 py-4 font-semibold text-zinc-300 text-right">Tháng {m}</th>
+                                        <th key={m} className="px-4 py-4 font-semibold text-gray-600 text-right">Tháng {m}</th>
                                     ))}
-                                    <th className="px-6 py-4 font-bold text-white text-right bg-zinc-800/50">TỔNG/TB</th>
+                                    <th className="px-6 py-4 font-bold text-gray-900 text-right bg-gray-100/50">TỔNG/TB</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800 text-zinc-400">
-                                <tr className="hover:bg-zinc-900/30">
-                                    <td className="px-6 py-4 font-medium text-white border-r border-zinc-800">1. Tổng Doanh Thu</td>
+                            <tbody className="divide-y divide-zinc-800 text-gray-500">
+                                <tr className="hover:bg-gray-50/30">
+                                    <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200">1. Tổng Doanh Thu</td>
                                     {yearData.map((m: any) => <td key={m.month} className="px-4 py-4 text-right">{m.totalRev > 0 ? formatVND(m.totalRev) : '-'}</td>)}
-                                    <td className="px-6 py-4 font-bold text-white text-right bg-zinc-800/50">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.totalRev || 0), 0))}</td>
+                                    <td className="px-6 py-4 font-bold text-gray-900 text-right bg-gray-100/50">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.totalRev || 0), 0))}</td>
                                 </tr>
-                                <tr className="hover:bg-zinc-900/30 text-xs">
-                                    <td className="px-6 py-2 pl-12 border-r border-zinc-800">• Tiền phòng</td>
+                                <tr className="hover:bg-gray-50/30 text-xs">
+                                    <td className="px-6 py-2 pl-12 border-r border-gray-200">• Tiền phòng</td>
                                     {yearData.map((m: any) => <td key={m.month} className="px-4 py-2 text-right">{m.roomRev > 0 ? formatVND(m.roomRev) : '-'}</td>)}
-                                    <td className="px-6 py-2 text-right bg-zinc-800/50">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.roomRev || 0), 0))}</td>
+                                    <td className="px-6 py-2 text-right bg-gray-100/50">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.roomRev || 0), 0))}</td>
                                 </tr>
-                                <tr className="hover:bg-zinc-900/30 text-xs text-zinc-400 border-b border-zinc-800">
-                                    <td className="px-6 py-2 pl-12 border-r border-zinc-800 pb-4">• Dịch vụ</td>
+                                <tr className="hover:bg-gray-50/30 text-xs text-gray-500 border-b border-gray-200">
+                                    <td className="px-6 py-2 pl-12 border-r border-gray-200 pb-4">• Dịch vụ</td>
                                     {yearData.map((m: any) => <td key={m.month} className="px-4 py-2 text-right pb-4">{m.servRev > 0 ? formatVND(m.servRev) : '-'}</td>)}
-                                    <td className="px-6 py-2 text-right bg-zinc-800/50 pb-4">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.servRev || 0), 0))}</td>
+                                    <td className="px-6 py-2 text-right bg-gray-100/50 pb-4">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.servRev || 0), 0))}</td>
                                 </tr>
 
-                                <tr className="hover:bg-zinc-900/30">
-                                    <td className="px-6 py-4 font-medium text-white border-r border-zinc-800">2. Số Đêm Phòng</td>
+                                <tr className="hover:bg-gray-50/30">
+                                    <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200">2. Số Đêm Phòng</td>
                                     {yearData.map((m: any) => <td key={m.month} className="px-4 py-4 text-right">{m.nights > 0 ? m.nights : '-'}</td>)}
-                                    <td className="px-6 py-4 font-bold text-white text-right bg-zinc-800/50">{yearData.reduce((acc: number, m: any) => acc + (m.nights || 0), 0)}</td>
+                                    <td className="px-6 py-4 font-bold text-gray-900 text-right bg-gray-100/50">{yearData.reduce((acc: number, m: any) => acc + (m.nights || 0), 0)}</td>
                                 </tr>
 
-                                <tr className="hover:bg-zinc-900/30">
-                                    <td className="px-6 py-4 font-medium text-white border-r border-zinc-800">3. OCC (%)</td>
+                                <tr className="hover:bg-gray-50/30">
+                                    <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200">3. OCC (%)</td>
                                     {yearData.map((m: any) => <td key={m.month} className="px-4 py-4 text-right text-emerald-400">{m.occ > 0 ? m.occ + '%' : '-'}</td>)}
-                                    <td className="px-6 py-4 font-bold text-emerald-400 text-right bg-zinc-800/50">
+                                    <td className="px-6 py-4 font-bold text-emerald-400 text-right bg-gray-100/50">
                                         {yearData.filter((m: any) => m.occ > 0).length > 0 ? Math.round(yearData.reduce((acc: number, m: any) => acc + (m.occ || 0), 0) / yearData.filter((m: any) => m.occ > 0).length) + '%' : '-'}
                                     </td>
                                 </tr>
 
-                                <tr className="hover:bg-zinc-900/30">
-                                    <td className="px-6 py-4 font-medium text-white border-r border-zinc-800">4. Lợi nhuận gộp (Est.)</td>
+                                <tr className="hover:bg-gray-50/30">
+                                    <td className="px-6 py-4 font-medium text-gray-900 border-r border-gray-200">4. Lợi nhuận gộp (Est.)</td>
                                     {yearData.map((m: any) => <td key={m.month} className="px-4 py-4 text-right">{m.gross > 0 ? `${Math.round(m.gross / 1000000)}M` : '-'}</td>)}
-                                    <td className="px-6 py-4 font-bold text-amber-500 text-right bg-zinc-800/50">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.gross || 0), 0))}</td>
+                                    <td className="px-6 py-4 font-bold text-amber-500 text-right bg-gray-100/50">{formatVND(yearData.reduce((acc: number, m: any) => acc + (m.gross || 0), 0))}</td>
                                 </tr>
                             </tbody>
                         </table>

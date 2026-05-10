@@ -8,7 +8,6 @@ import {
   Delete,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -24,7 +23,6 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { CreateServiceUsageDto } from './dto/create-service-usage.dto';
 import { Booking } from './entities/booking.entity';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
-import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
@@ -36,7 +34,6 @@ import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
 @Roles(...STAFF_ROLES)
-@UseInterceptors(AuditLogInterceptor)
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
@@ -106,6 +103,12 @@ export class BookingController {
     return this.bookingService.addServiceUsage(id, dto);
   }
 
+  @Get(':id/minibar')
+  @ApiOperation({ summary: 'Get minibar consumption for a booking' })
+  getMinibar(@Param('id') id: string) {
+    return this.bookingService.getMinibarForBooking(id);
+  }
+
   @Post(':id/cancel')
   @AuditLog('CANCEL_BOOKING')
   @ApiOperation({ summary: 'Cancel a booking' })
@@ -120,6 +123,7 @@ export class BookingController {
   }
 
   @Patch('service-usages/:id')
+  @AuditLog('UPDATE_SERVICE_USAGE')
   @ApiOperation({ summary: 'Update a service usage' })
   updateServiceUsage(
     @Param('id') id: string,
@@ -129,6 +133,7 @@ export class BookingController {
   }
 
   @Delete('service-usages/:id')
+  @AuditLog('DELETE_SERVICE_USAGE')
   @ApiOperation({ summary: 'Delete a service usage' })
   removeServiceUsage(@Param('id') id: string) {
     return this.bookingService.removeServiceUsage(id);

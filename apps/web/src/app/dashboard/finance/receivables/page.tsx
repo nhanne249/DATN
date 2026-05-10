@@ -47,41 +47,41 @@ export default function ReceivablesPage() {
     const getStatusDisplay = (status: string) => {
         if (status === 'UNPAID') return <span className="text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded text-xs font-medium border border-orange-500/20">Chưa thu</span>;
         if (status === 'PARTIAL') return <span className="text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded text-xs font-medium border border-blue-500/20">Thu 1 phần</span>;
-        return <span className="text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded text-xs font-medium uppercase">{status}</span>;
+        return <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded text-xs font-medium uppercase">{status}</span>;
     };
 
     return (
         <div className="p-6 max-w-[1600px] mx-auto space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold font-serif text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold font-serif text-gray-900 flex items-center gap-2">
                         <FileWarning className="w-6 h-6 text-orange-500" /> Quản lý Công nợ
                     </h1>
-                    <p className="text-zinc-400 text-sm mt-1">Danh sách các khoản tiền chưa thanh toán từ khách hàng / đối tác</p>
+                    <p className="text-gray-500 text-sm mt-1">Danh sách các khoản tiền chưa thanh toán từ khách hàng / đối tác</p>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <Input
                             placeholder="Tìm mã Booking, tên khách, OTA Code..."
-                            className="pl-9 bg-zinc-950 border-zinc-800 text-white w-full"
+                            className="pl-9 bg-white border-gray-200 text-gray-900 w-full"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Button variant="outline" className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+                    <Button variant="outline" className="border-gray-200 text-gray-600 hover:bg-gray-100">
                         <Filter className="w-4 h-4 mr-2" /> Lọc
                     </Button>
-                    <Button variant="outline" className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+                    <Button variant="outline" className="border-gray-200 text-gray-600 hover:bg-gray-100">
                         <Download className="w-4 h-4 mr-2" /> Xuất Excel
                     </Button>
                 </div>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-800 overflow-hidden">
+            <Card className="bg-white border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-zinc-900/50 text-zinc-400 text-xs uppercase">
+                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                             <tr>
                                 <th className="px-4 py-3 font-medium">Mã đặt phòng</th>
                                 <th className="px-4 py-3 font-medium">Nguồn</th>
@@ -95,51 +95,51 @@ export default function ReceivablesPage() {
                                 <th className="px-4 py-3 font-medium">Ngày thanh toán</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
+                        <tbody className="divide-y divide-zinc-800/50 text-gray-600">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={10} className="px-4 py-8 text-center text-zinc-500">Đang tải dữ liệu công nợ...</td>
+                                    <td colSpan={10} className="px-4 py-8 text-center text-gray-400">Đang tải dữ liệu công nợ...</td>
                                 </tr>
                             ) : filteredData.length > 0 ? (
                                 filteredData.map(r => {
                                     const debtAmount = Math.max(0, r.totalAmount - r.paidAmount);
                                     return (
-                                        <tr key={r.id} className="hover:bg-zinc-900/30 transition-colors group">
+                                        <tr key={r.id} className="hover:bg-gray-50/30 transition-colors group">
                                             <td className="px-4 py-3">
-                                                <div className="font-medium text-white flex items-center gap-1 cursor-pointer group-hover:text-amber-400 transition-colors">
+                                                <div className="font-medium text-gray-900 flex items-center gap-1 cursor-pointer group-hover:text-amber-400 transition-colors">
                                                     {r.code || 'N/A'}
                                                     <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100" />
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-xs uppercase text-zinc-400 font-medium">{r.source || 'Walk-in'}</td>
-                                            <td className="px-4 py-3 font-medium text-zinc-200">{r.guest?.name || 'Walk-in'}</td>
+                                            <td className="px-4 py-3 text-xs uppercase text-gray-500 font-medium">{r.source || 'Walk-in'}</td>
+                                            <td className="px-4 py-3 font-medium text-gray-700">{r.guest?.name || 'Walk-in'}</td>
                                             <td className="px-4 py-3 text-right font-bold text-orange-400">
                                                 {debtAmount.toLocaleString('vi-VN')} ₫
                                             </td>
                                             <td className="px-4 py-3">
                                                 {getStatusDisplay(r.paymentStatus)}
                                             </td>
-                                            <td className="px-4 py-3 text-xs text-zinc-400 font-mono">
+                                            <td className="px-4 py-3 text-xs text-gray-500 font-mono">
                                                 {r.otaCode || '-'}
                                             </td>
                                             <td className="px-4 py-3 text-xs max-w-[150px] truncate" title={r.notes}>
                                                 {r.notes || '-'}
                                             </td>
-                                            <td className="px-4 py-3 text-zinc-400 text-xs">
+                                            <td className="px-4 py-3 text-gray-500 text-xs">
                                                 {format(new Date(r.createdAt), 'dd/MM/yyyy')}
                                             </td>
                                             <td className="px-4 py-3 text-xs">
                                                 {r.createdBy?.name || 'Hệ thống'}
                                             </td>
-                                            <td className="px-4 py-3 text-zinc-500 font-mono text-center">
-                                                _
+                                            <td className="px-4 py-3 text-gray-400 text-center text-xs">
+                                                —
                                             </td>
                                         </tr>
                                     );
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan={10} className="px-4 py-8 text-center text-zinc-500">Không tìm thấy công nợ nào. Tuyệt vời!</td>
+                                    <td colSpan={10} className="px-4 py-8 text-center text-gray-400">Không tìm thấy công nợ nào. Tuyệt vời!</td>
                                 </tr>
                             )}
                         </tbody>

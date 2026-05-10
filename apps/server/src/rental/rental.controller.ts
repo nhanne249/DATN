@@ -25,6 +25,7 @@ import {
   UpdateVehicleDto,
   UpdateRentalStatusDto,
 } from './dto/rental.dto';
+import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 
 @ApiTags('Rental')
 @Controller('rentals')
@@ -42,6 +43,7 @@ export class RentalController {
 
   @Post('vehicles')
   @Roles(...MANAGEMENT_ROLES)
+  @AuditLog('CREATE_VEHICLE')
   @ApiOperation({ summary: 'Create a new vehicle' })
   createVehicle(@Body() dto: CreateVehicleDto) {
     return this.rentalService.createVehicle(dto);
@@ -49,6 +51,7 @@ export class RentalController {
 
   @Patch('vehicles/:id')
   @Roles(...MANAGEMENT_ROLES)
+  @AuditLog('UPDATE_VEHICLE')
   @ApiOperation({ summary: 'Update vehicle information' })
   updateVehicle(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
     return this.rentalService.updateVehicle(id, dto);
@@ -61,24 +64,28 @@ export class RentalController {
   }
 
   @Post('rentals')
+  @AuditLog('CREATE_RENTAL')
   @ApiOperation({ summary: 'Create a new rental record' })
   createRental(@Body() dto: CreateRentalDto) {
     return this.rentalService.createRental(dto);
   }
 
   @Put('rentals/:id/pickup')
+  @AuditLog('RENTAL_PICKUP')
   @ApiOperation({ summary: 'Record vehicle pickup' })
   recordPickup(@Param('id') id: string) {
     return this.rentalService.recordPickup(id);
   }
 
   @Put('rentals/:id/return')
+  @AuditLog('RENTAL_RETURN')
   @ApiOperation({ summary: 'Record vehicle return' })
   recordReturn(@Param('id') id: string) {
     return this.rentalService.recordReturn(id);
   }
 
   @Patch('rentals/:id/status')
+  @AuditLog('UPDATE_RENTAL_STATUS')
   @ApiOperation({ summary: 'Update rental status' })
   updateStatus(@Param('id') id: string, @Body() dto: UpdateRentalStatusDto) {
     return this.rentalService.updateStatus(id, dto.status);

@@ -124,19 +124,19 @@ export function RentalModal({ isOpen, onClose, rental, vehicles, bookings, onSav
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-white">
+            <DialogContent className="sm:max-w-[500px] bg-white border-gray-200 text-gray-900">
                 <DialogHeader>
                     <DialogTitle>{rental ? 'Chi tiết Đơn thuê' : 'Tạo Đơn thuê xe'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Gán với Đặt phòng (tùy chọn)</Label>
+                            <Label className="text-gray-700">Gán với Đặt phòng (tùy chọn)</Label>
                             <Select value={formData.bookingId} onValueChange={v => setFormData({ ...formData, bookingId: v })}>
-                                <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                                     <SelectValue placeholder="Chọn đơn đặt phòng" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectContent className="bg-gray-50 border-gray-200 text-white">
                                     <SelectItem value="none">Không gán</SelectItem>
                                     {(Array.isArray(bookings.data) ? bookings.data : (Array.isArray(bookings) ? bookings : [])).map((b: any) => (
                                         <SelectItem key={b.id} value={b.id}>
@@ -147,12 +147,12 @@ export function RentalModal({ isOpen, onClose, rental, vehicles, bookings, onSav
                             </Select>
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Loại xe</Label>
+                            <Label className="text-gray-700">Loại xe</Label>
                             <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
-                                <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectContent className="bg-gray-50 border-gray-200 text-white">
                                     <SelectItem value="SCOOTER">Xe tay ga</SelectItem>
                                     <SelectItem value="MANUAL">Xe số</SelectItem>
                                     <SelectItem value="OTHER">Khác</SelectItem>
@@ -163,104 +163,104 @@ export function RentalModal({ isOpen, onClose, rental, vehicles, bookings, onSav
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Tên xe / Hãng xe</Label>
+                            <Label className="text-gray-700">Tên xe / Hãng xe</Label>
                             <Input
                                 value={formData.vehicleName}
                                 onChange={e => setFormData({ ...formData, vehicleName: e.target.value })}
                                 placeholder="Honda Vision..."
                                 required
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Biển số xe</Label>
+                            <Label className="text-gray-700">Biển số xe</Label>
                             <Input
                                 value={formData.plateNumber}
                                 onChange={e => setFormData({ ...formData, plateNumber: e.target.value })}
                                 placeholder="29A-123.45"
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                     </div>
 
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Nhà cung cấp (Bên thứ 3)</Label>
+                        <Label className="text-gray-700">Nhà cung cấp (Bên thứ 3)</Label>
                         <Input
                             value={formData.provider}
                             onChange={e => setFormData({ ...formData, provider: e.target.value })}
                             placeholder="Tên đối tác gọi xe..."
-                            className="bg-zinc-900 border-zinc-800 text-white"
+                            className="bg-gray-50 border-gray-200 text-white"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Tên khách hàng</Label>
+                            <Label className="text-gray-700">Tên khách hàng</Label>
                             <Input
                                 value={formData.guestName}
                                 onChange={e => setFormData({ ...formData, guestName: e.target.value })}
                                 required
                                 disabled={!!formData.bookingId && formData.bookingId !== 'none'}
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Số điện thoại</Label>
+                            <Label className="text-gray-700">Số điện thoại</Label>
                             <Input
                                 value={formData.guestPhone}
                                 onChange={e => setFormData({ ...formData, guestPhone: e.target.value })}
                                 disabled={!!formData.bookingId && formData.bookingId !== 'none'}
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Bắt đầu từ</Label>
+                            <Label className="text-gray-700">Bắt đầu từ</Label>
                             <Input
                                 type="datetime-local"
                                 value={formData.startTime}
                                 onChange={e => setFormData({ ...formData, startTime: e.target.value })}
                                 required
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Kết thúc lúc</Label>
+                            <Label className="text-gray-700">Kết thúc lúc</Label>
                             <Input
                                 type="datetime-local"
                                 value={formData.endTime}
                                 onChange={e => setFormData({ ...formData, endTime: e.target.value })}
                                 required
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                     </div>
 
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Giá thỏa thuận (/ngày)</Label>
+                        <Label className="text-gray-700">Giá thỏa thuận (/ngày)</Label>
                         <Input
                             type="number"
                             value={formData.pricePerDay}
                             onChange={e => setFormData({ ...formData, pricePerDay: e.target.value })}
                             required
-                            className="bg-zinc-900 border-zinc-800 text-white font-bold text-lg text-emerald-400"
+                            className="bg-gray-50 border-gray-200 text-white font-bold text-lg text-emerald-400"
                         />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Ghi chú</Label>
+                        <Label className="text-gray-700">Ghi chú</Label>
                         <Input
                             value={formData.notes}
                             onChange={e => setFormData({ ...formData, notes: e.target.value })}
                             placeholder="Ghi chú thêm..."
-                            className="bg-zinc-900 border-zinc-800 text-white"
+                            className="bg-gray-50 border-gray-200 text-white"
                         />
                     </div>
 
                     <DialogFooter className="pt-4">
-                        <Button type="button" variant="outline" onClick={onClose} className="border-zinc-800 text-white hover:bg-zinc-800">
+                        <Button type="button" variant="outline" onClick={onClose} className="border-gray-200 text-white hover:bg-gray-100">
                             Hủy
                         </Button>
                         <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 min-w-[120px]">

@@ -44,7 +44,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
         <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {value.map((url) => (
-                    <div key={url} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900 group">
+                    <div key={url} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
                         <img
                             src={mediaService.getFileUrl(url)}
                             alt="Preview"
@@ -64,7 +64,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
                     type="button"
                     disabled={isUploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-lg bg-zinc-900 hover:bg-zinc-800 hover:border-zinc-700 transition-all text-zinc-500 hover:text-zinc-300 gap-2"
+                    className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all text-gray-400 hover:text-gray-600 gap-2"
                 >
                     {isUploading ? (
                         <Loader2 className="w-6 h-6 animate-spin" />

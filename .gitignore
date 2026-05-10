@@ -38,3 +38,17 @@ yarn-error.log*
 *.pem
 
 HK251-DAGD1-471.pdf
+# LaTeX build artifacts
+*.aux
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+texput.log
+
+# Claude app installer
+Claude.dmg
+
+# Thesis/report folder
+HK251_DAGD1_471_1952889_1957205/

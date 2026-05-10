@@ -8,6 +8,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { ROLE } from '../enum/role';
 import { UserPasswordHistory } from './user-password-history.entity';
@@ -15,6 +16,7 @@ import { Property } from '../../property/entities/property.entity';
 import { Task } from '../../task/entities/task.entity';
 
 @Entity('users')
+@Unique('UQ_user_username_property', ['username', 'propertyId'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,6 +24,10 @@ export class User {
   @Index()
   @Column({ type: 'varchar', length: 20, nullable: true, unique: true })
   phone: string;
+
+  // Login username within a property (unique per property via composite index)
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  username: string | null;
 
   @Column({ type: 'varchar', length: 100 })
   name: string;
@@ -56,6 +62,13 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   lockedAt?: Date | null;
 
+  // 2FA fields
+  @Column({ type: 'boolean', default: false })
+  twoFactorEnabled: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  twoFactorSecret?: string | null;
+
   @OneToMany(() => UserPasswordHistory, (history) => history.user)
   passwordHistories: UserPasswordHistory[];
 
@@ -65,6 +78,10 @@ export class User {
   @ManyToOne(() => Property, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
+
+  // Custom role assigned by hotel owner (overrides default module access)
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  customRoleId: string | null;
 
   @OneToMany(() => Task, (task: Task) => task.assignee)
   assignedTasks: Task[];

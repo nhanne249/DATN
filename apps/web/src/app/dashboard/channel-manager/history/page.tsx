@@ -19,7 +19,7 @@ export default function ChannelHistoryPage() {
       key={item.id}
       className={
         item.result === 'Success'
-          ? 'bg-emerald-600/20 text-emerald-300'
+          ? 'bg-emerald-600/20 text-emerald-700'
           : item.result === 'Retrying'
             ? 'bg-orange-600/20 text-orange-300'
             : 'bg-red-600/20 text-red-300'

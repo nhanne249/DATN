@@ -56,11 +56,11 @@ export default function PerformanceReportPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <Gauge className="w-6 h-6 text-fuchsia-500" />
                         Trạng thái Hiệu suất (KPIs)
                     </h1>
-                    <p className="text-zinc-400 mt-1">Chỉ số ADR, RevPAR và hiệu quả khai thác kinh doanh phòng.</p>
+                    <p className="text-gray-500 mt-1">Chỉ số ADR, RevPAR và hiệu quả khai thác kinh doanh phòng.</p>
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -70,17 +70,17 @@ export default function PerformanceReportPage() {
                         </div>
                     )}
                     <Select value={period} onValueChange={setPeriod}>
-                        <SelectTrigger className="w-[160px] bg-zinc-900 border-zinc-800 text-white">
-                            <CalendarIcon className="w-4 h-4 mr-2 text-zinc-400" />
+                        <SelectTrigger className="w-[160px] bg-gray-50 border-gray-200 text-gray-700">
+                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
                             <SelectValue placeholder="Chọn thời gian" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectContent className="bg-gray-50 border-gray-200 text-gray-900">
                             <SelectItem value="7days">7 ngày qua</SelectItem>
                             <SelectItem value="thisMonth">Tháng này</SelectItem>
                             <SelectItem value="custom">Tùy chỉnh...</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300">
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
                         <Download className="w-4 h-4 mr-2" />
                         Xuất báo cáo
                     </Button>
@@ -89,17 +89,17 @@ export default function PerformanceReportPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-1 group cursor-help">
-                                    <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">ADR</p>
-                                    <div className="absolute hidden group-hover:block ml-10 p-2 bg-zinc-800 text-xs rounded border border-zinc-700 w-48 z-10 text-zinc-300">
+                                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">ADR</p>
+                                    <div className="absolute hidden group-hover:block ml-10 p-2 bg-gray-100 text-xs rounded border border-gray-300 w-48 z-10 text-gray-600">
                                         Average Daily Rate (Giá trung bình 1 phòng / ngày)
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.adr)}</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.adr)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                 <ArrowUpRight className="w-5 h-5 text-blue-400" />
@@ -108,17 +108,17 @@ export default function PerformanceReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-1 group cursor-help">
-                                    <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">RevPAR</p>
-                                    <div className="absolute hidden group-hover:block ml-14 p-2 bg-zinc-800 text-xs rounded border border-zinc-700 w-48 z-10 text-zinc-300">
+                                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">RevPAR</p>
+                                    <div className="absolute hidden group-hover:block ml-14 p-2 bg-gray-100 text-xs rounded border border-gray-300 w-48 z-10 text-gray-600">
                                         Revenue Per Available Room (Doanh thu trên tổng số phòng sẵn có)
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.revpar)}</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.revpar)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-fuchsia-500/10 flex items-center justify-center">
                                 <MoveUpRight className="w-5 h-5 text-fuchsia-400" />
@@ -127,11 +127,11 @@ export default function PerformanceReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Tỷ lệ Lấp đầy (OCC)</p>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Tỷ lệ Lấp đầy (OCC)</p>
                                 <h3 className="text-2xl font-bold text-emerald-400 mt-2">{kpi.occ}%</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -141,17 +141,17 @@ export default function PerformanceReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-1 group cursor-help">
-                                    <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">ALOS</p>
-                                    <div className="absolute hidden group-hover:block ml-10 p-2 bg-zinc-800 text-xs rounded border border-zinc-700 w-48 z-10 text-zinc-300">
+                                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">ALOS</p>
+                                    <div className="absolute hidden group-hover:block ml-10 p-2 bg-gray-100 text-xs rounded border border-gray-300 w-48 z-10 text-gray-600">
                                         Average Length of Stay (Tr.bình số đêm/khách)
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-white mt-2">{kpi.alos} <span className="text-base font-normal text-zinc-500">đêm</span></h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{kpi.alos} <span className="text-base font-normal text-gray-400">đêm</span></h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
                                 <ArrowDownRight className="w-5 h-5 text-orange-400" />
@@ -161,9 +161,9 @@ export default function PerformanceReportPage() {
                 </Card>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-900 shadow-lg">
-                <CardHeader className="border-b border-zinc-800/50 pb-4">
-                    <CardTitle className="text-lg font-semibold text-white">Biến động Giá phòng & Doanh thu thực tế (ADR vs RevPAR)</CardTitle>
+            <Card className="bg-white border-zinc-900 shadow-lg">
+                <CardHeader className="border-b border-gray-200/50 pb-4">
+                    <CardTitle className="text-lg font-semibold text-gray-900">Biến động Giá phòng & Doanh thu thực tế (ADR vs RevPAR)</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <div className="h-[450px] w-full">

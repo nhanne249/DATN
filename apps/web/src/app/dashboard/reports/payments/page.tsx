@@ -65,11 +65,11 @@ export default function PaymentsReportPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <HandCoins className="w-6 h-6 text-amber-500" />
                         Báo cáo Thanh toán
                     </h1>
-                    <p className="text-zinc-400 mt-1">Phân tích dòng tiền theo phương thức thanh toán.</p>
+                    <p className="text-gray-500 mt-1">Phân tích dòng tiền theo phương thức thanh toán.</p>
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -79,11 +79,11 @@ export default function PaymentsReportPage() {
                         </div>
                     )}
                     <Select value={period} onValueChange={setPeriod}>
-                        <SelectTrigger className="w-[160px] bg-zinc-900 border-zinc-800 text-white">
-                            <CalendarIcon className="w-4 h-4 mr-2 text-zinc-400" />
+                        <SelectTrigger className="w-[160px] bg-gray-50 border-gray-200 text-gray-700">
+                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
                             <SelectValue placeholder="Chọn thời gian" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectContent className="bg-gray-50 border-gray-200 text-gray-900">
                             <SelectItem value="7days">7 ngày qua</SelectItem>
                             <SelectItem value="thisMonth">Tháng này</SelectItem>
                             <SelectItem value="lastMonth">Tháng trước</SelectItem>
@@ -91,7 +91,7 @@ export default function PaymentsReportPage() {
                             <SelectItem value="custom">Tùy chỉnh...</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300">
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
                         <Download className="w-4 h-4 mr-2" />
                         Xuất báo cáo
                     </Button>
@@ -105,7 +105,7 @@ export default function PaymentsReportPage() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-sm font-medium text-emerald-400 uppercase tracking-wider">Chuyển khoản</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.bank)}</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.bank)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
                                 <Building2 className="w-5 h-5 text-emerald-400" />
@@ -119,7 +119,7 @@ export default function PaymentsReportPage() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-sm font-medium text-blue-400 uppercase tracking-wider">Tiền mặt</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.cash)}</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.cash)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                 <HandCoins className="w-5 h-5 text-blue-400" />
@@ -133,7 +133,7 @@ export default function PaymentsReportPage() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-sm font-medium text-purple-400 uppercase tracking-wider">Thẻ VISA/Master</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.card)}</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.card)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
                                 <SmartphoneNfc className="w-5 h-5 text-purple-400" />
@@ -157,9 +157,9 @@ export default function PaymentsReportPage() {
                 </Card>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-900 shadow-lg">
-                <CardHeader className="border-b border-zinc-800/50 pb-4">
-                    <CardTitle className="text-lg font-semibold text-white">Xu hướng Phương thức thanh toán (Tháng)</CardTitle>
+            <Card className="bg-white border-zinc-900 shadow-lg">
+                <CardHeader className="border-b border-gray-200/50 pb-4">
+                    <CardTitle className="text-lg font-semibold text-gray-900">Xu hướng Phương thức thanh toán (Tháng)</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <div className="h-[400px] w-full">

@@ -2,14 +2,15 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
-import { Plus, Search, Filter, Download, DollarSign, ArrowUpRight, FolderOpen, MoreHorizontal, FileEdit, Trash } from 'lucide-react';
+import { Plus, Search, DollarSign, FolderOpen, MoreHorizontal, FileEdit, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/use-auth-store';
+import axiosInstance from '@/lib/axios';
 
 export default function ExpensesPage() {
     const { activePropertyId } = useAuthStore();
@@ -22,11 +23,6 @@ export default function ExpensesPage() {
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [categoryForm, setCategoryForm] = useState({ id: '', name: '' });
     const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
-    const apiBase = (() => {
-        const url = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
-        if (!url) return '/api';
-        return url.endsWith('/api') ? url : `${url}/api`;
-    })();
 
     const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -50,8 +46,8 @@ export default function ExpensesPage() {
     const fetchExpenses = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${apiBase}/finance/expenses?propertyId=${propertyId}`);
-            const data = await res.json();
+            const res = await axiosInstance.get('/finance/expenses', { params: { propertyId } });
+            const data = res.data;
             setExpenses(Array.isArray(data) ? data : data.data || []);
         } catch (error) {
             console.error("Failed to load expenses", error);
@@ -62,8 +58,8 @@ export default function ExpensesPage() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch(`${apiBase}/settings/categories?propertyId=${propertyId}`);
-            const data = await res.json();
+            const res = await axiosInstance.get('/settings/categories', { params: { propertyId } });
+            const data = res.data;
             setCategories(Array.isArray(data) ? data.filter((c: any) => c.type === 'expense') : []);
         } catch (error) {
             console.error("Failed to load categories", error);
@@ -75,64 +71,42 @@ export default function ExpensesPage() {
 
         if (formData.category === 'new' && formData.newCategoryName.trim()) {
             try {
-                const catRes = await fetch(`${apiBase}/settings/categories`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: formData.newCategoryName.trim(),
-                        type: 'expense',
-                        propertyId
-                    })
+                const catRes = await axiosInstance.post('/settings/categories', {
+                    name: formData.newCategoryName.trim(),
+                    type: 'expense',
+                    propertyId
                 });
-                if (!catRes.ok) {
-                    const err = await catRes.json();
-                    toast.error(err.message || "Không thể tạo danh mục mới");
-                    return;
-                }
-                const newCat = await catRes.json();
-                finalCategory = newCat.name;
-            } catch (error) {
-                console.error("Could not create Category", error);
-                toast.error("Lỗi khi tạo danh mục mới");
+                finalCategory = catRes.data.name;
+            } catch (error: any) {
+                toast.error(error.message || "Lỗi khi tạo danh mục mới");
                 return;
             }
         }
 
         try {
             const isEditing = !!formData.id;
-            const url = isEditing
-                ? `${apiBase}/finance/expenses/${formData.id}`
-                : `${apiBase}/finance/expenses`;
-            const method = isEditing ? 'PATCH' : 'POST';
+            const payload = {
+                title: formData.title,
+                code: formData.code || undefined,
+                category: finalCategory,
+                amount: Number(formData.amount),
+                description: formData.description,
+                propertyId
+            };
 
-            const expenseRes = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: formData.title,
-                    code: formData.code || undefined,
-                    category: finalCategory,
-                    amount: Number(formData.amount),
-                    description: formData.description,
-                    propertyId
-                })
-            });
-
-            if (!expenseRes.ok) {
-                const errData = await expenseRes.json();
-                toast.error(errData.message || (isEditing ? "Không thể cập nhật phiếu chi" : "Không thể tạo phiếu chi"));
-                console.error("Expense operation error:", errData);
-                return;
+            if (isEditing) {
+                await axiosInstance.patch(`/finance/expenses/${formData.id}`, payload);
+            } else {
+                await axiosInstance.post('/finance/expenses', payload);
             }
 
             toast.success(isEditing ? "Cập nhật phiếu chi thành công!" : "Tạo phiếu chi thành công!");
             setIsOpen(false);
             setFormData({ id: '', title: '', category: '', newCategoryName: '', amount: '', description: '', code: '' });
             fetchExpenses();
-            fetchCategories(); // Refresh categories in case a new one was added
-        } catch (error) {
-            toast.error("Lỗi kết nối máy chủ");
-            console.error("Failed to save expense", error);
+            fetchCategories();
+        } catch (error: any) {
+            toast.error(error.message || "Lỗi kết nối máy chủ");
         }
     };
 
@@ -152,18 +126,11 @@ export default function ExpensesPage() {
     const handleDeleteExpense = async (id: string) => {
         if (!confirm('Bạn có chắc chắn muốn xóa phiếu chi này? Hành động này không thể hoàn tác.')) return;
         try {
-            const res = await fetch(`${apiBase}/finance/expenses/${id}`, {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                toast.success('Xóa phiếu chi thành công');
-                fetchExpenses();
-            } else {
-                toast.error('Lỗi khi xóa phiếu chi');
-            }
-        } catch (error) {
-            toast.error('Lỗi kết nối máy chủ');
-            console.error("Failed to delete expense", error);
+            await axiosInstance.delete(`/finance/expenses/${id}`);
+            toast.success('Xóa phiếu chi thành công');
+            fetchExpenses();
+        } catch (error: any) {
+            toast.error(error.message || 'Lỗi khi xóa phiếu chi');
         }
     };
 
@@ -172,61 +139,40 @@ export default function ExpensesPage() {
         if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedExpenses.length} phiếu chi đã chọn? Hành động này không thể hoàn tác.`)) return;
 
         try {
-            const promises = selectedExpenses.map(id => fetch(`${apiBase}/finance/expenses/${id}`, { method: 'DELETE' }));
-            const results = await Promise.all(promises);
-            const success = results.every(res => res.ok);
-
-            if (success) {
-                toast.success(`Đã xóa thành công ${selectedExpenses.length} phiếu chi`);
-                setSelectedExpenses([]);
-                fetchExpenses();
-            } else {
-                toast.error("Một số phiếu chi không thể xóa");
-                fetchExpenses();
-            }
-        } catch (error) {
-            toast.error("Lỗi kết nối máy chủ");
-            console.error(error);
+            await Promise.all(selectedExpenses.map(id => axiosInstance.delete(`/finance/expenses/${id}`)));
+            toast.success(`Đã xóa thành công ${selectedExpenses.length} phiếu chi`);
+            setSelectedExpenses([]);
+            fetchExpenses();
+        } catch (error: any) {
+            toast.error(error.message || "Một số phiếu chi không thể xóa");
+            fetchExpenses();
         }
     };
 
     const handleSaveCategory = async () => {
         try {
             if (categoryForm.id) {
-                const patchRes = await fetch(`${apiBase}/settings/categories/${categoryForm.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: categoryForm.name.trim() })
-                });
-                if (!patchRes.ok) throw new Error(await patchRes.text());
+                await axiosInstance.patch(`/settings/categories/${categoryForm.id}`, { name: categoryForm.name.trim() });
             } else {
-                const postRes = await fetch(`${apiBase}/settings/categories`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: categoryForm.name.trim(),
-                        type: 'expense',
-                        propertyId
-                    })
+                await axiosInstance.post('/settings/categories', {
+                    name: categoryForm.name.trim(),
+                    type: 'expense',
+                    propertyId
                 });
-                if (!postRes.ok) throw new Error(await postRes.text());
             }
             toast.success("Lưu danh mục thành công!");
             setIsCategoryOpen(false);
             setCategoryForm({ id: '', name: '' });
             fetchCategories();
-        } catch (error) {
-            console.error("Failed to save category", error);
-            toast.error("Không thể lưu danh mục. Vui lòng thử lại!");
+        } catch (error: any) {
+            toast.error(error.message || "Không thể lưu danh mục. Vui lòng thử lại!");
         }
     };
 
     const handleDeleteCategory = async (id: string) => {
         if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
         try {
-            await fetch(`${apiBase}/settings/categories/${id}`, {
-                method: 'DELETE'
-            });
+            await axiosInstance.delete(`/settings/categories/${id}`);
             fetchCategories();
             fetchExpenses();
         } catch (error) {
@@ -238,21 +184,14 @@ export default function ExpensesPage() {
         if (!selectedCategories.length) return;
         if (!confirm(`Bạn có chắc muốn xóa ${selectedCategories.length} danh mục đã chọn?`)) return;
         try {
-            const promises = selectedCategories.map(id => fetch(`${apiBase}/settings/categories/${id}`, { method: 'DELETE' }));
-            const results = await Promise.all(promises);
-            const success = results.every(res => res.ok);
-            if (success) {
-                toast.success(`Đã xóa thành công ${selectedCategories.length} danh mục`);
-                setSelectedCategories([]);
-                fetchCategories();
-                fetchExpenses();
-            } else {
-                toast.error("Một số danh mục không thể xóa");
-                fetchCategories();
-            }
-        } catch (error) {
-            toast.error("Lỗi kết nối máy chủ");
-            console.error(error);
+            await Promise.all(selectedCategories.map(id => axiosInstance.delete(`/settings/categories/${id}`)));
+            toast.success(`Đã xóa thành công ${selectedCategories.length} danh mục`);
+            setSelectedCategories([]);
+            fetchCategories();
+            fetchExpenses();
+        } catch (error: any) {
+            toast.error(error.message || "Một số danh mục không thể xóa");
+            fetchCategories();
         }
     };
 
@@ -271,10 +210,10 @@ export default function ExpensesPage() {
         <div className="p-6 max-w-[1600px] mx-auto space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold font-serif text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold font-serif text-gray-900 flex items-center gap-2">
                         <DollarSign className="w-6 h-6 text-rose-500" /> Quản lý Chi phí (Phiếu chi)
                     </h1>
-                    <p className="text-zinc-400 text-sm mt-1">Ghi nhận các khoản chi xuất khỏi quỹ tiền tệ</p>
+                    <p className="text-gray-500 text-sm mt-1">Ghi nhận các khoản chi xuất khỏi quỹ tiền tệ</p>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     {selectedExpenses.length > 0 && (
@@ -283,10 +222,10 @@ export default function ExpensesPage() {
                         </Button>
                     )}
                     <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <Input
                             placeholder="Tìm kiếm phiếu chi..."
-                            className="pl-9 bg-zinc-950 border-zinc-800 text-white w-full"
+                            className="pl-9 bg-white border-gray-200 text-gray-900 w-full"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -301,45 +240,45 @@ export default function ExpensesPage() {
                                 <Plus className="w-4 h-4 mr-2" /> Tạo phiếu chi
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-zinc-950 border-zinc-800 text-white sm:max-w-[500px]">
+                        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[500px]">
                             <DialogHeader>
                                 <DialogTitle>{formData.id ? 'Sửa Phiếu Chi' : 'Tạo Phiếu Chi Mới'}</DialogTitle>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-zinc-400">Mã phiếu chi</label>
+                                        <label className="text-xs font-medium text-gray-500">Mã phiếu chi</label>
                                         <Input
                                             placeholder="Tự động nếu để trống"
                                             value={formData.code}
                                             onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                                            className="bg-zinc-900 border-zinc-800"
+                                            className="bg-gray-50 border-gray-200"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-zinc-400">Số tiền (VND) <span className="text-rose-500">*</span></label>
+                                        <label className="text-xs font-medium text-gray-500">Số tiền (VND) <span className="text-rose-500">*</span></label>
                                         <Input
                                             type="number"
                                             placeholder="VD: 500000"
                                             value={formData.amount}
                                             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                            className="bg-zinc-900 border-zinc-800 font-bold text-rose-400"
+                                            className="bg-gray-50 border-gray-200 font-bold text-rose-400"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-medium text-zinc-400">Tên khoản chi <span className="text-rose-500">*</span></label>
+                                    <label className="text-xs font-medium text-gray-500">Tên khoản chi <span className="text-rose-500">*</span></label>
                                     <Input
                                         placeholder="VD: Chi trả tiền điện tháng 03"
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        className="bg-zinc-900 border-zinc-800"
+                                        className="bg-gray-50 border-gray-200"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-medium text-zinc-400">Danh mục <span className="text-rose-500">*</span></label>
+                                    <label className="text-xs font-medium text-gray-500">Danh mục <span className="text-rose-500">*</span></label>
                                     <select
-                                        className="w-full h-10 px-3 bg-zinc-900 border border-zinc-800 rounded-md text-sm outline-none"
+                                        className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm outline-none"
                                         value={formData.category}
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                     >
@@ -353,28 +292,28 @@ export default function ExpensesPage() {
 
                                 {formData.category === 'new' && (
                                     <div className="space-y-2 pl-4 border-l-2 border-rose-500">
-                                        <label className="text-xs font-medium text-zinc-400">Tên Tên Danh mục Mới</label>
+                                        <label className="text-xs font-medium text-gray-500">Tên Danh mục Mới</label>
                                         <Input
                                             placeholder="VD: Chi trả nhà cung cấp, Điện nước..."
                                             value={formData.newCategoryName}
                                             onChange={(e) => setFormData({ ...formData, newCategoryName: e.target.value })}
-                                            className="bg-zinc-900 border-zinc-800"
+                                            className="bg-gray-50 border-gray-200"
                                         />
                                     </div>
                                 )}
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-medium text-zinc-400">Ghi chú thêm</label>
+                                    <label className="text-xs font-medium text-gray-500">Ghi chú thêm</label>
                                     <Input
                                         placeholder="Mô tả nếu cần..."
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="bg-zinc-900 border-zinc-800"
+                                        className="bg-gray-50 border-gray-200"
                                     />
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" className="border-zinc-800" onClick={() => setIsOpen(false)}>Hủy</Button>
+                                <Button variant="outline" className="border-gray-200" onClick={() => setIsOpen(false)}>Hủy</Button>
                                 <Button className="bg-rose-600 hover:bg-rose-700 text-white" onClick={handleCreateExpense} disabled={!formData.title || !formData.amount || (!formData.category && !formData.newCategoryName)}>
                                     {formData.id ? 'Cập nhật' : 'Tạo phiếu chi'}
                                 </Button>
@@ -385,25 +324,25 @@ export default function ExpensesPage() {
             </div>
 
             <Tabs defaultValue="expenses" className="space-y-4">
-                <TabsList className="bg-zinc-950 border border-zinc-800 p-1">
-                    <TabsTrigger value="expenses" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-rose-400">
+                <TabsList className="bg-white border border-gray-200 p-1">
+                    <TabsTrigger value="expenses" className="data-[state=active]:bg-gray-50 data-[state=active]:text-rose-400">
                         Phiếu chi
                     </TabsTrigger>
-                    <TabsTrigger value="categories" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-rose-400">
+                    <TabsTrigger value="categories" className="data-[state=active]:bg-gray-50 data-[state=active]:text-rose-400">
                         Danh mục chi phí
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="expenses" className="space-y-4 mt-0">
-                    <Card className="bg-zinc-950 border-zinc-800 overflow-hidden">
+                    <Card className="bg-white border-gray-200 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-zinc-900/50 text-zinc-400 text-xs uppercase">
+                                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                                     <tr>
                                         <th className="px-4 py-3 w-10">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-rose-500 cursor-pointer"
+                                                className="w-4 h-4 rounded border-gray-300 bg-gray-50 accent-rose-500 cursor-pointer"
                                                 checked={filteredData.length > 0 && selectedExpenses.length === filteredData.length}
                                                 onChange={(e) => {
                                                     if (e.target.checked) setSelectedExpenses(filteredData.map(d => d.id));
@@ -411,7 +350,7 @@ export default function ExpensesPage() {
                                                 }}
                                             />
                                         </th>
-                                        <th className="px-4 py-3 font-medium">M Mã Phiếu</th>
+                                        <th className="px-4 py-3 font-medium">Mã Phiếu</th>
                                         <th className="px-4 py-3 font-medium">Tên khoản chi</th>
                                         <th className="px-4 py-3 font-medium">Danh mục</th>
                                         <th className="px-4 py-3 font-medium text-right">Số tiền (VND)</th>
@@ -421,18 +360,18 @@ export default function ExpensesPage() {
                                         <th className="px-4 py-3 font-medium text-right w-[100px]">Thao tác</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
+                                <tbody className="divide-y divide-zinc-800/50 text-gray-600">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={9} className="px-4 py-8 text-center text-zinc-500">Đang tải biểu dữ liệu...</td>
+                                            <td colSpan={9} className="px-4 py-8 text-center text-gray-400">Đang tải biểu dữ liệu...</td>
                                         </tr>
                                     ) : filteredData.length > 0 ? (
                                         filteredData.map(e => (
-                                            <tr key={e.id} className="hover:bg-zinc-900/30 transition-colors group">
+                                            <tr key={e.id} className="hover:bg-gray-50/30 transition-colors group">
                                                 <td className="px-4 py-3">
                                                     <input
                                                         type="checkbox"
-                                                        className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-rose-500 cursor-pointer"
+                                                        className="w-4 h-4 rounded border-gray-300 bg-gray-50 accent-rose-500 cursor-pointer"
                                                         checked={selectedExpenses.includes(e.id)}
                                                         onChange={(event) => {
                                                             if (event.target.checked) {
@@ -444,11 +383,11 @@ export default function ExpensesPage() {
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <div className="font-mono text-white text-xs bg-zinc-800 px-2 py-1 rounded inline-block">
+                                                    <div className="font-mono text-gray-800 text-xs bg-gray-100 px-2 py-1 rounded inline-block">
                                                         {e.code || 'N/A'}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 font-medium text-zinc-200">{e.title || 'Khoản chi không tên'}</td>
+                                                <td className="px-4 py-3 font-medium text-gray-700">{e.title || 'Khoản chi không tên'}</td>
                                                 <td className="px-4 py-3">
                                                     <span className="text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded text-xs font-medium border border-rose-500/20">
                                                         {e.category}
@@ -460,7 +399,7 @@ export default function ExpensesPage() {
                                                 <td className="px-4 py-3 text-xs">
                                                     {e.createdBy?.name || 'Hệ thống'}
                                                 </td>
-                                                <td className="px-4 py-3 text-zinc-400 text-xs">
+                                                <td className="px-4 py-3 text-gray-500 text-xs">
                                                     {format(new Date(e.date), 'dd/MM/yyyy HH:mm')}
                                                 </td>
                                                 <td className="px-4 py-3 text-xs max-w-[200px] truncate" title={e.description}>
@@ -469,16 +408,16 @@ export default function ExpensesPage() {
                                                 <td className="px-4 py-3 text-right">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800">
+                                                            <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-blue-700 hover:bg-gray-100">
                                                                 <MoreHorizontal className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300">
-                                                            <DropdownMenuItem className="focus:bg-zinc-800 focus:text-white cursor-pointer" onClick={() => handleEditExpense(e)}>
+                                                        <DropdownMenuContent align="end" className="bg-gray-50 border-gray-200 text-gray-600">
+                                                            <DropdownMenuItem className="focus:bg-gray-100 focus:text-gray-900 cursor-pointer" onClick={() => handleEditExpense(e)}>
                                                                 <FileEdit className="mr-2 h-4 w-4" />
                                                                 <span>Chỉnh sửa</span>
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuSeparator className="bg-zinc-800" />
+                                                            <DropdownMenuSeparator className="bg-gray-100" />
                                                             <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer" onClick={() => handleDeleteExpense(e.id)}>
                                                                 <Trash className="mr-2 h-4 w-4" />
                                                                 <span>Xóa</span>
@@ -490,7 +429,7 @@ export default function ExpensesPage() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={9} className="px-4 py-8 text-center text-zinc-500">Chưa có khoản chi nào được ghi nhận.</td>
+                                            <td colSpan={9} className="px-4 py-8 text-center text-gray-400">Chưa có khoản chi nào được ghi nhận.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -501,8 +440,8 @@ export default function ExpensesPage() {
 
                 <TabsContent value="categories" className="space-y-4 mt-0">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-medium text-white flex items-center gap-2">
-                            <FolderOpen className="w-5 h-5 text-zinc-400" /> Cấu hình danh mục chi phí
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                            <FolderOpen className="w-5 h-5 text-gray-500" /> Cấu hình danh mục chi phí
                         </h2>
                         <div className="flex gap-2">
                             {selectedCategories.length > 0 && (
@@ -510,20 +449,20 @@ export default function ExpensesPage() {
                                     <Trash className="w-4 h-4 mr-2" /> Xóa ({selectedCategories.length})
                                 </Button>
                             )}
-                            <Button className="bg-zinc-800 hover:bg-zinc-700 text-white" onClick={() => { setCategoryForm({ id: '', name: '' }); setIsCategoryOpen(true); }}>
+                            <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900" onClick={() => { setCategoryForm({ id: '', name: '' }); setIsCategoryOpen(true); }}>
                                 <Plus className="w-4 h-4 mr-2" /> Thêm danh mục
                             </Button>
                         </div>
                     </div>
 
-                    <Card className="bg-zinc-950 border-zinc-800">
+                    <Card className="bg-white border-gray-200">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-zinc-900/50 text-zinc-400 text-xs uppercase">
+                            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                                 <tr>
                                     <th className="px-4 py-3 w-10">
                                         <input
                                             type="checkbox"
-                                            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-rose-500 cursor-pointer"
+                                            className="w-4 h-4 rounded border-gray-300 bg-gray-50 accent-rose-500 cursor-pointer"
                                             checked={categories.length > 0 && selectedCategories.length === categories.length}
                                             onChange={(e) => {
                                                 if (e.target.checked) setSelectedCategories(categories.map(c => c.id));
@@ -536,13 +475,13 @@ export default function ExpensesPage() {
                                     <th className="px-4 py-3 font-medium text-right w-[100px]">Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
+                            <tbody className="divide-y divide-zinc-800/50 text-gray-600">
                                 {categories.map(c => (
-                                    <tr key={c.id} className="hover:bg-zinc-900/30">
+                                    <tr key={c.id} className="hover:bg-gray-50/30">
                                         <td className="px-4 py-3">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-rose-500 cursor-pointer"
+                                                className="w-4 h-4 rounded border-gray-300 bg-gray-50 accent-rose-500 cursor-pointer"
                                                 checked={selectedCategories.includes(c.id)}
                                                 onChange={(event) => {
                                                     if (event.target.checked) {
@@ -553,23 +492,23 @@ export default function ExpensesPage() {
                                                 }}
                                             />
                                         </td>
-                                        <td className="px-4 py-3 font-medium text-white">{c.name}</td>
+                                        <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
                                         <td className="px-4 py-3 text-right">
-                                            <span className="text-xs bg-zinc-800 px-2 py-1 rounded text-zinc-400">Expense</span>
+                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">Expense</span>
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800">
+                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-blue-700 hover:bg-gray-100">
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300">
-                                                    <DropdownMenuItem className="focus:bg-zinc-800 focus:text-white cursor-pointer" onClick={() => { setCategoryForm({ id: c.id, name: c.name }); setIsCategoryOpen(true); }}>
+                                                <DropdownMenuContent align="end" className="bg-gray-50 border-gray-200 text-gray-600">
+                                                    <DropdownMenuItem className="focus:bg-gray-100 focus:text-gray-900 cursor-pointer" onClick={() => { setCategoryForm({ id: c.id, name: c.name }); setIsCategoryOpen(true); }}>
                                                         <FileEdit className="mr-2 h-4 w-4" />
                                                         <span>Chỉnh sửa</span>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuSeparator className="bg-zinc-800" />
+                                                    <DropdownMenuSeparator className="bg-gray-100" />
                                                     <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer" onClick={() => handleDeleteCategory(c.id)}>
                                                         <Trash className="mr-2 h-4 w-4" />
                                                         <span>Xóa</span>
@@ -581,7 +520,7 @@ export default function ExpensesPage() {
                                 ))}
                                 {categories.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-8 text-center text-zinc-500">Chưa có cấu hình danh mục nào.</td>
+                                        <td colSpan={4} className="px-4 py-8 text-center text-gray-400">Chưa có cấu hình danh mục nào.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -592,23 +531,23 @@ export default function ExpensesPage() {
 
             {/* Category Dialog */}
             <Dialog open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
-                <DialogContent className="bg-zinc-950 border-zinc-800 text-white sm:max-w-[400px]">
+                <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[400px]">
                     <DialogHeader>
                         <DialogTitle>{categoryForm.id ? 'Sửa' : 'Thêm'} Danh Mục Chi Phí</DialogTitle>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-zinc-400">Tên danh mục <span className="text-rose-500">*</span></label>
+                            <label className="text-xs font-medium text-gray-500">Tên danh mục <span className="text-rose-500">*</span></label>
                             <Input
                                 placeholder="VD: Lương nhân viên, Điện nước..."
                                 value={categoryForm.name}
                                 onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" className="border-zinc-800" onClick={() => setIsCategoryOpen(false)}>Hủy</Button>
+                        <Button variant="outline" className="border-gray-200" onClick={() => setIsCategoryOpen(false)}>Hủy</Button>
                         <Button className="bg-rose-600 hover:bg-rose-700 text-white" onClick={handleSaveCategory} disabled={!categoryForm.name.trim()}>
                             Lưu ngay
                         </Button>

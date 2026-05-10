@@ -7,6 +7,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { MANAGEMENT_ROLES } from '../auth/constants/role-groups.constant';
 import { AutomationService } from './automation.service';
 import { CreateEmailTemplateDto, CreateAutomationFlowDto } from './dto/automation.dto';
+import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 
 @ApiTags('Automation')
 @Controller('automation')
@@ -24,6 +25,7 @@ export class AutomationController {
 
   @Post('templates')
   @Roles(...MANAGEMENT_ROLES)
+  @AuditLog('CREATE_EMAIL_TEMPLATE')
   @ApiOperation({ summary: 'Create an email template' })
   createTemplate(@Body() dto: CreateEmailTemplateDto) {
     return this.automationService.createTemplate(dto);
@@ -38,6 +40,7 @@ export class AutomationController {
 
   @Post('flows')
   @Roles(...MANAGEMENT_ROLES)
+  @AuditLog('CREATE_AUTOMATION_FLOW')
   @ApiOperation({ summary: 'Create an automation flow' })
   createFlow(@Body() dto: CreateAutomationFlowDto) {
     return this.automationService.createFlow(dto);

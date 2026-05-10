@@ -8,11 +8,13 @@ import { OtaChannel } from './entities/ota-channel.entity';
 import { OtaMapping } from './entities/ota-mapping.entity';
 import { SyncLog } from './entities/sync-log.entity';
 import { RoomType } from '../room/entities/room-type.entity';
+import { Guest } from '../guest/entities/guest.entity';
+import { Booking } from '../booking/entities/booking.entity';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([OtaChannel, OtaMapping, SyncLog, RoomType]),
+    TypeOrmModule.forFeature([OtaChannel, OtaMapping, SyncLog, RoomType, Guest, Booking]),
   ],
   providers: [OtaService, ChannexService],
   controllers: [OtaController],

@@ -8,11 +8,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateStaffDto } from './dto/create-staff.dto';
+import { UpdateStaffDto } from './dto/update-staff.dto';
 import { CreateUserAddressDto } from './dto/create-user-address.dto';
 import { UpdateUserAddressDto } from './dto/update-user-address.dto';
 import { User } from './entities/user.entity';
 import { UserAddress } from './entities/user-address.entity';
 import { UserPasswordHistory } from './entities/user-password-history.entity';
+import { PropertyCustomRole } from '../permission/entities/property-custom-role.entity';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { ROLE } from './enum/role';
 import * as bcrypt from 'bcrypt';
@@ -25,6 +28,8 @@ export class UserService {
     private readonly addressRepo: Repository<UserAddress>,
     @InjectRepository(UserPasswordHistory)
     private readonly passwordHistoryRepo: Repository<UserPasswordHistory>,
+    @InjectRepository(PropertyCustomRole)
+    private readonly customRoleRepo: Repository<PropertyCustomRole>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -40,12 +45,15 @@ export class UserService {
       roleToSet = dto.role;
     }
 
-    const existing = await this.repo.findOne({ where: { phone: dto.phone } });
-    if (existing) throw new ConflictException('Phone already registered');
+    if (dto.phone) {
+      const existing = await this.repo.findOne({ where: { phone: dto.phone } });
+      if (existing) throw new ConflictException('Phone already registered');
+    }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = this.repo.create({
-      phone: dto.phone,
+      ...(dto.username ? { username: dto.username } : {}),
+      ...(dto.phone ? { phone: dto.phone } : {}),
       name: dto.name,
       password: passwordHash,
       role: roleToSet,
@@ -81,6 +89,10 @@ export class UserService {
 
   async findByGoogleId(googleId: string) {
     return this.repo.findOne({ where: { googleId } });
+  }
+
+  async findByUsernameAndProperty(username: string, propertyId: string) {
+    return this.repo.findOne({ where: { username, propertyId } });
   }
 
   async createOrUpdateGoogleUser(googleProfile: {
@@ -291,9 +303,140 @@ export class UserService {
     return { message: 'Address deleted successfully' };
   }
 
+  // ── Property-scoped staff management ─────────────────────────────────────
+
+  async findStaffByProperty(propertyId: string) {
+    const users = await this.repo.find({
+      where: { propertyId },
+      order: { createdAt: 'ASC' },
+    });
+    return users.map((u) => this.stripSensitive(u));
+  }
+
+  async createStaff(propertyId: string, dto: CreateStaffDto, requesterRole: ROLE) {
+    const existing = await this.repo.findOne({ where: { username: dto.username, propertyId } });
+    if (existing) throw new ConflictException('Tên đăng nhập đã tồn tại trong khách sạn này');
+
+    if (dto.phone) {
+      const phoneExists = await this.repo.findOne({ where: { phone: dto.phone } });
+      if (phoneExists) throw new ConflictException('Số điện thoại đã được đăng ký');
+    }
+
+    // Resolve role: custom role overrides base role
+    let resolvedRole = dto.role;
+    let customRoleId: string | null = null;
+
+    if (dto.customRoleId) {
+      const customRole = await this.customRoleRepo.findOne({
+        where: { id: dto.customRoleId, propertyId },
+      });
+      if (!customRole) throw new NotFoundException('Vai trò tuỳ chỉnh không tồn tại');
+      resolvedRole = customRole.baseRole;
+      customRoleId = customRole.id;
+    } else {
+      const STAFF_ROLES: ROLE[] = [
+        ROLE.HOTEL_MANAGER, ROLE.FRONT_DESK, ROLE.HOUSEKEEPING,
+        ROLE.MAINTENANCE, ROLE.LAUNDRY, ROLE.WAREHOUSE,
+      ];
+      if (!STAFF_ROLES.includes(dto.role)) {
+        throw new ForbiddenException('Không thể tạo tài khoản với vai trò này');
+      }
+      if (dto.role === ROLE.HOTEL_MANAGER && requesterRole !== ROLE.HOTEL_OWNER && requesterRole !== ROLE.ADMIN) {
+        throw new ForbiddenException('Chỉ chủ khách sạn mới có thể tạo tài khoản Quản lý');
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const user = this.repo.create({
+      username: dto.username,
+      name: dto.name,
+      password: passwordHash,
+      role: resolvedRole,
+      propertyId,
+      customRoleId,
+      ...(dto.phone ? { phone: dto.phone } : {}),
+    });
+    const saved = await this.repo.save(user);
+    await this.addToPasswordHistory(saved.id, passwordHash);
+    return this.stripSensitive(saved);
+  }
+
+  async updateStaff(userId: string, propertyId: string, dto: UpdateStaffDto, requesterRole: ROLE) {
+    const user = await this.repo.findOne({ where: { id: userId, propertyId } });
+    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
+
+    if (user.role === ROLE.HOTEL_OWNER) {
+      throw new ForbiddenException('Không thể chỉnh sửa tài khoản chủ khách sạn');
+    }
+
+    if (dto.customRoleId !== undefined) {
+      if (dto.customRoleId === null) {
+        user.customRoleId = null;
+      } else {
+        const customRole = await this.customRoleRepo.findOne({
+          where: { id: dto.customRoleId, propertyId },
+        });
+        if (!customRole) throw new NotFoundException('Vai trò tuỳ chỉnh không tồn tại');
+        user.customRoleId = customRole.id;
+        user.role = customRole.baseRole;
+      }
+    } else if (dto.role) {
+      if (dto.role === ROLE.HOTEL_MANAGER && requesterRole !== ROLE.HOTEL_OWNER && requesterRole !== ROLE.ADMIN) {
+        throw new ForbiddenException('Chỉ chủ khách sạn mới có thể phân quyền Quản lý');
+      }
+      user.role = dto.role;
+      user.customRoleId = null;
+    }
+
+    if (dto.name) user.name = dto.name;
+    if (dto.phone) user.phone = dto.phone;
+
+    if (dto.newPassword) {
+      const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+      user.password = passwordHash;
+      await this.addToPasswordHistory(userId, passwordHash);
+    }
+
+    const saved = await this.repo.save(user);
+    return this.stripSensitive(saved);
+  }
+
+  async removeStaff(userId: string, propertyId: string) {
+    const user = await this.repo.findOne({ where: { id: userId, propertyId } });
+    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
+    if (user.role === ROLE.HOTEL_OWNER) {
+      throw new ForbiddenException('Không thể xóa tài khoản chủ khách sạn');
+    }
+    await this.repo.delete(userId);
+    return { success: true };
+  }
+
+  async toggleStaffLock(userId: string, propertyId: string) {
+    const user = await this.repo.findOne({ where: { id: userId, propertyId } });
+    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
+    if (user.role === ROLE.HOTEL_OWNER) {
+      throw new ForbiddenException('Không thể khóa tài khoản chủ khách sạn');
+    }
+    user.isLocked = !user.isLocked;
+    if (!user.isLocked) {
+      user.failCount = 0;
+      user.lockedAt = null;
+    }
+    await this.repo.save(user);
+    return { isLocked: user.isLocked };
+  }
+
+  async update2FASecret(userId: string, secret: string | null) {
+    await this.repo.update(userId, { twoFactorSecret: secret });
+  }
+
+  async set2FAEnabled(userId: string, enabled: boolean) {
+    await this.repo.update(userId, { twoFactorEnabled: enabled });
+  }
+
   private stripSensitive(user: User) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, hashedRefreshToken, ...rest } = user;
+    const { password, hashedRefreshToken, twoFactorSecret, ...rest } = user;
     return rest;
   }
 }

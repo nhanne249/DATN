@@ -15,9 +15,11 @@ export class AuditLogService {
     action: string,
     ipAddress?: string,
     details?: Record<string, unknown>,
+    userName?: string,
   ) {
     const log = this.auditLogRepo.create({
       userId,
+      userName,
       action,
       ipAddress,
       details,
@@ -30,13 +32,14 @@ export class AuditLogService {
     action: string;
     details?: Record<string, unknown>;
     ipAddress?: string;
+    userName?: string;
     [key: string]: any;
   }) {
-    const { userId, action, ipAddress, details, ...rest } = params;
+    const { userId, action, ipAddress, details, userName, ...rest } = params;
     return this.logAction(userId, action, ipAddress, {
       ...details,
       ...rest,
-    });
+    }, userName);
   }
 
   async findAll(query: {
@@ -44,8 +47,10 @@ export class AuditLogService {
     offset?: number;
     userId?: string;
     action?: string;
+    startDate?: string;
+    endDate?: string;
   }) {
-    const { limit = 50, offset = 0, userId, action } = query;
+    const { limit = 50, offset = 0, userId, action, startDate, endDate } = query;
     const qb = this.auditLogRepo.createQueryBuilder('log');
 
     if (userId) {
@@ -53,7 +58,17 @@ export class AuditLogService {
     }
 
     if (action) {
-      qb.andWhere('log.action = :action', { action });
+      qb.andWhere('log.action ILIKE :action', { action: `%${action}%` });
+    }
+
+    if (startDate) {
+      qb.andWhere('log.createdAt >= :startDate', { startDate: new Date(startDate) });
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('log.createdAt <= :endDate', { endDate: end });
     }
 
     qb.orderBy('log.createdAt', 'DESC');

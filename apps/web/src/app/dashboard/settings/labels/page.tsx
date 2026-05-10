@@ -11,9 +11,9 @@ export default function Page() {
         { name: 'Cần chú ý', color: '#F59E0B' },
     ];
     return (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-gray-50 border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-white text-base">Quản lý nhãn</CardTitle>
+                <CardTitle className="text-gray-900 text-base">Quản lý nhãn</CardTitle>
                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700">+ Tạo nhãn</Button>
             </CardHeader>
             <CardContent>

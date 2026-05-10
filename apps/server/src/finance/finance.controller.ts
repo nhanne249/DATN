@@ -8,12 +8,10 @@ import {
   Delete,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { FinanceService } from './finance.service';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
-import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -30,7 +28,6 @@ import {
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
 @Roles(...STAFF_ROLES)
-@UseInterceptors(AuditLogInterceptor)
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}
 

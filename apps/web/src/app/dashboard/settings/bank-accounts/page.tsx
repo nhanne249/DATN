@@ -26,11 +26,11 @@ export default function BankAccountsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                         <Landmark className="h-6 w-6 text-emerald-500" />
                         Tài khoản Nhận thanh toán
                     </h3>
-                    <p className="text-sm text-zinc-400 mt-1">Cấu hình số tài khoản để in lên Thu/Chi, Hóa đơn và Mã QR thanh toán.</p>
+                    <p className="text-sm text-gray-500 mt-1">Cấu hình số tài khoản để in lên Thu/Chi, Hóa đơn và Mã QR thanh toán.</p>
                 </div>
                 <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -38,29 +38,29 @@ export default function BankAccountsPage() {
                 </Button>
             </div>
 
-            <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
+            <Card className="bg-gray-50 border-gray-200 overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-zinc-900/80 border-b border-zinc-800">
-                        <TableRow className="hover:bg-transparent border-zinc-800">
-                            <TableHead className="text-zinc-400 font-medium py-4">Ngân hàng / Ví</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4">Chủ tài khoản</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4">Số tài khoản</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4">Chi nhánh</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4 text-center">Mặc định</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4 text-right">Thao tác</TableHead>
+                    <TableHeader className="bg-gray-50/80 border-b border-gray-200">
+                        <TableRow className="hover:bg-transparent border-gray-200">
+                            <TableHead className="text-gray-500 font-medium py-4">Ngân hàng / Ví</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4">Chủ tài khoản</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4">Số tài khoản</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4">Chi nhánh</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4 text-center">Mặc định</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4 text-right">Thao tác</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {MOCK_BANKS.map(bank => (
-                            <TableRow key={bank.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/40 transition-colors">
-                                <TableCell className="font-semibold text-zinc-200">{bank.bankName}</TableCell>
-                                <TableCell className="text-zinc-300 font-mono text-sm">{bank.accountName}</TableCell>
+                            <TableRow key={bank.id} className="border-b border-gray-200/60 hover:bg-gray-100/40 transition-colors">
+                                <TableCell className="font-semibold text-gray-700">{bank.bankName}</TableCell>
+                                <TableCell className="text-gray-600 font-mono text-sm">{bank.accountName}</TableCell>
                                 <TableCell>
-                                    <code className="bg-zinc-950 px-2 py-1 rounded text-blue-400 border border-zinc-800 text-sm font-bold tracking-wider">
+                                    <code className="bg-white px-2 py-1 rounded text-blue-400 border border-gray-200 text-sm font-bold tracking-wider">
                                         {bank.accountNumber}
                                     </code>
                                 </TableCell>
-                                <TableCell className="text-zinc-400 text-sm">{bank.branch}</TableCell>
+                                <TableCell className="text-gray-500 text-sm">{bank.branch}</TableCell>
                                 <TableCell className="text-center">
                                     {bank.isDefault && (
                                         <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 font-normal">
@@ -70,7 +70,7 @@ export default function BankAccountsPage() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-700 hover:bg-gray-100">
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10">

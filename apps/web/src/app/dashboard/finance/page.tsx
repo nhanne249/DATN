@@ -53,20 +53,20 @@ export default function FinancePage() {
     };
 
     return (
-        <div className="flex-1 space-y-6 p-8 pt-6 bg-zinc-950 min-h-screen text-white">
+        <div className="flex-1 space-y-6 p-8 pt-6 bg-gray-50 min-h-screen text-gray-900">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-5">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                         <Wallet className="h-6 w-6 text-blue-500" />
                         Quản lý Tài chính
                     </h2>
-                    <p className="text-zinc-500 mt-1">
+                    <p className="text-gray-400 mt-1">
                         Theo dõi doanh thu, chi phí và lợi nhuận của khách sạn.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+                    <Button variant="outline" className="bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100">
                         <Download className="mr-2 h-4 w-4" /> Xuất báo cáo
                     </Button>
                     <Button 
@@ -83,36 +83,36 @@ export default function FinancePage() {
 
             {/* Stats Overview */}
             <div className="grid gap-6 md:grid-cols-3">
-                <Card className="bg-zinc-900 border-zinc-800 border-b-2 border-b-emerald-500/50">
+                <Card className="bg-gray-50 border-gray-200 border-b-2 border-b-emerald-500/50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Tổng doanh thu (Phiếu thu)</CardTitle>
+                        <CardTitle className="text-sm font-medium text-gray-500">Tổng doanh thu (Phiếu thu)</CardTitle>
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-400">+{totalIncome.toLocaleString('vi-VN')}₫</div>
-                        <p className="text-xs text-zinc-500 mt-1">Dựa trên các khoản thanh toán</p>
+                        <p className="text-xs text-gray-400 mt-1">Dựa trên các khoản thanh toán</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800 border-b-2 border-b-rose-500/50">
+                <Card className="bg-gray-50 border-gray-200 border-b-2 border-b-rose-500/50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Tổng chi phí (Phiếu chi)</CardTitle>
+                        <CardTitle className="text-sm font-medium text-gray-500">Tổng chi phí (Phiếu chi)</CardTitle>
                         <TrendingDown className="h-4 w-4 text-rose-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-rose-400">-{totalExpense.toLocaleString('vi-VN')}₫</div>
-                        <p className="text-xs text-zinc-500 mt-1">Lương, điện nước, vận hành...</p>
+                        <p className="text-xs text-gray-400 mt-1">Lương, điện nước, vận hành...</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800 border-b-2 border-b-blue-500/50">
+                <Card className="bg-gray-50 border-gray-200 border-b-2 border-b-blue-500/50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Lợi nhuận gộp</CardTitle>
+                        <CardTitle className="text-sm font-medium text-gray-500">Lợi nhuận gộp</CardTitle>
                         <DollarSign className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
                             {balance.toLocaleString('vi-VN')}₫
                         </div>
-                        <p className="text-xs text-zinc-500 mt-1">Kết quả kinh doanh (Dự kiến)</p>
+                        <p className="text-xs text-gray-400 mt-1">Kết quả kinh doanh (Dự kiến)</p>
                     </CardContent>
                 </Card>
             </div>
@@ -121,24 +121,24 @@ export default function FinancePage() {
             <div className="flex flex-wrap items-center justify-between gap-4 py-2">
                 <div className="flex flex-1 items-center gap-3">
                     <div className="relative w-full max-w-sm">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                         <Input
                             placeholder="Tìm kiếm giao dịch..."
-                            className="bg-zinc-900 border-zinc-800 pl-9 focus-visible:ring-blue-500"
+                            className="bg-gray-50 border-gray-200 pl-9 focus-visible:ring-blue-500"
                         />
                     </div>
-                    <Button variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-400">
+                    <Button variant="outline" className="bg-gray-50 border-gray-200 text-gray-500">
                         <Filter className="mr-2 h-4 w-4" /> Lọc
                     </Button>
                 </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="bg-zinc-900/50 border border-zinc-800 p-1">
-                    <TabsTrigger value="payments" className="data-[state=active]:bg-zinc-800 rounded-md py-2 px-6">
+                <TabsList className="bg-gray-50 border border-gray-200 p-1">
+                    <TabsTrigger value="payments" className="data-[state=active]:bg-gray-100 rounded-md py-2 px-6">
                         Phiếu thu (Doanh thu)
                     </TabsTrigger>
-                    <TabsTrigger value="expenses" className="data-[state=active]:bg-zinc-800 rounded-md py-2 px-6">
+                    <TabsTrigger value="expenses" className="data-[state=active]:bg-gray-100 rounded-md py-2 px-6">
                         Phiếu chi (Chi phí)
                     </TabsTrigger>
                 </TabsList>
@@ -146,8 +146,8 @@ export default function FinancePage() {
                 <TabsContent value="payments" className="m-0">
                     {loadingPayments ? (
                         <div className="space-y-3">
-                            <Skeleton className="h-12 w-full bg-zinc-900" />
-                            <Skeleton className="h-[400px] w-full bg-zinc-900" />
+                            <Skeleton className="h-12 w-full bg-gray-50" />
+                            <Skeleton className="h-[400px] w-full bg-gray-50" />
                         </div>
                     ) : (
                         <PaymentTable payments={payments || []} />
@@ -157,8 +157,8 @@ export default function FinancePage() {
                 <TabsContent value="expenses" className="m-0">
                     {loadingExpenses ? (
                         <div className="space-y-3">
-                            <Skeleton className="h-12 w-full bg-zinc-900" />
-                            <Skeleton className="h-[400px] w-full bg-zinc-900" />
+                            <Skeleton className="h-12 w-full bg-gray-50" />
+                            <Skeleton className="h-[400px] w-full bg-gray-50" />
                         </div>
                     ) : (
                         <ExpenseTable 

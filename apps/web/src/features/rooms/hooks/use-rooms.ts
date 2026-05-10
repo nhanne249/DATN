@@ -6,6 +6,7 @@ export const useRooms = (propertyId: string) => {
   return useQuery({
     queryKey: ['rooms', propertyId],
     queryFn: () => roomService.getRooms(propertyId).then(res => res.data),
+    enabled: !!propertyId,
   });
 };
 
@@ -13,6 +14,7 @@ export const useRoomTypes = (propertyId: string) => {
   return useQuery({
     queryKey: ['roomTypes', propertyId],
     queryFn: () => roomService.getRoomTypes(propertyId).then(res => res.data),
+    enabled: !!propertyId,
   });
 };
 

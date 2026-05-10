@@ -37,6 +37,7 @@ async function bootstrap() {
   if (!property) {
     property = await propertyRepo.save(propertyRepo.create({
       name: 'Khách sạn Phương Nam',
+      slug: 'phuong-nam',
       phone: '0283456789',
       email: 'info@phuongnam.vn',
       address: '123 Nguyễn Huệ, Quận 1, TP.HCM',
@@ -51,6 +52,7 @@ async function bootstrap() {
   // Cập nhật thông tin property đẹp hơn
   await propertyRepo.update(property.id, {
     name: 'Khách sạn Phương Nam',
+    slug: property.slug ?? 'phuong-nam',
     phone: '0283456789',
     email: 'info@phuongnam.vn',
     address: '123 Nguyễn Huệ, Quận 1, TP.HCM',
@@ -64,22 +66,26 @@ async function bootstrap() {
   // ── Staff accounts ──────────────────────────────────────────────────────────
   const userRepo = ds.getRepository(User);
   const staffData = [
-    { phone: '+84901111001', name: 'Nguyễn Văn Bình', role: ROLE.HOTEL_MANAGER },
-    { phone: '+84901111002', name: 'Trần Thị Lan', role: ROLE.FRONT_DESK },
-    { phone: '+84901111003', name: 'Lê Văn Cường', role: ROLE.FRONT_DESK },
-    { phone: '+84901111004', name: 'Phạm Thị Hoa', role: ROLE.HOUSEKEEPING },
-    { phone: '+84901111005', name: 'Võ Văn Dũng', role: ROLE.HOUSEKEEPING },
-    { phone: '+84901111006', name: 'Đặng Thị Mai', role: ROLE.HOUSEKEEPING },
-    { phone: '+84901111007', name: 'Bùi Văn Tài', role: ROLE.MAINTENANCE },
-    { phone: '+84901111008', name: 'Huỳnh Thị Thu', role: ROLE.LAUNDRY },
-    { phone: '+84901111009', name: 'Ngô Văn Khoa', role: ROLE.WAREHOUSE },
+    { phone: '+84901111001', username: 'manager', name: 'Nguyễn Văn Bình', role: ROLE.HOTEL_MANAGER },
+    { phone: '+84901111002', username: 'frontdesk1', name: 'Trần Thị Lan', role: ROLE.FRONT_DESK },
+    { phone: '+84901111003', username: 'frontdesk2', name: 'Lê Văn Cường', role: ROLE.FRONT_DESK },
+    { phone: '+84901111004', username: 'hk1', name: 'Phạm Thị Hoa', role: ROLE.HOUSEKEEPING },
+    { phone: '+84901111005', username: 'hk2', name: 'Võ Văn Dũng', role: ROLE.HOUSEKEEPING },
+    { phone: '+84901111006', username: 'hk3', name: 'Đặng Thị Mai', role: ROLE.HOUSEKEEPING },
+    { phone: '+84901111007', username: 'maintenance1', name: 'Bùi Văn Tài', role: ROLE.MAINTENANCE },
+    { phone: '+84901111008', username: 'laundry1', name: 'Huỳnh Thị Thu', role: ROLE.LAUNDRY },
+    { phone: '+84901111009', username: 'warehouse1', name: 'Ngô Văn Khoa', role: ROLE.WAREHOUSE },
   ];
   const staffMap: Record<string, User> = {};
   for (const s of staffData) {
-    let u = await userRepo.findOne({ where: { phone: s.phone } });
+    let u = await userRepo.findOne({ where: { username: s.username, propertyId: pid } });
+    if (!u) u = await userRepo.findOne({ where: { phone: s.phone } });
     if (!u) {
       const hash = await bcrypt.hash('Password@123', 10);
       u = await userRepo.save(userRepo.create({ ...s, password: hash, propertyId: pid }));
+    } else if (!u.username) {
+      await userRepo.update(u.id, { username: s.username });
+      u.username = s.username;
     }
     staffMap[s.role] = u;
   }
@@ -445,13 +451,15 @@ async function bootstrap() {
   }
 
   console.log('\n✅ Seed hoàn tất!\n');
+  const freshProp = await propertyRepo.findOne({ where: { id: pid } });
   console.log('─────────────────────────────────────────');
   console.log('Tài khoản đăng nhập:');
+  console.log(`  Khách sạn slug: ${freshProp?.slug ?? 'phuong-nam'}`);
   const ownerUser = await userRepo.findOne({ where: { propertyId: pid, role: ROLE.HOTEL_OWNER } })
     ?? await userRepo.findOne({ where: { propertyId: pid } });
-  if (ownerUser) console.log(`  Chủ khách sạn: ${ownerUser.phone} / Password@123`);
-  console.log('  Quản lý:      +84901111001 / Password@123');
-  console.log('  Lễ tân:       +84901111002 / Password@123');
+  if (ownerUser) console.log(`  Chủ khách sạn: username=${ownerUser.username ?? ownerUser.phone} / Password@123`);
+  console.log('  Quản lý:      username=manager / Password@123');
+  console.log('  Lễ tân:       username=frontdesk1 / Password@123');
   console.log('─────────────────────────────────────────\n');
 
   await app.close();

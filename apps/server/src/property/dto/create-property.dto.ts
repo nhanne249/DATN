@@ -6,6 +6,11 @@ export class CreatePropertyDto {
   @IsString()
   name: string;
 
+  @ApiProperty({ example: 'my-hotel', required: false, description: 'URL-safe unique identifier for login' })
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
   @ApiProperty({ example: '0123456789', required: false })
   @IsString()
   @IsOptional()

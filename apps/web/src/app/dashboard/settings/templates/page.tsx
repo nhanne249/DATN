@@ -7,6 +7,8 @@ import { Tabs as RadixTabs, TabsContent, TabsList, TabsTrigger } from '@/compone
 import { FileText, Save, PenSquare, X, Type, Code } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuthStore } from '@/store/use-auth-store';
+import axiosInstance from '@/lib/axios';
+import { toast } from 'sonner';
 
 const DEFAULT_INVOICE_TEMPLATE = `
 <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #333;">
@@ -149,11 +151,6 @@ const DEFAULT_DEPOSIT_TEMPLATE = `
 export default function TemplatesPage() {
     const { activePropertyId } = useAuthStore();
     const propertyId = activePropertyId || process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || '';
-    const apiBase = (() => {
-        const url = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
-        if (!url) return '/api';
-        return url.endsWith('/api') ? url : `${url}/api`;
-    })();
     const [templates, setTemplates] = useState<{ id?: string, type: string, content: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewingType, setViewingType] = useState('invoice');
@@ -175,9 +172,8 @@ export default function TemplatesPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${apiBase}/settings/print-templates?propertyId=${propertyId}`);
-            const data = await res.json();
-            setTemplates(data || []);
+            const res = await axiosInstance.get('/settings/print-templates', { params: { propertyId } });
+            setTemplates(res.data || []);
         } catch (error) {
             console.error("Error fetching templates", error);
         } finally {
@@ -225,23 +221,12 @@ export default function TemplatesPage() {
                 type: viewingType,
                 content: editorContent
             };
-
-            const res = await fetch(`${apiBase}/settings/print-templates`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                alert("Đã lưu mẫu in thành công!");
-                setIsEditModalOpen(false);
-                fetchData();
-            } else {
-                const err = await res.json();
-                alert("Lỗi khi lưu: " + err.message);
-            }
-        } catch (error) {
-            alert("Lỗi mạng khi lưu");
+            await axiosInstance.post('/settings/print-templates', payload);
+            toast.success('Đã lưu mẫu in thành công');
+            setIsEditModalOpen(false);
+            fetchData();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || error?.message || 'Lỗi khi lưu mẫu in');
         } finally {
             setIsSaving(false);
         }
@@ -251,11 +236,11 @@ export default function TemplatesPage() {
         <div className="p-6 max-w-7xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <FileText className="w-6 h-6 text-blue-500" />
                         Mẫu In ấn
                     </h1>
-                    <p className="text-zinc-400 mt-1">Quản lý mẫu in Hóa đơn và Phiếu đặt cọc của bạn.</p>
+                    <p className="text-gray-500 mt-1">Quản lý mẫu in Hóa đơn và Phiếu đặt cọc của bạn.</p>
                 </div>
                 <Button onClick={openEditModal} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
                     <PenSquare className="w-4 h-4 mr-2" />
@@ -263,17 +248,17 @@ export default function TemplatesPage() {
                 </Button>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-900 shadow">
+            <Card className="bg-white border-zinc-900 shadow">
                 <CardHeader className="pb-4 border-b border-zinc-900">
                     <RadixTabs value={viewingType} onValueChange={setViewingType} className="w-full">
-                        <TabsList className="bg-zinc-900 grid w-[400px] grid-cols-2">
-                            <TabsTrigger value="invoice" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Hóa Đơn</TabsTrigger>
-                            <TabsTrigger value="deposit" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Phiếu Đặt Cọc</TabsTrigger>
+                        <TabsList className="bg-gray-50 grid w-[400px] grid-cols-2">
+                            <TabsTrigger value="invoice" className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900">Hóa Đơn</TabsTrigger>
+                            <TabsTrigger value="deposit" className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900">Phiếu Đặt Cọc</TabsTrigger>
                         </TabsList>
                     </RadixTabs>
                 </CardHeader>
                 <CardContent className="pt-6 relative">
-                    <div className="bg-zinc-900/50 p-6 rounded-lg border border-zinc-800 flex justify-center custom-scrollbar max-h-[700px] overflow-auto">
+                    <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 flex justify-center custom-scrollbar max-h-[700px] overflow-auto">
                         <div
                             className="bg-white p-8 shadow-md rounded pointer-events-none opacity-90"
                             style={{ width: '210mm', minHeight: '297mm', transform: 'scale(0.85)', transformOrigin: 'top center' }}
@@ -285,35 +270,35 @@ export default function TemplatesPage() {
 
             {/* FULL SCREEN EDIT MODAL */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="!max-w-[100vw] !w-screen !h-[100dvh] !m-0 flex flex-col !p-0 gap-0 border-none !rounded-none overflow-hidden bg-zinc-950 duration-0 animate-none">
-                    <DialogHeader className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/50 flex-shrink-0 flex flex-row items-center justify-between">
+                <DialogContent className="!max-w-[100vw] !w-screen !h-[100dvh] !m-0 flex flex-col !p-0 gap-0 border-none !rounded-none overflow-hidden bg-white duration-0 animate-none">
+                    <DialogHeader className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex-shrink-0 flex flex-row items-center justify-between">
                         <div>
                             <DialogTitle className="text-xl">
                                 Chỉnh sửa Mẫu {viewingType === 'invoice' ? 'Hóa đơn' : 'Phiếu đặt cọc'}
                             </DialogTitle>
-                            <div className="text-xs text-zinc-500 mt-1 flex gap-2 w-full max-w-[800px] flex-wrap">
+                            <div className="text-xs text-gray-400 mt-1 flex gap-2 w-full max-w-[800px] flex-wrap">
                                 <strong>Biến hợp lệ:</strong>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{propertyName}}'}</span>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{guestName}}'}</span>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{bookingCode}}'}</span>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{grandTotal}}'}</span>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{paidAmount}}'}</span>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{roomName}}'}</span>
-                                <span className="bg-zinc-800 px-1 py-0.5 rounded text-blue-400">{'{{checkInDate}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{propertyName}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{guestName}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{bookingCode}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{grandTotal}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{paidAmount}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{roomName}}'}</span>
+                                <span className="bg-gray-100 px-1 py-0.5 rounded text-blue-400">{'{{checkInDate}}'}</span>
                             </div>
                         </div>
                     </DialogHeader>
 
                     {/* Split View */}
-                    <div className="flex-1 grid grid-cols-2 min-h-0 bg-zinc-950">
+                    <div className="flex-1 grid grid-cols-2 min-h-0 bg-white">
                         {/* Editor Side */}
-                        <div className="flex flex-col border-r border-zinc-800 min-h-0 h-full">
-                            <div className="flex items-center gap-2 p-2 border-b border-zinc-800 bg-zinc-900/50">
+                        <div className="flex flex-col border-r border-gray-200 min-h-0 h-full">
+                            <div className="flex items-center gap-2 p-2 border-b border-gray-200 bg-gray-50">
                                 <Button
                                     variant={editorMode === 'word' ? 'secondary' : 'ghost'}
                                     size="sm"
                                     onClick={() => setEditorMode('word')}
-                                    className={editorMode === 'word' ? "bg-zinc-800 text-white" : "text-zinc-400"}
+                                    className={editorMode === 'word' ? "bg-gray-100 text-gray-900" : "text-gray-500"}
                                 >
                                     <Type className="w-4 h-4 mr-2" /> Word (Trực quan)
                                 </Button>
@@ -321,7 +306,7 @@ export default function TemplatesPage() {
                                     variant={editorMode === 'html' ? 'secondary' : 'ghost'}
                                     size="sm"
                                     onClick={() => setEditorMode('html')}
-                                    className={editorMode === 'html' ? "bg-zinc-800 text-white" : "text-zinc-400"}
+                                    className={editorMode === 'html' ? "bg-gray-100 text-gray-900" : "text-gray-500"}
                                 >
                                     <Code className="w-4 h-4 mr-2" /> HTML
                                 </Button>
@@ -374,10 +359,10 @@ export default function TemplatesPage() {
                         </div>
 
                         {/* Preview Side */}
-                        <div className="flex flex-col min-h-0 bg-zinc-900 h-full relative">
-                            <div className="absolute top-0 inset-x-0 h-10 bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 flex items-center px-4 justify-between z-10 shadow-sm">
-                                <span className="text-xs font-semibold text-zinc-400 tracking-wider">XEM TRƯỚC (LIVE PREVIEW)</span>
-                                <span className="text-xs bg-black/50 text-zinc-500 px-2 rounded-sm border border-zinc-700">A4 Format</span>
+                        <div className="flex flex-col min-h-0 bg-gray-50 h-full relative">
+                            <div className="absolute top-0 inset-x-0 h-10 bg-gray-50/80 backdrop-blur-md border-b border-gray-200 flex items-center px-4 justify-between z-10 shadow-sm">
+                                <span className="text-xs font-semibold text-gray-500 tracking-wider">XEM TRƯỚC (LIVE PREVIEW)</span>
+                                <span className="text-xs bg-black/50 text-gray-400 px-2 rounded-sm border border-gray-300">A4 Format</span>
                             </div>
 
                             <div className="flex-1 overflow-y-auto custom-scrollbar pt-14 pb-8 flex justify-center w-full">
@@ -394,11 +379,11 @@ export default function TemplatesPage() {
                         </div>
                     </div>
 
-                    <DialogFooter className="px-6 py-4 border-t border-zinc-800 bg-zinc-900 flex-shrink-0 flex sm:justify-end gap-2">
+                    <DialogFooter className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0 flex sm:justify-end gap-2">
                         <Button
                             variant="outline"
                             onClick={() => setIsEditModalOpen(false)}
-                            className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 shrink-0"
+                            className="bg-transparent border-gray-300 text-gray-600 hover:bg-gray-100 shrink-0"
                             disabled={isSaving}
                         >
                             <X className="w-4 h-4 mr-2" /> Hủy

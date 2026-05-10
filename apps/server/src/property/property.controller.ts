@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -20,7 +19,6 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './entities/property.entity';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
-import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
@@ -32,7 +30,6 @@ import { MANAGEMENT_ROLES } from '../auth/constants/role-groups.constant';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
 @Roles(...MANAGEMENT_ROLES)
-@UseInterceptors(AuditLogInterceptor)
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 

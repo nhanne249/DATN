@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
@@ -12,6 +13,10 @@ import { GuestModule } from './guest/guest.module';
 import { BookingModule } from './booking/booking.module';
 import { TaskModule } from './task/task.module';
 import { FinanceModule } from './finance/finance.module';
+import { MinibarModule } from './minibar/minibar.module';
+import { LaundryModule } from './laundry/laundry.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { EventsModule } from './events/events.module';
 
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -22,6 +27,7 @@ import { AutomationModule } from './automation/automation.module';
 import { WebsiteModule } from './website/website.module';
 import { MediaModule } from './media/media.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PermissionModule } from './permission/permission.module';
 import { PropertyAccessGuard } from './auth/guards/property-access.guard';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
@@ -36,6 +42,7 @@ const UPLOAD_ROOT =
       serveRoot: '/api/uploads',
     }),
     ConfigModule.forRoot({ isGlobal: true }),
+    CacheModule.register({ isGlobal: true, ttl: 60000, max: 500 }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -80,6 +87,11 @@ const UPLOAD_ROOT =
     WebsiteModule,
     MediaModule,
     DashboardModule,
+    EventsModule,
+    MinibarModule,
+    LaundryModule,
+    InventoryModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [AppService, PropertyAccessGuard],

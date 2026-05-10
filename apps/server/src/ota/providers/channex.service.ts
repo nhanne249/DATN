@@ -9,11 +9,25 @@ import {
   SyncStatus,
 } from '../entities/sync-log.entity';
 
+export interface ChannexAriValue {
+  property_id: string;
+  room_type_id: string;
+  rate_plan_id?: string;
+  date_from: string;
+  date_to: string;
+  availability?: number;
+  rate?: string;
+  closed?: boolean;
+  closed_to_arrival?: boolean;
+  closed_to_departure?: boolean;
+  min_stay_arrival?: number;
+}
+
 @Injectable()
 export class ChannexService {
   private readonly logger = new Logger(ChannexService.name);
-  private readonly apiUrl = 'https://api.channex.io/b/api/v1';
   private readonly globalApiKey: string;
+  private readonly isSandbox: boolean;
 
   constructor(
     private readonly config: ConfigService,
@@ -21,19 +35,27 @@ export class ChannexService {
     private readonly syncLogRepo: Repository<SyncLog>,
   ) {
     this.globalApiKey = this.config.get<string>('CHANNEX_API_KEY') ?? '';
+    this.isSandbox = this.config.get<string>('CHANNEX_SANDBOX') === 'true';
+  }
+
+  private get apiUrl(): string {
+    return this.isSandbox
+      ? 'https://api.sandbox.channex.io/v1'
+      : 'https://api.channex.io/api/v1';
   }
 
   // ============================================================
   // Private Helpers
   // ============================================================
 
-  /** Resolve the API key: prefer per-channel credential, fallback to global env key */
   private resolveApiKey(channel: OtaChannel): string {
-    const credentials = channel.credentials as
-      | Record<string, string>
-      | undefined;
-    const perChannelKey = credentials?.apiKey;
-    return perChannelKey || this.globalApiKey;
+    const credentials = channel.credentials as Record<string, string> | undefined;
+    return credentials?.apiKey || this.globalApiKey;
+  }
+
+  private resolveChannexPropertyId(channel: OtaChannel): string {
+    const credentials = channel.credentials as Record<string, string> | undefined;
+    return credentials?.channexPropertyId || '';
   }
 
   private buildHeaders(apiKey: string): Record<string, string> {
@@ -43,10 +65,6 @@ export class ChannexService {
     };
   }
 
-  /**
-   * Generic HTTP request helper against the Channex API.
-   * Throws on non-2xx responses.
-   */
   async request<T = unknown>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
@@ -56,8 +74,7 @@ export class ChannexService {
     const response = await fetch(url, {
       method,
       headers: this.buildHeaders(options.apiKey),
-      body:
-        options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     });
 
     if (!response.ok) {
@@ -74,19 +91,11 @@ export class ChannexService {
   // ARI (Availability / Rates / Restrictions)
   // ============================================================
 
-  /**
-   * Push Availability, Rates, and Restrictions to Channex.
-   * `data` should follow the Channex ARI payload schema.
-   */
-  async pushARI(
-    channel: OtaChannel,
-    data: unknown,
-  ): Promise<{ success: boolean }> {
+  async pushARI(channel: OtaChannel, data: unknown): Promise<{ success: boolean }> {
     const apiKey = this.resolveApiKey(channel);
-    if (!apiKey)
-      throw new Error('Channex API Key not configured for this channel');
+    if (!apiKey) throw new Error('Channex API Key not configured for this channel');
 
-    this.logger.log(`Pushing ARI to Channex for channel ${channel.id}`);
+    this.logger.log(`Pushing ARI to Channex for channel ${channel.id} (${this.isSandbox ? 'sandbox' : 'production'})`);
 
     const syncLog = await this.syncLogRepo.save(
       this.syncLogRepo.create({
@@ -102,9 +111,6 @@ export class ChannexService {
     try {
       await this.request('POST', '/ari', { apiKey, body: data });
 
-      this.logger.log(
-        `Successfully pushed ARI to Channex for channel ${channel.id}`,
-      );
       syncLog.status = SyncStatus.SUCCESS;
       syncLog.duration = Date.now() - startTime;
       await this.syncLogRepo.save(syncLog);
@@ -116,48 +122,62 @@ export class ChannexService {
       syncLog.details = { error: message, data };
       syncLog.duration = Date.now() - startTime;
       await this.syncLogRepo.save(syncLog);
-
       this.logger.error(`Failed to push ARI: ${message}`);
       throw error;
     }
+  }
+
+  /**
+   * Push availability values in Channex ARI format.
+   * Uses per-channel channexPropertyId credential if set.
+   */
+  async pushAvailability(
+    channel: OtaChannel,
+    values: ChannexAriValue[],
+  ): Promise<{ success: boolean }> {
+    // Fill property_id from credentials if not provided per-value
+    const channexPropertyId = this.resolveChannexPropertyId(channel);
+    const resolved = values.map((v) => ({
+      ...v,
+      property_id: v.property_id || channexPropertyId,
+    }));
+    return this.pushARI(channel, { values: resolved });
   }
 
   // ============================================================
   // Reservations
   // ============================================================
 
-  /**
-   * Pull reservations from Channex (for initial sync or when webhook fails).
-   */
   async pullReservations(channel: OtaChannel): Promise<unknown[]> {
     const apiKey = this.resolveApiKey(channel);
-    if (!apiKey)
-      throw new Error('Channex API Key not configured for this channel');
+    if (!apiKey) throw new Error('Channex API Key not configured for this channel');
 
-    this.logger.log(
-      `Pulling reservations from Channex for channel ${channel.id}`,
-    );
+    this.logger.log(`Pulling reservations from Channex for channel ${channel.id}`);
 
     type ReservationsResponse = { data: unknown[] };
-    const response = await this.request<ReservationsResponse>(
+    const response = await this.request<ReservationsResponse>('GET', '/reservations', { apiKey });
+    return response.data ?? [];
+  }
+
+  async pullReservation(channel: OtaChannel, reservationId: string): Promise<unknown> {
+    const apiKey = this.resolveApiKey(channel);
+    if (!apiKey) throw new Error('Channex API Key not configured for this channel');
+
+    type ReservationResponse = { data: unknown };
+    const response = await this.request<ReservationResponse>(
       'GET',
-      '/reservations',
+      `/reservations/${reservationId}`,
       { apiKey },
     );
-
-    return response.data ?? [];
+    return response.data;
   }
 
   // ============================================================
   // Properties
   // ============================================================
 
-  /**
-   * Fetch all properties associated with the global API key from env.
-   */
   async getProperties(): Promise<unknown> {
-    if (!this.globalApiKey)
-      throw new Error('CHANNEX_API_KEY is not set in environment');
+    if (!this.globalApiKey) throw new Error('CHANNEX_API_KEY is not set in environment');
     return this.request('GET', '/properties', { apiKey: this.globalApiKey });
   }
 }

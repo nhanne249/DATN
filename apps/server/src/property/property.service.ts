@@ -40,6 +40,10 @@ export class PropertyService {
     return await this.repo.save(property);
   }
 
+  async findBySlug(slug: string): Promise<Property | null> {
+    return this.repo.findOne({ where: { slug } });
+  }
+
   async remove(id: string): Promise<void> {
     const property = await this.findOne(id);
     await this.repo.remove(property);

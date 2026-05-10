@@ -88,7 +88,7 @@ export default function HousekeepingPage() {
         const typeMap: Record<string, { label: string, color: string }> = {
             HOUSEKEEPING: { label: 'Dọn dẹp', color: 'bg-violet-500/10 text-violet-500 border-violet-500/20' },
             MAINTENANCE: { label: 'Bảo trì', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-            OTHER: { label: 'Khác', color: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20' },
+            OTHER: { label: 'Khác', color: 'bg-zinc-500/10 text-gray-400 border-zinc-500/20' },
         };
         const t = typeMap[type] || typeMap.OTHER;
         return <Badge variant="outline" className={t.color}>{t.label}</Badge>;
@@ -155,8 +155,8 @@ export default function HousekeepingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* CỘT TRÁI: CẦN DỌN */}
                 <div className="space-y-4">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-md p-3 flex justify-between items-center">
-                        <h3 className="font-semibold text-zinc-100 flex items-center">
+                    <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-800 flex items-center">
                             <Clock className="w-4 h-4 mr-2 text-amber-500" /> Cần dọn dẹp
                         </h3>
                         <Badge variant="secondary" className="bg-amber-500/10 text-amber-500 border-amber-500/20 border hover:bg-amber-500/20">
@@ -164,30 +164,30 @@ export default function HousekeepingPage() {
                         </Badge>
                     </div>
 
-                    <Card className="bg-zinc-950 border-zinc-800">
+                    <Card className="bg-white border-gray-200">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-zinc-800 hover:bg-transparent">
-                                    <TableHead className="text-zinc-400">Yêu cầu</TableHead>
-                                    <TableHead className="text-zinc-400">Phòng</TableHead>
-                                    <TableHead className="text-right text-zinc-400">Hành động</TableHead>
+                                <TableRow className="border-gray-200 hover:bg-transparent">
+                                    <TableHead className="text-gray-500">Yêu cầu</TableHead>
+                                    <TableHead className="text-gray-500">Phòng</TableHead>
+                                    <TableHead className="text-right text-gray-500">Hành động</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tasks.filter(t => t.status !== 'COMPLETED').map((task) => (
-                                    <TableRow key={task.id} className="border-zinc-800 hover:bg-zinc-900/50">
+                                    <TableRow key={task.id} className="border-gray-200 hover:bg-gray-50">
                                         <TableCell>
-                                            <span className="font-medium text-zinc-100 block">{task.title}</span>
+                                            <span className="font-medium text-gray-800 block">{task.title}</span>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-xs text-zinc-500 flex items-center"><Clock className="w-3 h-3 mr-1" /> {format(new Date(task.createdAt), "HH:mm")}</span>
+                                                <span className="text-xs text-gray-400 flex items-center"><Clock className="w-3 h-3 mr-1" /> {format(new Date(task.createdAt), "HH:mm")}</span>
                                                 {getTypeBadge(task.type)}
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {task.roomId ? <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 pointer-events-none text-sm px-2 py-1">P. {task.room?.roomNumber || task.roomId.substring(0, 4)}</Badge> : '-'}
+                                            {task.roomId ? <Badge variant="secondary" className="bg-gray-100 text-gray-600 pointer-events-none text-sm px-2 py-1">P. {task.room?.roomNumber || task.roomId.substring(0, 4)}</Badge> : '-'}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="outline" size="sm" className="bg-emerald-600/10 text-emerald-500 border-emerald-600/20 hover:bg-emerald-600 hover:text-white" onClick={() => handleCompleteTask(task.id)}>
+                                            <Button variant="outline" size="sm" className="bg-emerald-600/10 text-emerald-500 border-emerald-600/20 hover:bg-emerald-600 hover:text-blue-700" onClick={() => handleCompleteTask(task.id)}>
                                                 <Check className="w-4 h-4 mr-1" />
                                                 Hoàn thành
                                             </Button>
@@ -196,7 +196,7 @@ export default function HousekeepingPage() {
                                 ))}
                                 {tasks.filter(t => t.status !== 'COMPLETED').length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-12 text-zinc-500 text-sm flex flex-col items-center justify-center">
+                                        <TableCell colSpan={3} className="text-center py-12 text-gray-400 text-sm flex flex-col items-center justify-center">
                                             <CheckSquare className="w-8 h-8 mb-2 opacity-20" />
                                             Tuyệt vời! Bạn không còn phòng nào cần dọn lúc này.
                                         </TableCell>
@@ -209,8 +209,8 @@ export default function HousekeepingPage() {
 
                 {/* CỘT PHẢI: ĐÃ DỌN */}
                 <div className="space-y-4">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-md p-3 flex justify-between items-center">
-                        <h3 className="font-semibold text-zinc-100 flex items-center">
+                    <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-800 flex items-center">
                             <CheckSquare className="w-4 h-4 mr-2 text-emerald-500" /> Đã hoàn thành
                         </h3>
                         <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 border hover:bg-emerald-500/20">
@@ -218,35 +218,35 @@ export default function HousekeepingPage() {
                         </Badge>
                     </div>
 
-                    <Card className="bg-zinc-950 border-zinc-800">
+                    <Card className="bg-white border-gray-200">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-zinc-800 hover:bg-transparent">
-                                    <TableHead className="text-zinc-400">Yêu cầu</TableHead>
-                                    <TableHead className="text-zinc-400">Phòng</TableHead>
-                                    <TableHead className="text-zinc-400">Hoàn thành lúc</TableHead>
+                                <TableRow className="border-gray-200 hover:bg-transparent">
+                                    <TableHead className="text-gray-500">Yêu cầu</TableHead>
+                                    <TableHead className="text-gray-500">Phòng</TableHead>
+                                    <TableHead className="text-gray-500">Hoàn thành lúc</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tasks.filter(t => t.status === 'COMPLETED').map((task) => (
-                                    <TableRow key={task.id} className="border-zinc-800 hover:bg-zinc-900/50 opacity-60">
+                                    <TableRow key={task.id} className="border-gray-200 hover:bg-gray-50 opacity-60">
                                         <TableCell>
-                                            <span className="font-medium text-zinc-300 block line-through">{task.title}</span>
+                                            <span className="font-medium text-gray-600 block line-through">{task.title}</span>
                                             <div className="flex items-center gap-2 mt-1">
                                                 {getTypeBadge(task.type)}
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {task.roomId ? <Badge variant="secondary" className="bg-zinc-800/50 text-zinc-500 pointer-events-none text-sm px-2 py-1">P. {task.room?.roomNumber || task.roomId.substring(0, 4)}</Badge> : '-'}
+                                            {task.roomId ? <Badge variant="secondary" className="bg-gray-100/50 text-gray-400 pointer-events-none text-sm px-2 py-1">P. {task.room?.roomNumber || task.roomId.substring(0, 4)}</Badge> : '-'}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="text-zinc-400 text-sm flex items-center"><Check className="w-3 h-3 mr-1 text-emerald-500" /> {task.updatedAt ? format(new Date(task.updatedAt), "HH:mm") : '-'}</span>
+                                            <span className="text-gray-500 text-sm flex items-center"><Check className="w-3 h-3 mr-1 text-emerald-500" /> {task.updatedAt ? format(new Date(task.updatedAt), "HH:mm") : '-'}</span>
                                         </TableCell>
                                     </TableRow>
                                 ))}
                                 {tasks.filter(t => t.status === 'COMPLETED').length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-12 text-zinc-500 text-sm">Chưa có phòng nào dọn xong hôm nay</TableCell>
+                                        <TableCell colSpan={3} className="text-center py-12 text-gray-400 text-sm">Chưa có phòng nào dọn xong hôm nay</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>

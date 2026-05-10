@@ -8,6 +8,7 @@ export interface JwtPayload {
   sub: string;
   role: ROLE;
   propertyId?: string;
+  name?: string;
   iat?: number;
   exp?: number;
 }
@@ -16,6 +17,7 @@ export interface RequestUser {
   id: string;
   role: ROLE;
   propertyId?: string;
+  name?: string;
 }
 
 const cookieTokenExtractor = (req: {
@@ -52,6 +54,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: payload.sub,
       role: payload.role,
       propertyId: payload.propertyId,
+      name: payload.name,
     };
   }
 }

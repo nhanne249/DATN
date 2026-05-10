@@ -44,13 +44,13 @@ export default function ReportsPage() {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-zinc-900 border border-zinc-800 p-3 rounded-lg shadow-xl text-sm">
-                    <p className="font-medium text-zinc-100 mb-2">{label}</p>
+                <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg shadow-xl text-sm">
+                    <p className="font-medium text-gray-800 mb-2">{label}</p>
                     {payload.map((entry: any, index: number) => (
                         <div key={index} className="flex items-center gap-2 mb-1">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                            <span className="text-zinc-400">{entry.name}:</span>
-                            <span className="font-semibold text-zinc-100">
+                            <span className="text-gray-500">{entry.name}:</span>
+                            <span className="font-semibold text-gray-800">
                                 {entry.name.includes('%') || entry.name.includes('Lấp đầy')
                                     ? `${entry.value}%`
                                     : entry.name.includes('ADR') || entry.name.includes('RevPAR')
@@ -68,20 +68,20 @@ export default function ReportsPage() {
     return (
         <div className="flex-1 space-y-6 p-8 pt-6">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-5">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-white">Báo cáo & Thống kê</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-gray-900">Báo cáo & Thống kê</h2>
                     <p className="text-muted-foreground mt-2 text-sm">
                         Phân tích thông minh các chỉ số tài chính và hoạt động kinh doanh (Business Intelligence).
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Select value={dateRange} onValueChange={setDateRange}>
-                        <SelectTrigger className="w-[180px] bg-zinc-950 border-zinc-800 text-zinc-300">
+                        <SelectTrigger className="w-[180px] bg-white border-gray-200 text-gray-600">
                             <CalendarIcon className="w-4 h-4 mr-2" />
                             <SelectValue placeholder="Thời gian" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-950 border-zinc-800">
+                        <SelectContent className="bg-white border-gray-200">
                             <SelectItem value="this_month">Tháng này</SelectItem>
                             <SelectItem value="last_month">Tháng trước</SelectItem>
                             <SelectItem value="this_quarter">Quý này</SelectItem>
@@ -96,12 +96,12 @@ export default function ReportsPage() {
             </div>
 
             <Tabs defaultValue="financial" className="space-y-6">
-                <TabsList className="bg-zinc-900/50 border border-zinc-800 h-12 p-1">
-                    <TabsTrigger value="financial" className="data-[state=active]:bg-zinc-800 h-full px-6">
+                <TabsList className="bg-gray-50 border border-gray-200 h-12 p-1">
+                    <TabsTrigger value="financial" className="data-[state=active]:bg-gray-100 h-full px-6">
                         <Wallet className="w-4 h-4 mr-2" />
                         Báo cáo Tài chính
                     </TabsTrigger>
-                    <TabsTrigger value="operational" className="data-[state=active]:bg-zinc-800 h-full px-6">
+                    <TabsTrigger value="operational" className="data-[state=active]:bg-gray-100 h-full px-6">
                         <Activity className="w-4 h-4 mr-2" />
                         Báo cáo Hoạt động (KPIs)
                     </TabsTrigger>
@@ -111,54 +111,54 @@ export default function ReportsPage() {
                 <TabsContent value="financial" className="space-y-6">
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm border-zinc-800 font-medium text-zinc-400">Doanh thu tháng</CardTitle>
+                                <CardTitle className="text-sm border-gray-200 font-medium text-gray-500">Doanh thu tháng</CardTitle>
                                 <DollarSign className="h-4 w-4 text-emerald-500" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-emerald-500">{formatVND(finKpi.totalRev)}</div>
-                                <p className="text-xs text-zinc-500 mt-1">Nghiệp vụ phòng: {formatVND(finKpi.roomRev)}</p>
+                                <p className="text-xs text-gray-400 mt-1">Nghiệp vụ phòng: {formatVND(finKpi.roomRev)}</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">Doanh thu dịch vụ</CardTitle>
+                                <CardTitle className="text-sm font-medium text-gray-500">Doanh thu dịch vụ</CardTitle>
                                 <CreditCard className="h-4 w-4 text-blue-500" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-blue-500">{formatVND(finKpi.servRev)}</div>
-                                <p className="text-xs text-zinc-500 mt-1">Chiếm {Math.round((finKpi.servRev / (finKpi.totalRev || 1)) * 100)}% tổng thu</p>
+                                <p className="text-xs text-gray-400 mt-1">Chiếm {Math.round((finKpi.servRev / (finKpi.totalRev || 1)) * 100)}% tổng thu</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">Số đêm phòng</CardTitle>
+                                <CardTitle className="text-sm font-medium text-gray-500">Số đêm phòng</CardTitle>
                                 <TrendingUp className="h-4 w-4 text-rose-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">{finKpi.nights} <span className="text-sm font-normal text-zinc-500">đêm</span></div>
-                                <p className="text-xs text-zinc-500 mt-1">Phát sinh trong tháng này</p>
+                                <div className="text-2xl font-bold text-gray-900">{finKpi.nights} <span className="text-sm font-normal text-gray-400">đêm</span></div>
+                                <p className="text-xs text-gray-400 mt-1">Phát sinh trong tháng này</p>
                             </CardContent>
                         </Card>
-                        <Card className="relative overflow-hidden bg-zinc-900 border-zinc-700">
+                        <Card className="relative overflow-hidden bg-gray-50 border-gray-300">
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10" />
                             <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-indigo-300">Lợi nhuận gộp (Est.)</CardTitle>
+                                <CardTitle className="text-sm font-medium text-indigo-600">Lợi nhuận gộp (Est.)</CardTitle>
                                 <PieChart className="h-4 w-4 text-indigo-400" />
                             </CardHeader>
                             <CardContent className="relative">
-                                <div className="text-2xl font-bold text-white">{formatVND(finKpi.gross)}</div>
-                                <p className="text-xs text-indigo-300 mt-1">Số liệu ước tính dựa trên biên lợi nhuận</p>
+                                <div className="text-2xl font-bold text-gray-900">{formatVND(finKpi.gross)}</div>
+                                <p className="text-xs text-indigo-600 mt-1">Số liệu ước tính dựa trên biên lợi nhuận</p>
                             </CardContent>
                         </Card>
                     </div>
 
                     {/* Financial Chart */}
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-gray-50 border-gray-200">
                         <CardHeader>
-                            <CardTitle className="text-lg text-white font-medium">Biểu đồ Phân tích Dòng tiền</CardTitle>
-                            <CardDescription className="text-zinc-500">So sánh doanh thu, chi phí và lợi nhuận theo các tháng gần nhất (Triệu VNĐ)</CardDescription>
+                            <CardTitle className="text-lg text-gray-800 font-medium">Biểu đồ Phân tích Dòng tiền</CardTitle>
+                            <CardDescription className="text-gray-400">So sánh doanh thu, chi phí và lợi nhuận theo các tháng gần nhất (Triệu VNĐ)</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[400px] w-full mt-4">
@@ -191,56 +191,56 @@ export default function ReportsPage() {
                 {/* TAB: BÁO CÁO HOẠT ĐỘNG (KPI) */}
                 <TabsContent value="operational" className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">Công suất phòng</CardTitle>
+                                <CardTitle className="text-sm font-medium text-gray-500">Công suất phòng</CardTitle>
                                 <Building className="h-4 w-4 text-blue-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">{perfKpi.occ}%</div>
-                                <p className="text-xs text-zinc-500 mt-1">Dựa trên số phòng khả dụng thực tế</p>
+                                <div className="text-2xl font-bold text-gray-900">{perfKpi.occ}%</div>
+                                <p className="text-xs text-gray-400 mt-1">Dựa trên số phòng khả dụng thực tế</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">Giá ADR (Trung bình)</CardTitle>
+                                <CardTitle className="text-sm font-medium text-gray-500">Giá ADR (Trung bình)</CardTitle>
                                 <BarChart3 className="h-4 w-4 text-orange-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">{formatVND(perfKpi.adr)}</div>
-                                <p className="text-xs text-zinc-500 mt-1 flex items-center">
+                                <div className="text-2xl font-bold text-gray-900">{formatVND(perfKpi.adr)}</div>
+                                <p className="text-xs text-gray-400 mt-1 flex items-center">
                                     Average Daily Rate
                                 </p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">RevPAR</CardTitle>
+                                <CardTitle className="text-sm font-medium text-gray-500">RevPAR</CardTitle>
                                 <TrendingUp className="h-4 w-4 text-emerald-500" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-emerald-500">{formatVND(perfKpi.revpar)}</div>
-                                <p className="text-xs text-zinc-500 mt-1 flex items-center">
+                                <p className="text-xs text-gray-400 mt-1 flex items-center">
                                     Revenue Per Available Room
                                 </p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-gray-50 border-gray-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">ALOS</CardTitle>
+                                <CardTitle className="text-sm font-medium text-gray-500">ALOS</CardTitle>
                                 <Users className="h-4 w-4 text-violet-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">{perfKpi.alos} <span className="text-sm font-normal text-zinc-500">đêm</span></div>
-                                <p className="text-xs text-zinc-500 mt-1 text-nowrap">Thời gian lưu trú trung bình</p>
+                                <div className="text-2xl font-bold text-gray-900">{perfKpi.alos} <span className="text-sm font-normal text-gray-400">đêm</span></div>
+                                <p className="text-xs text-gray-400 mt-1 text-nowrap">Thời gian lưu trú trung bình</p>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-gray-50 border-gray-200">
                         <CardHeader>
-                            <CardTitle className="text-lg text-white font-medium">Biểu đồ Hiệu suất Hoạt động (KPIs)</CardTitle>
-                            <CardDescription className="text-zinc-500">Mối tương quan giữa Tỷ lệ lấp đầy, Tiền phòng bình quân (ADR) và Doanh thu trên mỗi phòng (RevPAR)</CardDescription>
+                            <CardTitle className="text-lg text-gray-800 font-medium">Biểu đồ Hiệu suất Hoạt động (KPIs)</CardTitle>
+                            <CardDescription className="text-gray-400">Mối tương quan giữa Tỷ lệ lấp đầy, Tiền phòng bình quân (ADR) và Doanh thu trên mỗi phòng (RevPAR)</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[400px] w-full mt-4">

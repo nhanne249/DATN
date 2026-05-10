@@ -10,10 +10,10 @@ export class CreateOtaChannelDto {
   @IsString()
   type: string;
 
-  @ApiPropertyOptional({ example: { apiKey: '...' } })
+  @ApiPropertyOptional({ example: { apiKey: '...', channexPropertyId: '...', sandbox: true } })
   @IsOptional()
   @IsObject()
-  credentials?: any;
+  credentials?: Record<string, unknown>;
 
   @ApiPropertyOptional({ default: false })
   @IsOptional()
@@ -40,7 +40,7 @@ export class UpdateOtaChannelDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsObject()
-  credentials?: any;
+  credentials?: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -68,6 +68,7 @@ export class CreateOtaMappingDto {
   externalRateId?: string;
 }
 
+/** Legacy webhook DTO — kept for backward compatibility */
 export class OtaWebhookDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -89,4 +90,61 @@ export class OtaWebhookDto {
   @ApiProperty()
   @IsString()
   status: string;
+}
+
+/** Channex native webhook format */
+export interface ChannexCustomer {
+  name: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface ChannexGuests {
+  adults?: number;
+  children?: number;
+  infants?: number;
+}
+
+export interface ChannexReservationPayload {
+  id: string;
+  booking_id: string;
+  property_id?: string;
+  room_type_id?: string;
+  rate_plan_id?: string;
+  arrival_date: string;
+  departure_date: string;
+  status: 'new' | 'modified' | 'cancelled';
+  amount?: string;
+  currency?: string;
+  customer?: ChannexCustomer;
+  guests?: ChannexGuests;
+  notes?: string;
+  ota_name?: string;
+}
+
+export interface ChannexWebhookBody {
+  event: string;
+  payload: ChannexReservationPayload;
+}
+
+export class PushAriBodyDto {
+  @ApiPropertyOptional({ description: 'Channex Property ID from credentials if not set per-channel' })
+  @IsOptional()
+  @IsString()
+  channexPropertyId?: string;
+
+  @ApiPropertyOptional({ description: 'Channex Rate Plan ID to apply to all mappings' })
+  @IsOptional()
+  @IsString()
+  channexRatePlanId?: string;
+
+  @ApiPropertyOptional({ description: 'Date from YYYY-MM-DD (default: today)' })
+  @IsOptional()
+  @IsString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ description: 'Date to YYYY-MM-DD (default: 90 days from now)' })
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
 }

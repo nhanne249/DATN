@@ -5,9 +5,10 @@ import { UserController } from './user.controller';
 import { User } from './entities/user.entity';
 import { UserAddress } from './entities/user-address.entity';
 import { UserPasswordHistory } from './entities/user-password-history.entity';
+import { PropertyCustomRole } from '../permission/entities/property-custom-role.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserAddress, UserPasswordHistory])],
+  imports: [TypeOrmModule.forFeature([User, UserAddress, UserPasswordHistory, PropertyCustomRole])],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService, TypeOrmModule],

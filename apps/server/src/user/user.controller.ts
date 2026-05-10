@@ -8,10 +8,13 @@ import {
   Delete,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateStaffDto } from './dto/create-staff.dto';
+import { UpdateStaffDto } from './dto/update-staff.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -53,6 +56,73 @@ export class UserController {
   getProfile(@Request() req: RequestWithUser) {
     return this.userService.findOne(req.user.id);
   }
+
+  // ── Property-scoped staff management (must be before :id routes) ──────────
+
+  @Get('staff')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List staff for current property' })
+  listStaff(@Request() req: RequestWithUser) {
+    const propertyId = req.user.propertyId;
+    if (!propertyId) throw new ForbiddenException('No property associated with this account');
+    return this.userService.findStaffByProperty(propertyId);
+  }
+
+  @Post('staff')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create staff account for current property' })
+  @AuditLog('CREATE_STAFF')
+  createStaff(@Body() dto: CreateStaffDto, @Request() req: RequestWithUser) {
+    const propertyId = req.user.propertyId;
+    if (!propertyId) throw new ForbiddenException('No property associated with this account');
+    return this.userService.createStaff(propertyId, dto, req.user.role);
+  }
+
+  @Patch('staff/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update staff account' })
+  @AuditLog('UPDATE_STAFF')
+  updateStaff(
+    @Param('id') id: string,
+    @Body() dto: UpdateStaffDto,
+    @Request() req: RequestWithUser,
+  ) {
+    const propertyId = req.user.propertyId;
+    if (!propertyId) throw new ForbiddenException('No property associated with this account');
+    return this.userService.updateStaff(id, propertyId, dto, req.user.role);
+  }
+
+  @Delete('staff/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete staff account' })
+  @AuditLog('DELETE_STAFF')
+  removeStaff(@Param('id') id: string, @Request() req: RequestWithUser) {
+    const propertyId = req.user.propertyId;
+    if (!propertyId) throw new ForbiddenException('No property associated with this account');
+    return this.userService.removeStaff(id, propertyId);
+  }
+
+  @Post('staff/:id/toggle-lock')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Lock/unlock staff account' })
+  @AuditLog('TOGGLE_LOCK_STAFF')
+  toggleStaffLock(@Param('id') id: string, @Request() req: RequestWithUser) {
+    const propertyId = req.user.propertyId;
+    if (!propertyId) throw new ForbiddenException('No property associated with this account');
+    return this.userService.toggleStaffLock(id, propertyId);
+  }
+
+  // ── Generic :id routes (must be after all named routes) ──────────────────
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -117,6 +187,7 @@ export class UserController {
   }
 
   @Patch('address/:id')
+  @AuditLog('UPDATE_USER_ADDRESS')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update address' })

@@ -106,60 +106,60 @@ export function RoomModal({ isOpen, onClose, room, roomTypes, onSaved }: any) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white">
+            <DialogContent className="sm:max-w-[425px] bg-white border-gray-200 text-gray-900">
                 <DialogHeader>
                     <DialogTitle>{room ? 'Cập nhật Phòng' : 'Thêm Phòng'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Tên/Số phòng</Label>
+                        <Label className="text-gray-700">Tên/Số phòng</Label>
                         <Input
                             value={formData.roomNumber}
                             onChange={e => setFormData({ ...formData, roomNumber: e.target.value })}
                             required
-                            className="bg-zinc-900 border-zinc-800 text-white"
+                            className="bg-gray-50 border-gray-200 text-white"
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Loại phòng</Label>
+                        <Label className="text-gray-700">Loại phòng</Label>
                         <Select value={formData.roomTypeId} onValueChange={v => setFormData({ ...formData, roomTypeId: v })} required>
-                            <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+                            <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                                 <SelectValue placeholder="Chọn loại phòng" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                            <SelectContent className="bg-gray-50 border-gray-200 text-white">
                                 {roomTypes.map((rt: any) => (
-                                    <SelectItem key={rt.id} value={rt.id} className="hover:bg-zinc-800 cursor-pointer focus:bg-zinc-800 focus:text-white">{rt.name} ({rt.code})</SelectItem>
+                                    <SelectItem key={rt.id} value={rt.id} className="hover:bg-gray-100 cursor-pointer focus:bg-gray-100 focus:text-white">{rt.name} ({rt.code})</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Khu vực</Label>
+                            <Label className="text-gray-700">Khu vực</Label>
                             <Input
                                 value={formData.area}
                                 onChange={e => setFormData({ ...formData, area: e.target.value })}
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                                 placeholder="Ví dụ: Khu A"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Tầng</Label>
+                            <Label className="text-gray-700">Tầng</Label>
                             <Input
                                 value={formData.floor}
                                 onChange={e => setFormData({ ...formData, floor: e.target.value })}
-                                className="bg-zinc-900 border-zinc-800 text-white"
+                                className="bg-gray-50 border-gray-200 text-white"
                             />
                         </div>
                     </div>
                     {room && ( // Only show status edit on update, usually creation is AVAILABLE
                         <div className="grid gap-2">
-                            <Label className="text-zinc-200">Trạng thái</Label>
+                            <Label className="text-gray-700">Trạng thái</Label>
                             <Select value={formData.status} onValueChange={v => setFormData({ ...formData, status: v })}>
-                                <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                                     <SelectValue placeholder="Trạng thái" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectContent className="bg-gray-50 border-gray-200 text-white">
                                     <SelectItem value="AVAILABLE">Trống</SelectItem>
                                     <SelectItem value="OCCUPIED">Đang ở</SelectItem>
                                     <SelectItem value="CLEANING">Đang dọn</SelectItem>
@@ -169,10 +169,10 @@ export function RoomModal({ isOpen, onClose, room, roomTypes, onSaved }: any) {
                         </div>
                     )}
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Hình ảnh phòng</Label>
+                        <Label className="text-gray-700">Hình ảnh phòng</Label>
                         <div className="grid grid-cols-4 gap-2 mb-2">
                             {formData.photos.map((url, idx) => (
-                                <div key={idx} className="relative group aspect-square rounded-md overflow-hidden border border-zinc-800">
+                                <div key={idx} className="relative group aspect-square rounded-md overflow-hidden border border-gray-200">
                                     <img
                                         src={url}
                                         alt=""
@@ -195,10 +195,10 @@ export function RoomModal({ isOpen, onClose, room, roomTypes, onSaved }: any) {
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploading}
-                                className="aspect-square rounded-md border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors disabled:opacity-50"
+                                className="aspect-square rounded-md border-2 border-dashed border-gray-200 flex flex-col items-center justify-center hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors disabled:opacity-50"
                             >
-                                {uploading ? <Loader2 className="w-5 h-5 animate-spin text-zinc-500" /> : <Plus className="w-5 h-5 text-zinc-500" />}
-                                <span className="text-[10px] text-zinc-500 mt-1">{uploading ? 'Đang tải' : 'Thêm ảnh'}</span>
+                                {uploading ? <Loader2 className="w-5 h-5 animate-spin text-gray-400" /> : <Plus className="w-5 h-5 text-gray-400" />}
+                                <span className="text-[10px] text-gray-400 mt-1">{uploading ? 'Đang tải' : 'Thêm ảnh'}</span>
                             </button>
                         </div>
                         <input
@@ -210,15 +210,15 @@ export function RoomModal({ isOpen, onClose, room, roomTypes, onSaved }: any) {
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label className="text-zinc-200">Ghi chú</Label>
+                        <Label className="text-gray-700">Ghi chú</Label>
                         <Input
                             value={formData.notes}
                             onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                            className="bg-zinc-900 border-zinc-800 text-white"
+                            className="bg-gray-50 border-gray-200 text-white"
                         />
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose} className="border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+                        <Button type="button" variant="outline" onClick={onClose} className="border-gray-200 text-white hover:bg-gray-100 hover:text-blue-700">
                             Hủy
                         </Button>
                         <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">

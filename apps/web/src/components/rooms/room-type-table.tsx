@@ -47,53 +47,53 @@ export function RoomTypeTable({ propertyId = process.env.NEXT_PUBLIC_DEFAULT_PRO
     return (
         <div className="space-y-4 mt-6">
             <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-white">Danh sách Loại phòng</h3>
+                <h3 className="text-xl font-semibold text-gray-900">Danh sách Loại phòng</h3>
                 <Button onClick={() => { setEditingType(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Plus className="mr-2 h-4 w-4" /> Thêm loại phòng
                 </Button>
             </div>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-gray-50 border-gray-200">
                 <CardContent className="p-0">
                     <Table>
-                        <TableHeader className="bg-zinc-900/50">
-                            <TableRow className="border-zinc-800 hover:bg-transparent">
-                                <TableHead className="text-zinc-400">Mã (Code)</TableHead>
-                                <TableHead className="text-zinc-400">Tên loại phòng</TableHead>
-                                <TableHead className="text-zinc-400 text-center">Sức chứa</TableHead>
-                                <TableHead className="text-zinc-400 text-right">Giá cơ bản / Cuối tuần</TableHead>
-                                <TableHead className="text-zinc-400 text-center">Số lượng phòng</TableHead>
-                                <TableHead className="text-zinc-400 text-right">Thao tác</TableHead>
+                        <TableHeader className="bg-gray-50">
+                            <TableRow className="border-gray-200 hover:bg-transparent">
+                                <TableHead className="text-gray-500">Mã (Code)</TableHead>
+                                <TableHead className="text-gray-500">Tên loại phòng</TableHead>
+                                <TableHead className="text-gray-500 text-center">Sức chứa</TableHead>
+                                <TableHead className="text-gray-500 text-right">Giá cơ bản / Cuối tuần</TableHead>
+                                <TableHead className="text-gray-500 text-center">Số lượng phòng</TableHead>
+                                <TableHead className="text-gray-500 text-right">Thao tác</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
-                                <TableRow className="border-zinc-800"><TableCell colSpan={6} className="text-center text-zinc-500 py-8">Đang tải...</TableCell></TableRow>
+                                <TableRow className="border-gray-200"><TableCell colSpan={6} className="text-center text-gray-400 py-8">Đang tải...</TableCell></TableRow>
                             ) : roomTypes.length === 0 ? (
-                                <TableRow className="border-zinc-800"><TableCell colSpan={6} className="text-center text-zinc-500 py-8">Chưa có dữ liệu</TableCell></TableRow>
+                                <TableRow className="border-gray-200"><TableCell colSpan={6} className="text-center text-gray-400 py-8">Chưa có dữ liệu</TableCell></TableRow>
                             ) : roomTypes.map(rt => (
-                                <TableRow key={rt.id} className="border-zinc-800 hover:bg-zinc-800/50 transition-colors">
-                                    <TableCell className="font-medium text-white">{rt.code}</TableCell>
-                                    <TableCell className="text-zinc-300">
+                                <TableRow key={rt.id} className="border-gray-200 hover:bg-gray-100/50 transition-colors">
+                                    <TableCell className="font-medium text-gray-900">{rt.code}</TableCell>
+                                    <TableCell className="text-gray-600">
                                         <div className="flex flex-col">
                                             <span>{rt.name}</span>
-                                            <span className="text-xs text-zinc-500">{rt.kind === 'DORM' ? 'Phòng Dorm' : 'Phòng Riêng'}</span>
+                                            <span className="text-xs text-gray-400">{rt.kind === 'DORM' ? 'Phòng Dorm' : 'Phòng Riêng'}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center text-zinc-300">
+                                    <TableCell className="text-center text-gray-600">
                                         {rt.maxAdults} NL - {rt.maxChildren} TE - {rt.maxInfants} EB
                                     </TableCell>
-                                    <TableCell className="text-right text-zinc-300">
+                                    <TableCell className="text-right text-gray-600">
                                         <div className="flex flex-col">
                                             <span>{rt.basePrice?.toLocaleString() || 0}</span>
-                                            <span className="text-xs text-zinc-500">{rt.weekendPrice ? rt.weekendPrice.toLocaleString() : '-'}</span>
+                                            <span className="text-xs text-gray-400">{rt.weekendPrice ? rt.weekendPrice.toLocaleString() : '-'}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center text-zinc-300">{rt._count?.rooms || 0}</TableCell>
+                                    <TableCell className="text-center text-gray-600">{rt._count?.rooms || 0}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => { setEditingType(rt); setIsModalOpen(true); }} className="text-zinc-400 hover:text-white hover:bg-zinc-800">
+                                        <Button variant="ghost" size="icon" onClick={() => { setEditingType(rt); setIsModalOpen(true); }} className="text-gray-500 hover:text-blue-700 hover:bg-gray-100">
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => setDeletingId(rt.id)} className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 ml-2">
+                                        <Button variant="ghost" size="icon" onClick={() => setDeletingId(rt.id)} className="text-gray-500 hover:text-red-400 hover:bg-red-500/10 ml-2">
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
@@ -112,15 +112,15 @@ export function RoomTypeTable({ propertyId = process.env.NEXT_PUBLIC_DEFAULT_PRO
             />
 
             <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
-                <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white">
+                <AlertDialogContent className="bg-white border-gray-200 text-gray-900">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-zinc-400">
+                        <AlertDialogDescription className="text-gray-500">
                             Loại phòng này sẽ bị xóa. Nếu đang có các phòng thuộc loại phòng này thì việc xóa có thể thất bại bảo vệ dữ liệu.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-transparent border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">Thoát</AlertDialogCancel>
+                        <AlertDialogCancel className="bg-transparent border-gray-200 text-white hover:bg-gray-100 hover:text-blue-700">Thoát</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
                             Xác nhận Xóa
                         </AlertDialogAction>

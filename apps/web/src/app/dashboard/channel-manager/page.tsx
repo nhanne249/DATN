@@ -29,7 +29,7 @@ export default function ChannelManagerPage() {
 
   const { data: channels, isLoading: loadingChannels } = useOtaChannels(propertyId || '');
   const { data: roomTypes = [] } = useRoomTypes(propertyId || '');
-  const { createChannel, createMapping, deleteMapping, updateChannel } = useOtaMutation();
+  const { createChannel, createMapping, deleteMapping, updateChannel, pushARI, pullReservations } = useOtaMutation();
 
   const currentChannelId = selectedChannelId || channels?.[0]?.id;
   const { data: logs, isLoading: loadingLogs } = useOtaLogs(currentChannelId || '');
@@ -46,6 +46,14 @@ export default function ChannelManagerPage() {
       propertyId,
       dto: { isActive: !channel.isActive },
     });
+  };
+
+  const handlePushARI = (channel: { id: string }) => {
+    pushARI.mutate({ channelId: channel.id });
+  };
+
+  const handlePullReservations = (channel: { id: string }) => {
+    pullReservations.mutate(channel.id);
   };
 
   const handleDeleteMap = (id: string) => {
@@ -86,19 +94,19 @@ export default function ChannelManagerPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6 bg-zinc-950 min-h-screen text-white">
-      <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
+    <div className="flex-1 space-y-6 p-8 pt-6 bg-gray-50 min-h-screen text-gray-900">
+      <div className="flex items-center justify-between border-b border-gray-200 pb-5">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
             <Globe className="h-6 w-6 text-blue-500" />
             Quản lý Kênh Phân Phối (Channel Manager)
           </h2>
-          <p className="text-zinc-500 mt-2 text-sm">
+          <p className="text-gray-400 mt-2 text-sm">
             Kết nối, đồng bộ giá, quỹ phòng và nhận booking tự động từ các OTA.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-300">
+          <Button variant="outline" className="bg-gray-50 border-gray-200 text-gray-600">
             <RefreshCcw className="mr-2 h-4 w-4" />
             Đồng bộ toàn bộ
           </Button>
@@ -112,14 +120,14 @@ export default function ChannelManagerPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-zinc-900/50 border border-zinc-800 p-1">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-zinc-800 rounded-md py-2 px-6">
+        <TabsList className="bg-gray-50 border border-gray-200 p-1">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-gray-100 rounded-md py-2 px-6">
             Tổng quan và Kết nối
           </TabsTrigger>
-          <TabsTrigger value="mappings" className="data-[state=active]:bg-zinc-800 rounded-md py-2 px-6">
+          <TabsTrigger value="mappings" className="data-[state=active]:bg-gray-100 rounded-md py-2 px-6">
             Map Hạng Phòng và Giá
           </TabsTrigger>
-          <TabsTrigger value="logs" className="data-[state=active]:bg-zinc-800 rounded-md py-2 px-6">
+          <TabsTrigger value="logs" className="data-[state=active]:bg-gray-100 rounded-md py-2 px-6">
             Lịch sử Đồng bộ
           </TabsTrigger>
         </TabsList>
@@ -127,9 +135,9 @@ export default function ChannelManagerPage() {
         <TabsContent value="overview">
           {loadingChannels ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Skeleton className="h-[200px] w-full bg-zinc-900" />
-              <Skeleton className="h-[200px] w-full bg-zinc-900" />
-              <Skeleton className="h-[200px] w-full bg-zinc-900" />
+              <Skeleton className="h-[200px] w-full bg-gray-50" />
+              <Skeleton className="h-[200px] w-full bg-gray-50" />
+              <Skeleton className="h-[200px] w-full bg-gray-50" />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,12 +150,16 @@ export default function ChannelManagerPage() {
                     setActiveTab('mappings');
                   }}
                   onConnect={() => handleToggleConnect(channel)}
+                  onPushARI={handlePushARI}
+                  onPullReservations={handlePullReservations}
+                  isPushingARI={pushARI.isPending}
+                  isPullingReservations={pullReservations.isPending}
                 />
               ))}
               {channels?.length === 0 && (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-zinc-800 rounded-xl">
-                  <Globe className="h-12 w-12 text-zinc-700 mx-auto mb-4" />
-                  <p className="text-zinc-500">Chưa có kênh OTA nào được kết nối.</p>
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                  <Globe className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-400">Chưa có kênh OTA nào được kết nối.</p>
                   <Button
                     variant="link"
                     className="text-blue-500 mt-2"
@@ -163,15 +175,15 @@ export default function ChannelManagerPage() {
 
         <TabsContent value="mappings">
           <div className="space-y-4">
-            <div className="flex items-center gap-4 bg-zinc-900/40 p-4 rounded-lg border border-zinc-800">
-              <span className="text-sm text-zinc-400">Chọn kênh:</span>
+            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <span className="text-sm text-gray-500">Chọn kênh:</span>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {channels?.map((channel) => (
                   <Button
                     key={channel.id}
                     variant={currentChannelId === channel.id ? 'default' : 'outline'}
                     size="sm"
-                    className={currentChannelId === channel.id ? 'bg-blue-600' : 'bg-transparent border-zinc-700'}
+                    className={currentChannelId === channel.id ? 'bg-blue-600' : 'bg-transparent border-gray-300'}
                     onClick={() => setSelectedChannelId(channel.id)}
                   >
                     {channel.name}
@@ -184,7 +196,7 @@ export default function ChannelManagerPage() {
               <>
                 <form
                   onSubmit={handleCreateMapping}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-zinc-900/40 p-4 rounded-lg border border-zinc-800"
+                  className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200"
                 >
                   <div className="space-y-2">
                     <Label htmlFor="roomTypeId">Hạng phòng nội bộ</Label>
@@ -194,7 +206,7 @@ export default function ChannelManagerPage() {
                       onChange={(e) =>
                         setMappingForm((prev) => ({ ...prev, roomTypeId: e.target.value }))
                       }
-                      className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100"
+                      className="w-full h-10 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-800"
                       required
                     >
                       <option value="">Chọn hạng phòng</option>
@@ -217,7 +229,7 @@ export default function ChannelManagerPage() {
                         }))
                       }
                       placeholder="Ví dụ: OTA_ROOM_101"
-                      className="bg-zinc-950 border-zinc-800"
+                      className="bg-white border-gray-200"
                     />
                   </div>
                   <div className="space-y-2">
@@ -232,7 +244,7 @@ export default function ChannelManagerPage() {
                         }))
                       }
                       placeholder="Ví dụ: OTA_RATE_STANDARD"
-                      className="bg-zinc-950 border-zinc-800"
+                      className="bg-white border-gray-200"
                     />
                   </div>
                   <div className="flex items-end">
@@ -252,8 +264,8 @@ export default function ChannelManagerPage() {
                 />
               </>
             ) : (
-              <div className="py-20 text-center bg-zinc-900/20 rounded-xl border border-zinc-800">
-                <p className="text-zinc-500">Vui lòng chọn hoặc kết nối kênh để thiết lập mapping.</p>
+              <div className="py-20 text-center bg-gray-50/50 rounded-xl border border-gray-200">
+                <p className="text-gray-400">Vui lòng chọn hoặc kết nối kênh để thiết lập mapping.</p>
               </div>
             )}
           </div>
@@ -261,15 +273,15 @@ export default function ChannelManagerPage() {
 
         <TabsContent value="logs">
           <div className="space-y-4">
-            <div className="flex items-center gap-4 bg-zinc-900/40 p-4 rounded-lg border border-zinc-800">
-              <span className="text-sm text-zinc-400">Chọn kênh xem nhật ký:</span>
+            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <span className="text-sm text-gray-500">Chọn kênh xem nhật ký:</span>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {channels?.map((channel) => (
                   <Button
                     key={channel.id}
                     variant={currentChannelId === channel.id ? 'default' : 'outline'}
                     size="sm"
-                    className={currentChannelId === channel.id ? 'bg-blue-600' : 'bg-transparent border-zinc-700'}
+                    className={currentChannelId === channel.id ? 'bg-blue-600' : 'bg-transparent border-gray-300'}
                     onClick={() => setSelectedChannelId(channel.id)}
                   >
                     {channel.name}
@@ -279,7 +291,7 @@ export default function ChannelManagerPage() {
             </div>
 
             {loadingLogs ? (
-              <Skeleton className="h-[400px] w-full bg-zinc-900" />
+              <Skeleton className="h-[400px] w-full bg-gray-50" />
             ) : (
               <SyncLogTable logs={logs || []} />
             )}

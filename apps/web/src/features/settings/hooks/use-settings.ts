@@ -25,10 +25,10 @@ export const useSettingsMutation = (propertyId: string) => {
     mutationFn: (data: Partial<PropertyInfo>) => settingsService.updateProperty(propertyId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
-      toast.success('Property information updated successfully');
+      toast.success('Cập nhật thông tin cơ sở thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update property info');
+      toast.error(error.response?.data?.message || 'Không thể cập nhật thông tin cơ sở');
     },
   });
 
@@ -36,10 +36,10 @@ export const useSettingsMutation = (propertyId: string) => {
     mutationFn: (data: Partial<PropertySettings>) => settingsService.updateSettings(propertyId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', propertyId] });
-      toast.success('Settings updated successfully');
+      toast.success('Cập nhật cài đặt thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update settings');
+      toast.error(error.response?.data?.message || 'Không thể cập nhật cài đặt');
     },
   });
 

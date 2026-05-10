@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthStore } from '@/store/use-auth-store';
 import { getDefaultPathForRole } from '@/lib/route-access';
+import { permissionService } from '@/features/settings/services/permission.service';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshToken, user, hasHydrated, setSession } = useAuthStore();
-  const [phone, setPhone] = useState('');
+  const { refreshToken, user, hasHydrated, setSession, setAllowedModules } = useAuthStore();
+  const [hotelSlug, setHotelSlug] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,14 +30,18 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!phone.trim() || !password.trim()) {
-      toast.error('Vui lòng nhập số điện thoại và mật khẩu');
+    if (!hotelSlug.trim() || !username.trim() || !password.trim()) {
+      toast.error('Vui lòng điền đầy đủ thông tin đăng nhập');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const response = await authService.login({ phone: phone.trim(), password });
+      const response = await authService.login({
+        hotelSlug: hotelSlug.trim().toLowerCase(),
+        username: username.trim(),
+        password,
+      });
       const payload = response.data;
 
       if (!payload?.refreshToken) {
@@ -43,8 +49,21 @@ export default function LoginPage() {
       }
 
       setSession(payload.refreshToken, payload.user || null);
+
+      const role = payload.user?.role;
+      if (role === 'admin' || role === 'hotel_owner') {
+        setAllowedModules(null);
+      } else {
+        try {
+          const res = await permissionService.getMyModules();
+          setAllowedModules(res.data.modules);
+        } catch {
+          // keep existing allowedModules
+        }
+      }
+
       toast.success('Đăng nhập thành công');
-      router.replace(getDefaultPathForRole(payload.user?.role));
+      router.replace(getDefaultPathForRole(role));
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Đăng nhập thất bại';
       toast.error(typeof message === 'string' ? message : message[0]);
@@ -70,30 +89,45 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Chào mừng trở lại</CardTitle>
-          <CardDescription className="text-zinc-400 text-sm font-medium">
-            Đăng nhập vào tài khoản của bạn để tiếp tục
+          <CardDescription className="text-gray-500 text-sm font-medium">
+            Đăng nhập vào hệ thống quản lý khách sạn
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-4">
               <div className="relative group/input">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block" htmlFor="phone">
-                  Số điện thoại
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block" htmlFor="hotelSlug">
+                  Tên định danh khách sạn
                 </label>
                 <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+84901234567"
+                  id="hotelSlug"
+                  value={hotelSlug}
+                  onChange={(e) => setHotelSlug(e.target.value)}
+                  placeholder="grand-hotel-hanoi"
+                  autoComplete="organization"
+                  className="h-12 border-gray-300/50 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
+                />
+                <p className="text-gray-600 text-xs mt-1">Định danh khách sạn (dùng chữ thường, số, dấu gạch ngang)</p>
+              </div>
+
+              <div className="relative group/input">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block" htmlFor="username">
+                  Tên đăng nhập
+                </label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="admin"
                   autoComplete="username"
-                  className="h-12 border-zinc-700/50 bg-zinc-900/50 text-white placeholder:text-zinc-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
+                  className="h-12 border-gray-300/50 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
                 />
               </div>
 
               <div className="relative group/input">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block flex justify-between" htmlFor="password">
-                  <span>Mật khẩu</span>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block" htmlFor="password">
+                  Mật khẩu
                 </label>
                 <Input
                   id="password"
@@ -102,14 +136,14 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu của bạn"
                   autoComplete="current-password"
-                  className="h-12 border-zinc-700/50 bg-zinc-900/50 text-white placeholder:text-zinc-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
+                  className="h-12 border-gray-300/50 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all duration-300"
                 />
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] transition-all duration-300 relative overflow-hidden" 
+            <Button
+              type="submit"
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] transition-all duration-300 relative overflow-hidden"
               disabled={isSubmitting}
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
@@ -130,8 +164,8 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center justify-center pb-8">
-          <p className="text-zinc-400 text-sm mt-4">
-            Chưa có tài khoản?{' '}
+          <p className="text-gray-500 text-sm mt-4">
+            Chưa có tài khoản khách sạn?{' '}
             <Link href="/register" className="text-purple-400 font-semibold hover:text-purple-300 transition-colors">
               Đăng ký ngay
             </Link>

@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useAuthStore } from '@/store/use-auth-store';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useBookings, useBookingMutation } from '@/features/bookings/hooks/use-bookings';
 import { useRoomTypes } from '@/features/rooms/hooks/use-rooms';
 import { useServices } from '@/features/bookings/hooks/use-services';
@@ -50,11 +52,11 @@ export default function CalendarPage() {
         const bookings = Array.isArray(bookingsRaw) ? bookingsRaw : [];
         
         bookings.forEach((b: any) => {
-            if (b.status === 'NEW' && b.source && b.source.toLowerCase() !== 'walk-in' || !b.bookingRooms?.length) {
+            if (!b.bookingRooms?.length) {
                 const vRoomId = `unassigned_${b.id}`;
                 virtualRooms.push({
                     id: vRoomId,
-                    roomNumber: `Đơn ${b.code}`,
+                    roomNumber: `Đơn ${b.code || b.bookingCode}`,
                     floor: '-',
                     isVirtual: true
                 });
@@ -75,13 +77,14 @@ export default function CalendarPage() {
     const bookings = useMemo(() => {
         const arrBookings = Array.isArray(bookingsRaw) ? bookingsRaw : [];
         return arrBookings.map((b: any) => {
-            const isUnconfirmedExternal = b.status === 'NEW' && b.source && b.source.toLowerCase() !== 'walk-in';
-            const newBookingRooms = b.bookingRooms?.map((br: any) => {
-                if (isUnconfirmedExternal || !br.roomId) {
-                    return { ...br, originalRoomId: br.roomId, roomId: `unassigned_${b.id}` };
-                }
-                return br;
-            });
+            const hasNoRoom = !b.bookingRooms?.length;
+            if (hasNoRoom) {
+                return { ...b, bookingRooms: [{ roomId: `unassigned_${b.id}` }] };
+            }
+            // Remap any booking-room without an assigned roomId to the virtual slot
+            const newBookingRooms = b.bookingRooms.map((br: any) =>
+                br.roomId ? br : { ...br, roomId: `unassigned_${b.id}` }
+            );
             return { ...b, bookingRooms: newBookingRooms };
         });
     }, [bookingsRaw]);
@@ -104,6 +107,8 @@ export default function CalendarPage() {
     const [bookingServices, setBookingServices] = useState<any[]>([]);
     const [newService, setNewService] = useState({ serviceId: '', quantity: 1, unitPrice: 0, customName: '' });
     const [serviceToRemove, setServiceToRemove] = useState<{ id: string; amount: number } | null>(null);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
 
     // Compute date range
     const dates = useMemo(() => {
@@ -171,17 +176,15 @@ export default function CalendarPage() {
         // but for legacy callers, we can just trigger a re-fetch if needed.
     }
 
-    const getStatusColor = (status: string, source?: string) => {
-        if (status === 'NEW' && source && source.toLowerCase() !== 'walk-in') {
-            return 'bg-orange-500 border-orange-600 text-white shadow-md ring-2 ring-orange-300 ring-offset-1 font-bold';
-        }
+    const getStatusColor = (status: string) => {
         switch (status) {
-            case 'NEW': return 'bg-blue-500/20 border-blue-500/30 text-blue-400';
-            case 'CONFIRMED': return 'bg-purple-500/20 border-purple-500/30 text-purple-400';
-            case 'CHECKED_IN': return 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400';
-            case 'CHECKED_OUT': return 'bg-zinc-500/20 border-zinc-500/30 text-zinc-400';
+            case 'PENDING': return 'bg-blue-500/20 border-blue-500/30 text-blue-600';
+            case 'CONFIRMED': return 'bg-purple-500/20 border-purple-500/30 text-purple-600';
+            case 'CHECKED_IN': return 'bg-emerald-500/20 border-emerald-500/30 text-emerald-600';
+            case 'CHECKED_OUT': return 'bg-zinc-500/20 border-zinc-500/30 text-gray-500';
             case 'CANCELLED': return 'bg-red-500/20 border-red-500/30 text-red-400';
-            default: return 'bg-blue-500/20 border-blue-500/30 text-blue-400';
+            case 'NO_SHOW': return 'bg-orange-500/20 border-orange-500/30 text-orange-500';
+            default: return 'bg-blue-500/20 border-blue-500/30 text-blue-600';
         }
     };
 
@@ -265,12 +268,17 @@ export default function CalendarPage() {
         }
     };
 
-    const handleCancelBooking = async () => {
+    const handleCancelBooking = () => {
         if (!selectedBooking) return;
-        const reason = window.prompt("Nhập lý do hủy phòng:");
-        if (reason === null) return;
+        setCancelReason('');
+        setShowCancelDialog(true);
+    };
+
+    const confirmCancelBooking = async () => {
+        if (!selectedBooking) return;
         try {
-            await cancelBooking({ id: selectedBooking.id, reason });
+            await cancelBooking({ id: selectedBooking.id, reason: cancelReason || 'Không có lý do' });
+            setShowCancelDialog(false);
             setSelectedBooking(null);
         } catch (error) {
             console.error(error);
@@ -411,7 +419,7 @@ export default function CalendarPage() {
             }
         } catch (error) {
             console.error(error);
-            alert("Lỗi mạng khi tải mẫu in");
+            toast.error("Lỗi khi tải mẫu in");
         }
     };
 
@@ -514,25 +522,25 @@ export default function CalendarPage() {
         <div className="flex flex-col h-[calc(100vh-80px)] gap-4">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Lịch phòng</h1>
-                    <p className="text-sm text-zinc-400">Timeline kéo thả và quản lý phòng trực quan.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">Lịch phòng</h1>
+                    <p className="text-sm text-gray-500">Timeline kéo thả và quản lý phòng trực quan.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800" onClick={handleToday}>
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100" onClick={handleToday}>
                         Hôm nay
                     </Button>
-                    <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-md">
-                        <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-9 w-9 text-zinc-400 hover:text-white rounded-none border-r border-zinc-800">
+                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-md">
+                        <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-9 w-9 text-gray-500 hover:text-blue-700 rounded-none border-r border-gray-200">
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                             <PopoverTrigger asChild>
-                                <Button variant="ghost" className="px-4 text-sm font-medium text-white flex items-center gap-2 w-[240px] justify-center hover:bg-zinc-800 rounded-none h-9">
-                                    <CalendarIcon className="h-4 w-4 text-zinc-500" />
+                                <Button variant="ghost" className="px-4 text-sm font-medium text-gray-900 flex items-center gap-2 w-[240px] justify-center hover:bg-gray-100 rounded-none h-9">
+                                    <CalendarIcon className="h-4 w-4 text-gray-400" />
                                     {format(startDate, 'dd/MM/yyyy')} - {format(addDays(startDate, daysToShow - 1), 'dd/MM/yyyy')}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-zinc-950 border-zinc-800 text-zinc-100" align="center">
+                            <PopoverContent className="w-auto p-0 bg-white border-gray-200 text-gray-800" align="center">
                                 <Calendar
                                     mode="single"
                                     selected={startDate}
@@ -543,22 +551,22 @@ export default function CalendarPage() {
                                         }
                                     }}
                                     initialFocus
-                                    className="bg-zinc-950 text-zinc-100"
+                                    className="bg-white text-gray-800"
                                 />
                             </PopoverContent>
                         </Popover>
-                        <Button variant="ghost" size="icon" onClick={handleNext} className="h-9 w-9 text-zinc-400 hover:text-white rounded-none border-l border-zinc-800">
+                        <Button variant="ghost" size="icon" onClick={handleNext} className="h-9 w-9 text-gray-500 hover:text-blue-700 rounded-none border-l border-gray-200">
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
             </div>
 
-            <Card className="flex-1 bg-zinc-950 border-zinc-800 overflow-hidden flex flex-col items-stretch">
+            <Card className="flex-1 bg-white border-gray-200 overflow-hidden flex flex-col items-stretch">
                 <CardContent className="p-0 flex-1 flex flex-col relative h-full">
                     {loading && (
-                        <div className="absolute inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center">
-                            <span className="text-zinc-400">Đang tải dữ liệu lịch...</span>
+                        <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center">
+                            <span className="text-gray-500">Đang tải dữ liệu lịch...</span>
                         </div>
                     )}
 
@@ -566,21 +574,21 @@ export default function CalendarPage() {
                     <div className="flex-1 overflow-auto flex flex-col relative custom-scrollbar">
                         <div className="flex flex-col min-w-max relative flex-1">
                             {/* Header: Dates */}
-                            <div className="flex border-b border-zinc-800 w-full sticky top-0 z-40 bg-zinc-950">
+                            <div className="flex border-b border-gray-200 w-full sticky top-0 z-40 bg-white">
                                 {/* Corner cell */}
-                                <div className="w-48 flex-shrink-0 border-r border-zinc-800 p-3 bg-zinc-900 flex items-center justify-between sticky left-0 z-50">
-                                    <span className="text-sm font-medium text-zinc-400">Phòng</span>
-                                    <Filter className="h-4 w-4 text-zinc-500" />
+                                <div className="w-48 flex-shrink-0 border-r border-gray-200 p-3 bg-gray-50 flex items-center justify-between sticky left-0 z-50">
+                                    <span className="text-sm font-medium text-gray-500">Phòng</span>
+                                    <Filter className="h-4 w-4 text-gray-400" />
                                 </div>
                                 {/* Dates row */}
                                 <div className="flex-1 flex">
                                     {dates.map((date, i) => (
-                                        <div key={i} className={`flex-1 min-w-[80px] flex flex-col items-center justify-center p-2 border-r border-zinc-800 ${isSameDay(date, new Date()) ? 'bg-blue-500/10' : ''}`}>
-                                            <span className="text-xs font-medium text-zinc-500 uppercase">{format(date, 'eee', { locale: vi })}</span>
-                                            <span className={`text-lg font-bold ${isSameDay(date, new Date()) ? 'text-blue-400' : 'text-zinc-200'}`}>
+                                        <div key={i} className={`flex-1 min-w-[80px] flex flex-col items-center justify-center p-2 border-r border-gray-200 ${isSameDay(date, new Date()) ? 'bg-blue-500/10' : ''}`}>
+                                            <span className="text-xs font-medium text-gray-400 uppercase">{format(date, 'eee', { locale: vi })}</span>
+                                            <span className={`text-lg font-bold ${isSameDay(date, new Date()) ? 'text-blue-400' : 'text-gray-700'}`}>
                                                 {format(date, 'dd')}
                                             </span>
-                                            <span className="text-xs text-zinc-600 truncate max-w-full">{format(date, 'MM/yyyy')}</span>
+                                            <span className="text-xs text-gray-400 truncate max-w-full">{format(date, 'MM/yyyy')}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -589,19 +597,40 @@ export default function CalendarPage() {
                             {/* Timeline Grid Body */}
                             <div className="flex-1 flex relative">
                                 {/* Y-Axis: Rooms */}
-                                <div className="w-48 flex-shrink-0 border-r border-zinc-800 bg-zinc-950 sticky left-0 z-30">
+                                <div className="w-48 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-30">
                                     {roomTypes.map(type => (
                                         <div key={type.id}>
-                                            <div className="p-2 h-[38px] bg-zinc-800/50 border-b border-zinc-800 flex items-center gap-2">
-                                                <Layers className="h-4 w-4 text-zinc-500 flex-shrink-0" />
-                                                <span className="text-xs font-medium text-zinc-300 truncate" title={type.name}>{type.name}</span>
+                                            <div className="p-2 h-[38px] bg-gray-100/50 border-b border-gray-200 flex items-center gap-2">
+                                                <Layers className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                                <span className="text-xs font-medium text-gray-600 truncate" title={type.name}>{type.name}</span>
                                             </div>
-                                            {type.rooms?.map((room: any) => (
-                                                <div key={room.id} className="h-16 border-b border-zinc-800 p-3 flex flex-col justify-center relative group">
-                                                    <span className="text-sm font-medium text-white">{room.roomNumber}</span>
-                                                    <span className="text-xs text-zinc-500">Tầng {room.floor}</span>
-                                                </div>
-                                            ))}
+                                            {type.rooms?.map((room: any) => {
+                                                const statusLabel: Record<string, string> = {
+                                                    CLEANING: 'Dọn phòng',
+                                                    MAINTENANCE: 'Bảo trì',
+                                                    BLOCKED: 'Tạm khóa',
+                                                    OCCUPIED: 'Có khách',
+                                                };
+                                                const statusBadge: Record<string, string> = {
+                                                    CLEANING: 'bg-yellow-100 text-yellow-700',
+                                                    MAINTENANCE: 'bg-red-100 text-red-700',
+                                                    BLOCKED: 'bg-gray-200 text-gray-500',
+                                                    OCCUPIED: 'bg-blue-100 text-blue-700',
+                                                };
+                                                return (
+                                                    <div key={room.id} className="h-16 border-b border-gray-200 p-3 flex flex-col justify-center relative group">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-sm font-medium text-gray-900">{room.roomNumber}</span>
+                                                            {room.status && room.status !== 'AVAILABLE' && (
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${statusBadge[room.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                                                                    {statusLabel[room.status] ?? room.status}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-xs text-gray-400">{room.floor ? `Tầng ${room.floor}` : ''}</span>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     ))}
                                 </div>
@@ -611,7 +640,7 @@ export default function CalendarPage() {
                                     {/* Grid Lines Overlay */}
                                     <div className="absolute inset-0 flex pointer-events-none z-0">
                                         {dates.map((date, i) => (
-                                            <div key={i} className={`flex-1 min-w-[80px] border-r border-zinc-800/50 ${isSameDay(date, new Date()) ? 'bg-blue-500/5' : ''}`}></div>
+                                            <div key={i} className={`flex-1 min-w-[80px] border-r border-gray-200/50 ${isSameDay(date, new Date()) ? 'bg-blue-500/5' : ''}`}></div>
                                         ))}
                                     </div>
 
@@ -619,7 +648,7 @@ export default function CalendarPage() {
                                     {roomTypes.map(type => (
                                         <div key={type.id} className="relative z-10 flex flex-col">
                                             {/* Type Header Row Spacer */}
-                                            <div className="h-[38px] border-b border-zinc-800/50 bg-zinc-900/10 w-full flex">
+                                            <div className="h-[38px] border-b border-gray-200/50 bg-gray-50/10 w-full flex">
                                                 {/* Grey out the row corresponding to the category header */}
                                             </div>
 
@@ -627,6 +656,21 @@ export default function CalendarPage() {
                                             {type.rooms?.map((room: any) => {
                                                 // Find bookings for this room
                                                 const roomBookings = bookings.filter(b => b.bookingRooms?.some((br: any) => br.roomId === room.id));
+
+                                                const isDateBooked = (date: Date) =>
+                                                    roomBookings.some(b => {
+                                                        const ci = new Date(b.checkIn);
+                                                        const co = new Date(b.checkOut);
+                                                        return ci <= date && date < co && !['CANCELLED', 'NO_SHOW'].includes(b.status);
+                                                    });
+
+                                                const cellBg = (date: Date) => {
+                                                    if (isDateBooked(date)) return '';
+                                                    if (room.status === 'CLEANING') return 'bg-yellow-50';
+                                                    if (room.status === 'MAINTENANCE') return 'bg-red-50';
+                                                    if (room.status === 'BLOCKED') return 'bg-gray-100';
+                                                    return '';
+                                                };
 
                                                 // Calculate drag overlay bounds if active on this room
                                                 let dragStyle = {};
@@ -657,7 +701,7 @@ export default function CalendarPage() {
                                                 }
 
                                                 return (
-                                                    <div key={room.id} className="h-16 border-b border-zinc-800 flex w-full relative transition-colors select-none">
+                                                    <div key={room.id} className="h-16 border-b border-gray-200 flex w-full relative transition-colors select-none">
                                                         {/* Rendering bookings as absolute blocks */}
                                                         {roomBookings.map(booking => {
                                                             const checkIn = new Date(booking.checkIn);
@@ -686,7 +730,7 @@ export default function CalendarPage() {
                                                                         e.stopPropagation();
                                                                         handleSelectBooking(booking);
                                                                     }}
-                                                                    className={`absolute top-2 bottom-2 rounded-md border p-1.5 overflow-hidden flex flex-col cursor-pointer shadow-sm transition-all z-20 ${getStatusColor(booking.status, booking.source)} hover:brightness-110`}
+                                                                    className={`absolute top-2 bottom-2 rounded-md border p-1.5 overflow-hidden flex flex-col cursor-pointer shadow-sm transition-all z-20 ${getStatusColor(booking.status)} hover:brightness-110`}
                                                                     style={{
                                                                         left: `${leftPercent}%`,
                                                                         width: `calc(${widthPercent}%)`, // Exact exact fractional width
@@ -713,13 +757,11 @@ export default function CalendarPage() {
                                                         {dates.map((date, i) => (
                                                             <div
                                                                 key={i}
-                                                                className="flex-1 min-w-[80px] h-full flex items-center justify-center hover:bg-zinc-800/40 cursor-crosshair transition-all z-10 border-r border-transparent"
+                                                                className={`flex-1 min-w-[80px] h-full flex items-center justify-center cursor-crosshair transition-all z-10 border-r border-transparent hover:bg-gray-100/40 ${cellBg(date)}`}
                                                                 onMouseDown={(e) => handleCellMouseDown(room, type, date, e)}
                                                                 onMouseEnter={() => handleCellMouseEnter(room, date)}
                                                                 onMouseUp={() => handleCellMouseUp(room, type, date)}
-                                                            >
-                                                                {/* Visual helper dots can be placed here if needed */}
-                                                            </div>
+                                                            />
                                                         ))}
                                                     </div>
                                                 );
@@ -746,29 +788,29 @@ export default function CalendarPage() {
             {
                 selectedBooking && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedBooking(null)}>
-                        <Card className="w-full max-w-4xl bg-zinc-950 border-zinc-800 p-6 flex flex-col gap-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                                <h2 className="text-lg font-bold text-white">Quản lý Đặt phòng</h2>
-                                <button onClick={() => setSelectedBooking(null)} className="text-zinc-400 hover:text-white">&times;</button>
+                        <Card className="w-full max-w-4xl bg-white border-gray-200 p-6 flex flex-col gap-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                                <h2 className="text-lg font-bold text-gray-900">Quản lý Đặt phòng</h2>
+                                <button onClick={() => setSelectedBooking(null)} className="text-gray-500 hover:text-blue-700">&times;</button>
                             </div>
 
                             <Tabs defaultValue="info" className="w-full text-sm">
-                                <TabsList className="grid w-full grid-cols-2 bg-zinc-900 mb-4 h-9 p-1">
-                                    <TabsTrigger value="info" className="text-xs data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-zinc-400">Thông tin chung</TabsTrigger>
-                                    <TabsTrigger value="services" className="text-xs data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-zinc-400">Dịch vụ bổ sung</TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-2 bg-gray-50 mb-4 h-9 p-1">
+                                    <TabsTrigger value="info" className="text-xs data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500">Thông tin chung</TabsTrigger>
+                                    <TabsTrigger value="services" className="text-xs data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500">Dịch vụ bổ sung</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="info" className="mt-0 focus-visible:outline-none">
                                     <fieldset disabled={!isEditingBooking} className="border-none p-0 m-0 min-w-0 w-full space-y-4">
-                                        <div className="text-zinc-300 space-y-2 mb-4 bg-zinc-900/50 p-4 rounded-md border border-zinc-800 relative overflow-hidden">
-                                            {selectedBooking.source !== 'walk-in' && selectedBooking.status === 'NEW' && (
+                                        <div className="text-gray-600 space-y-2 mb-4 bg-gray-50 p-4 rounded-md border border-gray-200 relative overflow-hidden">
+                                            {selectedBooking.source !== 'walk-in' && selectedBooking.status === 'PENDING' && (
                                                 <div className="absolute top-0 right-0 bg-orange-500/20 text-orange-400 text-xs px-3 py-1 font-semibold rounded-bl-lg border-b border-l border-orange-500/30">
                                                     CẦN XÁC NHẬN
                                                 </div>
                                             )}
-                                            <p><strong className="text-zinc-400 w-32 inline-block">Mã Booking:</strong> <span className="text-white font-bold">{selectedBooking.code}</span></p>
-                                            <p><strong className="text-zinc-400 w-32 inline-block">Khách hàng:</strong> <span className="text-blue-400 font-medium">{selectedBooking.guest?.name || 'Walk-in'} ({selectedBooking.guest?.phone || 'Chưa cập nhật'})</span></p>
-                                            <p><strong className="text-zinc-400 w-32 inline-block">Nguồn:</strong> <span className="uppercase text-white font-medium">{selectedBooking.source === 'walk-in' ? 'Khách lẻ / Trực tiếp' : selectedBooking.source}</span></p>
-                                            <p><strong className="text-zinc-400 w-32 inline-block">TG Tạo đơn:</strong> <span className="text-zinc-300">{format(new Date(selectedBooking.createdAt || new Date()), "HH:mm - dd/MM/yyyy")}</span></p>
+                                            <p><strong className="text-gray-500 w-32 inline-block">Mã Booking:</strong> <span className="text-gray-900 font-bold">{selectedBooking.code}</span></p>
+                                            <p><strong className="text-gray-500 w-32 inline-block">Khách hàng:</strong> <span className="text-blue-400 font-medium">{selectedBooking.guest?.name || 'Walk-in'} ({selectedBooking.guest?.phone || 'Chưa cập nhật'})</span></p>
+                                            <p><strong className="text-gray-500 w-32 inline-block">Nguồn:</strong> <span className="uppercase text-gray-900 font-medium">{selectedBooking.source === 'walk-in' ? 'Khách lẻ / Trực tiếp' : selectedBooking.source}</span></p>
+                                            <p><strong className="text-gray-500 w-32 inline-block">TG Tạo đơn:</strong> <span className="text-gray-600">{format(new Date(selectedBooking.createdAt || new Date()), "HH:mm - dd/MM/yyyy")}</span></p>
                                             {selectedBooking.status === 'CANCELLED' && selectedBooking.cancellationReason && (
                                                 <p><strong className="text-red-400 w-32 inline-block">Lý do hủy:</strong> <span className="text-red-300 font-medium italic">{selectedBooking.cancellationReason}</span></p>
                                             )}
@@ -776,19 +818,19 @@ export default function CalendarPage() {
 
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <label className="block text-xs text-zinc-500 uppercase mb-1">Nhận phòng</label>
+                                                <label className="block text-xs text-gray-400 uppercase mb-1">Nhận phòng</label>
                                                 <input
                                                     type="datetime-local"
-                                                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white [color-scheme:dark]"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded p-2 text-gray-900 [color-scheme:light]"
                                                     value={editBookingData.checkIn}
                                                     onChange={e => setEditBookingData({ ...editBookingData, checkIn: e.target.value })}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-zinc-500 uppercase mb-1">Trả phòng</label>
+                                                <label className="block text-xs text-gray-400 uppercase mb-1">Trả phòng</label>
                                                 <input
                                                     type="datetime-local"
-                                                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white [color-scheme:dark]"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded p-2 text-gray-900 [color-scheme:light]"
                                                     value={editBookingData.checkOut}
                                                     onChange={e => setEditBookingData({ ...editBookingData, checkOut: e.target.value })}
                                                 />
@@ -797,9 +839,9 @@ export default function CalendarPage() {
 
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <label className="block text-xs text-zinc-500 uppercase mb-1">Phòng xếp (Gán phòng)</label>
+                                                <label className="block text-xs text-gray-400 uppercase mb-1">Phòng xếp (Gán phòng)</label>
                                                 <select
-                                                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded p-2 text-gray-900"
                                                     value={editBookingData.roomId || ''}
                                                     onChange={e => setEditBookingData({ ...editBookingData, roomId: e.target.value })}
                                                 >
@@ -814,23 +856,24 @@ export default function CalendarPage() {
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-zinc-500 uppercase mb-1">Trạng thái</label>
+                                                <label className="block text-xs text-gray-400 uppercase mb-1">Trạng thái</label>
                                                 <select
-                                                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded p-2 text-gray-900"
                                                     value={editBookingData.status}
                                                     onChange={e => setEditBookingData({ ...editBookingData, status: e.target.value })}
                                                 >
-                                                    <option value="NEW">Mới</option>
-                                                    <option value="CONFIRMED">Xác nhận</option>
-                                                    <option value="CHECKED_IN">Đang ở</option>
-                                                    <option value="CHECKED_OUT">Đã rời đi</option>
-                                                    <option value="CANCELLED">Hủy</option>
+                                                    <option value="PENDING">Chờ xác nhận</option>
+                                                    <option value="CONFIRMED">Đã xác nhận</option>
+                                                    <option value="CHECKED_IN">Đang lưu trú</option>
+                                                    <option value="CHECKED_OUT">Đã trả phòng</option>
+                                                    <option value="CANCELLED">Đã hủy</option>
+                                                    <option value="NO_SHOW">Không đến</option>
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-zinc-500 uppercase mb-1">Thanh toán</label>
+                                                <label className="block text-xs text-gray-400 uppercase mb-1">Thanh toán</label>
                                                 <select
-                                                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded p-2 text-gray-900"
                                                     value={editBookingData.paymentStatus}
                                                     onChange={e => setEditBookingData({ ...editBookingData, paymentStatus: e.target.value })}
                                                 >
@@ -843,21 +886,21 @@ export default function CalendarPage() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs text-zinc-500 uppercase mb-1">Cơ cấu Doanh thu</label>
-                                            <div className="bg-zinc-900 border border-zinc-800 rounded p-3 text-sm flex flex-col gap-2">
-                                                <div className="flex justify-between items-center text-zinc-400">
+                                            <label className="block text-xs text-gray-400 uppercase mb-1">Cơ cấu Doanh thu</label>
+                                            <div className="bg-gray-50 border border-gray-200 rounded p-3 text-sm flex flex-col gap-2">
+                                                <div className="flex justify-between items-center text-gray-500">
                                                     <span>Tiền phòng:</span>
-                                                    <span className="text-zinc-200">{(Number(editBookingData.totalAmount || 0) - bookingServices.reduce((a, b) => a + b.amount, 0)).toLocaleString('vi-VN')} VND</span>
+                                                    <span className="text-gray-700">{(Number(editBookingData.totalAmount || 0) - bookingServices.reduce((a, b) => a + b.amount, 0)).toLocaleString('vi-VN')} VND</span>
                                                 </div>
-                                                <div className="flex justify-between items-center text-zinc-400">
+                                                <div className="flex justify-between items-center text-gray-500">
                                                     <span>Tiền dịch vụ:</span>
-                                                    <span className="text-zinc-200">{bookingServices.reduce((a, b) => a + b.amount, 0).toLocaleString('vi-VN')} VND</span>
+                                                    <span className="text-gray-700">{bookingServices.reduce((a, b) => a + b.amount, 0).toLocaleString('vi-VN')} VND</span>
                                                 </div>
-                                                <div className="flex justify-between items-center border-t border-zinc-800 pt-2 mt-1">
-                                                    <span className="text-zinc-300 uppercase text-xs">Tổng thu khách (VND):</span>
+                                                <div className="flex justify-between items-center border-t border-gray-200 pt-2 mt-1">
+                                                    <span className="text-gray-600 uppercase text-xs">Tổng thu khách (VND):</span>
                                                     <input
                                                         type="number"
-                                                        className="w-32 bg-zinc-950 border border-zinc-700 focus:border-orange-500 rounded p-1 text-right text-white font-bold text-orange-400 outline-none"
+                                                        className="w-32 bg-white border border-gray-300 focus:border-orange-500 rounded p-1 text-right text-gray-900 font-bold text-orange-400 outline-none"
                                                         value={editBookingData.totalAmount}
                                                         onChange={e => setEditBookingData({ ...editBookingData, totalAmount: e.target.value })}
                                                     />
@@ -871,7 +914,7 @@ export default function CalendarPage() {
                                     <fieldset disabled={!isEditingBooking} className="border-none p-0 m-0 min-w-0 w-full space-y-4">
                                         <div className="flex gap-2 flex-wrap mb-2">
                                             <select
-                                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded p-2 text-white text-sm min-w-40"
+                                                className="flex-1 bg-gray-50 border border-gray-200 rounded p-2 text-gray-900 text-sm min-w-40"
                                                 value={newService.serviceId}
                                                 onChange={e => {
                                                     const val = e.target.value;
@@ -893,7 +936,7 @@ export default function CalendarPage() {
                                             {newService.serviceId === 'NEW_SERVICE' && (
                                                 <input
                                                     type="text"
-                                                    className="w-full sm:w-auto flex-1 bg-zinc-900 border border-zinc-800 rounded p-2 text-white text-sm"
+                                                    className="w-full sm:w-auto flex-1 bg-gray-50 border border-gray-200 rounded p-2 text-gray-900 text-sm"
                                                     value={newService.customName}
                                                     onChange={e => setNewService({ ...newService, customName: e.target.value })}
                                                     placeholder="Tên dịch vụ mới"
@@ -903,7 +946,7 @@ export default function CalendarPage() {
                                             <input
                                                 type="number"
                                                 min="0"
-                                                className="w-28 bg-zinc-900 border border-zinc-800 rounded p-2 text-right text-white text-sm"
+                                                className="w-28 bg-gray-50 border border-gray-200 rounded p-2 text-right text-gray-900 text-sm"
                                                 value={newService.unitPrice}
                                                 onChange={e => setNewService({ ...newService, unitPrice: Number(e.target.value) })}
                                                 placeholder="Đơn giá"
@@ -911,16 +954,16 @@ export default function CalendarPage() {
                                             <input
                                                 type="number"
                                                 min="1"
-                                                className="w-16 bg-zinc-900 border border-zinc-800 rounded p-2 text-center text-white text-sm"
+                                                className="w-16 bg-gray-50 border border-gray-200 rounded p-2 text-center text-gray-900 text-sm"
                                                 value={newService.quantity}
                                                 onChange={e => setNewService({ ...newService, quantity: Number(e.target.value) })}
                                                 placeholder="SL"
                                             />
                                             <Button onClick={handleAddServiceUsage} className="bg-blue-600 hover:bg-blue-700 text-white px-3 flex-shrink-0"><Plus className="w-4 h-4" /></Button>
                                         </div>
-                                        <div className="border border-zinc-800 rounded overflow-hidden">
-                                            <table className="w-full text-sm text-left text-zinc-300">
-                                                <thead className="bg-zinc-900 text-xs text-zinc-400">
+                                        <div className="border border-gray-200 rounded overflow-hidden">
+                                            <table className="w-full text-sm text-left text-gray-600">
+                                                <thead className="bg-gray-50 text-xs text-gray-500">
                                                     <tr>
                                                         <th className="px-3 py-2 font-medium">Dịch vụ</th>
                                                         <th className="px-3 py-2 font-medium text-center">SL</th>
@@ -930,38 +973,38 @@ export default function CalendarPage() {
                                                 </thead>
                                                 <tbody>
                                                     {bookingServices.length > 0 ? bookingServices.map(usage => (
-                                                        <tr key={usage.id} className="border-b border-zinc-800/50 bg-zinc-950/50 hover:bg-zinc-900/50">
-                                                            <td className="px-3 py-2 text-white">{usage.service?.name}
-                                                                {usage.unitPrice !== usage.service?.price && <span className="text-xs text-zinc-500 block">({usage.unitPrice.toLocaleString()} đ/sp)</span>}
+                                                        <tr key={usage.id} className="border-b border-gray-200/50 bg-white/50 hover:bg-gray-50">
+                                                            <td className="px-3 py-2 text-gray-900">{usage.service?.name}
+                                                                {usage.unitPrice !== usage.service?.price && <span className="text-xs text-gray-400 block">({usage.unitPrice.toLocaleString()} đ/sp)</span>}
                                                             </td>
                                                             <td className="px-3 py-2 text-center">
                                                                 <input
                                                                     type="number"
                                                                     min="1"
-                                                                    className="w-16 bg-zinc-950 border border-zinc-800 rounded p-1 text-center text-white text-xs outline-none focus:border-zinc-500"
+                                                                    className="w-16 bg-white border border-gray-200 rounded p-1 text-center text-gray-900 text-xs outline-none focus:border-zinc-500"
                                                                     value={usage.quantity}
                                                                     onChange={e => handleUpdateServiceQuantity(usage.id, Number(e.target.value), usage.unitPrice, usage.amount)}
                                                                 />
                                                             </td>
                                                             <td className="px-3 py-2 text-right">{usage.amount.toLocaleString()}</td>
                                                             <td className="px-3 py-2 text-right">
-                                                                <button className="text-zinc-500 hover:text-red-400" onClick={() => setServiceToRemove({ id: usage.id, amount: usage.amount })}>&times;</button>
+                                                                <button className="text-gray-400 hover:text-red-400" onClick={() => setServiceToRemove({ id: usage.id, amount: usage.amount })}>&times;</button>
                                                             </td>
                                                         </tr>
                                                     )) : (
                                                         <tr>
-                                                            <td colSpan={4} className="px-3 py-6 text-center text-zinc-500 text-xs">Chưa có dịch vụ nào</td>
+                                                            <td colSpan={4} className="px-3 py-6 text-center text-gray-400 text-xs">Chưa có dịch vụ nào</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
                                             </table>
                                         </div>
 
-                                        <div className="flex flex-col gap-1 text-right pt-3 border-t border-zinc-800">
-                                            <div className="text-xs text-zinc-400">Tiền phòng: <span className="text-zinc-200">{(Number(editBookingData.totalAmount || 0) - bookingServices.reduce((a, b) => a + b.amount, 0)).toLocaleString('vi-VN')}</span> VND</div>
-                                            <div className="text-xs text-zinc-400">Tiền dịch vụ: <span className="text-zinc-200">{bookingServices.reduce((a, b) => a + b.amount, 0).toLocaleString('vi-VN')}</span> VND</div>
-                                            <div className="text-sm pt-2 mt-1 border-t border-zinc-800/50">
-                                                <span className="text-zinc-400 uppercase mr-2 text-xs">Tổng thu khách:</span>
+                                        <div className="flex flex-col gap-1 text-right pt-3 border-t border-gray-200">
+                                            <div className="text-xs text-gray-500">Tiền phòng: <span className="text-gray-700">{(Number(editBookingData.totalAmount || 0) - bookingServices.reduce((a, b) => a + b.amount, 0)).toLocaleString('vi-VN')}</span> VND</div>
+                                            <div className="text-xs text-gray-500">Tiền dịch vụ: <span className="text-gray-700">{bookingServices.reduce((a, b) => a + b.amount, 0).toLocaleString('vi-VN')}</span> VND</div>
+                                            <div className="text-sm pt-2 mt-1 border-t border-gray-200/50">
+                                                <span className="text-gray-500 uppercase mr-2 text-xs">Tổng thu khách:</span>
                                                 <span className="font-bold text-orange-400">{Number(editBookingData.totalAmount || 0).toLocaleString('vi-VN')} VND</span>
                                             </div>
                                         </div>
@@ -969,31 +1012,31 @@ export default function CalendarPage() {
                                 </TabsContent>
                             </Tabs>
 
-                            <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-zinc-800 mt-2">
-                                <Button variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white" onClick={() => setSelectedBooking(null)}>Đóng</Button>
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-gray-200 mt-2">
+                                <Button variant="outline" className="bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-700" onClick={() => setSelectedBooking(null)}>Đóng</Button>
 
                                 <div className="flex flex-wrap gap-2 items-center">
                                     {!isEditingBooking ? (
                                         <>
-                                            <Button variant="outline" className="bg-zinc-900 border-teal-900/50 text-teal-400 hover:bg-teal-900/20" onClick={() => handlePrint('invoice')}>
+                                            <Button variant="outline" className="bg-gray-50 border-teal-900/50 text-teal-400 hover:bg-teal-900/20" onClick={() => handlePrint('invoice')}>
                                                 In Hóa đơn
                                             </Button>
 
-                                            <Button variant="outline" className="bg-zinc-900 border-teal-900/50 text-teal-400 hover:bg-teal-900/20" onClick={() => handlePrint('deposit')}>
+                                            <Button variant="outline" className="bg-gray-50 border-teal-900/50 text-teal-400 hover:bg-teal-900/20" onClick={() => handlePrint('deposit')}>
                                                 In Phiếu đặt cọc
                                             </Button>
 
-                                            <Button variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white" onClick={(e) => { e.preventDefault(); setIsEditingBooking(true); }}>
+                                            <Button variant="outline" className="bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-700" onClick={(e) => { e.preventDefault(); setIsEditingBooking(true); }}>
                                                 Chỉnh sửa
                                             </Button>
 
                                             {(editBookingData.status === 'CHECKED_IN') && (
-                                                <Button variant="outline" className="bg-zinc-900 text-violet-400 border-violet-900/50 hover:bg-violet-900/20" onClick={() => handleRequestCleaning()}>
+                                                <Button variant="outline" className="bg-gray-50 text-violet-400 border-violet-900/50 hover:bg-violet-900/20" onClick={() => handleRequestCleaning()}>
                                                     Yêu cầu Dọn phòng
                                                 </Button>
                                             )}
 
-                                            {(editBookingData.status === 'NEW' || editBookingData.status === 'CONFIRMED') && (
+                                            {(editBookingData.status === 'PENDING' || editBookingData.status === 'CONFIRMED') && (
                                                 <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => handleSaveBookingEdit('CHECKED_IN')}>
                                                     Check-in
                                                 </Button>
@@ -1013,11 +1056,11 @@ export default function CalendarPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <Button variant="outline" className="bg-zinc-900 border-red-900/50 text-red-400 hover:bg-red-900/20" onClick={() => handleCancelBooking()}>
+                                            <Button variant="outline" className="bg-gray-50 border-red-900/50 text-red-400 hover:bg-red-900/20" onClick={() => handleCancelBooking()}>
                                                 Hủy đơn
                                             </Button>
-                                            <Button variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white" onClick={() => setIsEditingBooking(false)}>Hủy</Button>
-                                            <Button variant="secondary" className="bg-zinc-800 text-white hover:bg-zinc-700" onClick={() => handleSaveBookingEdit()}>Lưu thay đổi</Button>
+                                            <Button variant="outline" className="bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-700" onClick={() => setIsEditingBooking(false)}>Hủy</Button>
+                                            <Button variant="secondary" className="bg-gray-100 text-gray-900 hover:bg-gray-200" onClick={() => handleSaveBookingEdit()}>Lưu thay đổi</Button>
                                         </>
                                     )}
                                 </div>
@@ -1029,15 +1072,15 @@ export default function CalendarPage() {
 
             {/* Service Removal Alert Dialog */}
             <AlertDialog open={!!serviceToRemove} onOpenChange={(open) => !open && setServiceToRemove(null)}>
-                <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white">
+                <AlertDialogContent className="bg-white border-gray-200 text-gray-900">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xóa dịch vụ</AlertDialogTitle>
-                        <AlertDialogDescription className="text-zinc-400">
+                        <AlertDialogDescription className="text-gray-500">
                             Bạn có chắc chắn muốn xóa dịch vụ này khỏi Đặt phòng? Việc này không thể hoàn tác và doanh thu sẽ tự động được cập nhật.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white">Thoát</AlertDialogCancel>
+                        <AlertDialogCancel className="border-gray-200 bg-gray-50 text-gray-900 hover:bg-gray-100 hover:text-blue-700">Thoát</AlertDialogCancel>
                         <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white" onClick={() => {
                             if (serviceToRemove) {
                                 handleRemoveServiceUsage(serviceToRemove.id, serviceToRemove.amount);
@@ -1049,6 +1092,33 @@ export default function CalendarPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Cancel Booking Dialog */}
+            <Dialog open={showCancelDialog} onOpenChange={(open) => { if (!open) setShowCancelDialog(false); }}>
+                <DialogContent className="bg-gray-50 border-gray-200 text-gray-900 max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-gray-900">Hủy đặt phòng</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 mt-2">
+                        <p className="text-sm text-gray-500">Nhập lý do hủy phòng (tùy chọn):</p>
+                        <Input
+                            placeholder="VD: Khách yêu cầu hủy, sự cố..."
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                            className="bg-white border-gray-200 text-gray-900"
+                            onKeyDown={(e) => e.key === 'Enter' && confirmCancelBooking()}
+                        />
+                    </div>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-100" onClick={() => setShowCancelDialog(false)}>
+                            Thoát
+                        </Button>
+                        <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmCancelBooking}>
+                            Xác nhận hủy
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

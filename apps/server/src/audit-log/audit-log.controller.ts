@@ -14,19 +14,23 @@ export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
   @Get()
-  @Roles(ROLE.ADMIN) // Only admins can view audit logs
-  @ApiOperation({ summary: 'Get audit logs with pagination' })
+  @Roles(ROLE.ADMIN)
+  @ApiOperation({ summary: 'Get audit logs with pagination and filtering' })
   async findAll(
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
     @Query('userId') userId?: string,
     @Query('action') action?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     return this.auditLogService.findAll({
       limit: limit ? Number(limit) : undefined,
       offset: offset ? Number(offset) : undefined,
       userId,
       action,
+      startDate,
+      endDate,
     });
   }
 }

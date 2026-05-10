@@ -52,8 +52,8 @@ export function WorkspacePage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">{title}</h1>
-          <p className="mt-1 text-sm text-zinc-400">{description}</p>
+          <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+          <p className="mt-1 text-sm text-gray-500">{description}</p>
         </div>
         <div className="flex items-center gap-2">
           {actions.map((action) => (
@@ -72,22 +72,22 @@ export function WorkspacePage({
 
       <div className="grid gap-3 md:grid-cols-3">
         {stats.map((stat) => (
-          <Card key={stat.label} className="border-zinc-800 bg-zinc-900/60">
+          <Card key={stat.label} className="border-gray-200 bg-gray-50/60">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              <CardTitle className="text-xs font-medium uppercase tracking-wide text-gray-400">
                 {stat.label}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-semibold text-white">{stat.value}</div>
-              <p className="mt-1 text-xs text-zinc-400">{stat.hint}</p>
+              <div className="text-xl font-semibold text-gray-900">{stat.value}</div>
+              <p className="mt-1 text-xs text-gray-500">{stat.hint}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-gray-200 bg-gray-50">
           <CardHeader className="pb-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base text-white">Danh sach cong viec</CardTitle>
@@ -96,9 +96,9 @@ export function WorkspacePage({
                   readOnly
                   value=""
                   placeholder={searchPlaceholder}
-                  className="h-9 w-56 border-zinc-700 bg-zinc-950 text-zinc-300 placeholder:text-zinc-600"
+                  className="h-9 w-56 border-gray-300 bg-white text-gray-600 placeholder:text-gray-400"
                 />
-                <Button variant="outline" className="border-zinc-700 bg-zinc-950 text-zinc-200">
+                <Button variant="outline" className="border-gray-300 bg-white text-gray-700">
                   Loc nang cao
                 </Button>
               </div>
@@ -107,9 +107,9 @@ export function WorkspacePage({
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
+                <TableRow className="border-gray-200 hover:bg-transparent">
                   {columns.map((column) => (
-                    <TableHead key={column} className="text-zinc-400">
+                    <TableHead key={column} className="text-gray-500">
                       {column}
                     </TableHead>
                   ))}
@@ -117,9 +117,9 @@ export function WorkspacePage({
               </TableHeader>
               <TableBody>
                 {rows.map((row, index) => (
-                  <TableRow key={`row-${index}`} className="border-zinc-800 hover:bg-zinc-800/30">
+                  <TableRow key={`row-${index}`} className="border-gray-200 hover:bg-gray-100/30">
                     {row.map((cell, cellIndex) => (
-                      <TableCell key={`cell-${index}-${cellIndex}`} className="text-zinc-200">
+                      <TableCell key={`cell-${index}-${cellIndex}`} className="text-gray-700">
                         {cell}
                       </TableCell>
                     ))}
@@ -130,18 +130,18 @@ export function WorkspacePage({
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-gray-200 bg-gray-50">
           <CardHeader>
             <CardTitle className="text-base text-white">{insightsTitle}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {insights.map((insight) => (
-              <div key={insight.title} className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
+              <div key={insight.title} className="rounded-lg border border-gray-200 bg-white/70 p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-medium text-white">{insight.title}</h3>
-                  {insight.tag ? <Badge className="bg-zinc-800 text-zinc-300">{insight.tag}</Badge> : null}
+                  <h3 className="text-sm font-medium text-gray-900">{insight.title}</h3>
+                  {insight.tag ? <Badge className="bg-gray-100 text-gray-600">{insight.tag}</Badge> : null}
                 </div>
-                <p className="mt-1 text-xs text-zinc-400">{insight.description}</p>
+                <p className="mt-1 text-xs text-gray-500">{insight.description}</p>
               </div>
             ))}
           </CardContent>

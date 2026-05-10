@@ -3,10 +3,18 @@ import { ROLE } from '../enum/role';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateUserDto {
-  @ApiProperty({ example: '+84901234567' })
+  @ApiPropertyOptional({ example: 'le-van-b', description: 'Tên đăng nhập, unique trong property' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9._-]+$/, { message: 'username chỉ chứa chữ cái, số, dấu chấm, gạch ngang, gạch dưới' })
+  @Length(2, 50)
+  username?: string;
+
+  @ApiPropertyOptional({ example: '+84901234567' })
+  @IsOptional()
   @IsString()
   @Matches(/^\+?\d{8,15}$/, { message: 'phone must be a valid phone number' })
-  phone: string;
+  phone?: string;
 
   @ApiProperty({ example: 'Nguyen Van A', minLength: 2, maxLength: 100 })
   @IsString()

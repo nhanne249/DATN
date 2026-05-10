@@ -8,7 +8,6 @@ import {
   Delete,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -21,7 +20,6 @@ import { BookingService } from './booking.service';
 import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
 import { Service } from './entities/service.entity';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
-import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
@@ -33,7 +31,6 @@ import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
 @Roles(...STAFF_ROLES)
-@UseInterceptors(AuditLogInterceptor)
 export class ServiceController {
   constructor(private readonly bookingService: BookingService) {}
 

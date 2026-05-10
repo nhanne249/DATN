@@ -141,9 +141,9 @@ export default function CustomersPage() {
 
     return (
         <div className="flex-1 space-y-6 p-8 pt-6">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-5">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-white">Khách hàng</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-gray-900">Khách hàng</h2>
                     <p className="text-muted-foreground mt-2 text-sm">
                         Hồ sơ CRM, lịch sử lưu trú, phân loại VIP và thẻ (tags) khách hàng.
                     </p>
@@ -158,10 +158,10 @@ export default function CustomersPage() {
 
             <div className="flex items-center space-x-3 mb-6">
                 <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                     <Input
                         placeholder="Tìm kiếm tên, số điện thoại, CCCD, email..."
-                        className="pl-9 bg-zinc-950 border-zinc-800 text-zinc-200"
+                        className="pl-9 bg-white border-gray-200 text-gray-700"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -169,22 +169,22 @@ export default function CustomersPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex flex-col justify-center">
-                    <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Tổng số khách</span>
-                    <span className="text-2xl font-bold text-white mt-1">{guests.length}</span>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col justify-center">
+                    <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">Tổng số khách</span>
+                    <span className="text-2xl font-bold text-gray-900 mt-1">{guests.length}</span>
                 </div>
             </div>
 
-            <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/40">
+            <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
                 <Table>
-                    <TableHeader className="bg-zinc-900/80 border-b border-zinc-800">
-                        <TableRow className="hover:bg-transparent border-zinc-800">
-                            <TableHead className="text-zinc-400 font-medium py-4">Khách hàng</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4">Liên hệ</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4">CCCD/Passport</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4 text-center">Số đơn đặt</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4">Phân loại</TableHead>
-                            <TableHead className="text-zinc-400 font-medium py-4 text-right">Thao tác</TableHead>
+                    <TableHeader className="bg-gray-50/80 border-b border-gray-200">
+                        <TableRow className="hover:bg-transparent border-gray-200">
+                            <TableHead className="text-gray-500 font-medium py-4">Khách hàng</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4">Liên hệ</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4">CCCD/Passport</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4 text-center">Số đơn đặt</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4">Phân loại</TableHead>
+                            <TableHead className="text-gray-500 font-medium py-4 text-right">Thao tác</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -193,61 +193,61 @@ export default function CustomersPage() {
                             const isVip = bookingsCount >= 3;
 
                             return (
-                                <TableRow key={guest.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/40 cursor-pointer" onClick={() => handleViewHistory(guest)}>
+                                <TableRow key={guest.id} className="border-b border-gray-200/60 hover:bg-gray-100/40 cursor-pointer" onClick={() => handleViewHistory(guest)}>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm font-medium text-zinc-300 uppercase">
+                                            <div className="h-10 w-10 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-sm font-medium text-gray-600 uppercase">
                                                 {guest.name.charAt(0)}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="font-semibold text-zinc-100">{guest.name}</span>
+                                                    <span className="font-semibold text-gray-800">{guest.name}</span>
                                                     {isVip && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />}
                                                 </div>
-                                                <span className="text-xs text-zinc-500">{guest.id.substring(0, 10)}...</span>
+                                                <span className="text-xs text-gray-400">{guest.id.substring(0, 10)}...</span>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-sm text-zinc-300">
-                                                <Phone className="h-3 w-3 text-zinc-500" />
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <Phone className="h-3 w-3 text-gray-400" />
                                                 {guest.phone || '-'}
                                             </div>
                                             {guest.email && (
-                                                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                                                    <Mail className="h-3 w-3 text-zinc-500" />
+                                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                    <Mail className="h-3 w-3 text-gray-400" />
                                                     {guest.email}
                                                 </div>
                                             )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="text-sm text-zinc-300 font-mono tracking-wider">{guest.idNumber || '-'}</span>
+                                        <span className="text-sm text-gray-600 font-mono tracking-wider">{guest.idNumber || '-'}</span>
                                     </TableCell>
-                                    <TableCell className="text-center text-zinc-200 font-medium">{bookingsCount}</TableCell>
+                                    <TableCell className="text-center text-gray-700 font-medium">{bookingsCount}</TableCell>
                                     <TableCell>
                                         {isVip ? (
                                             <Badge variant="outline" className="border-yellow-600/50 bg-yellow-500/10 text-yellow-500">Khách VIP</Badge>
                                         ) : (
-                                            <Badge variant="outline" className="border-zinc-700 bg-zinc-800 text-zinc-400">Khách thường</Badge>
+                                            <Badge variant="outline" className="border-gray-300 bg-gray-100 text-gray-500">Khách thường</Badge>
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-400 hover:text-white hover:bg-zinc-800" onClick={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-blue-700 hover:bg-gray-100" onClick={(e) => e.stopPropagation()}>
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
-                                                <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewHistory(guest); }}>
+                                            <DropdownMenuContent align="end" className="bg-gray-50 border-gray-200 text-gray-700">
+                                                <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewHistory(guest); }}>
                                                     <History className="mr-2 h-4 w-4" /> Xem lịch sử
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleEditClick(guest); }}>
+                                                <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleEditClick(guest); }}>
                                                     Chỉnh sửa hồ sơ
                                                 </DropdownMenuItem>
-                                                <DropdownMenuSeparator className="bg-zinc-800" />
+                                                <DropdownMenuSeparator className="bg-gray-100" />
                                                 <DropdownMenuItem className="text-red-400 hover:bg-red-500/10 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleDeleteGuest(guest.id); }}>
                                                     Xóa khách hàng
                                                 </DropdownMenuItem>
@@ -258,7 +258,7 @@ export default function CustomersPage() {
                             );
                         }) : (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-32 text-center text-zinc-500">
+                                <TableCell colSpan={6} className="h-32 text-center text-gray-400">
                                     Không có khách hàng nào.
                                 </TableCell>
                             </TableRow>
@@ -269,50 +269,50 @@ export default function CustomersPage() {
 
             {/* Add Guest Modal */}
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                <DialogContent className="bg-zinc-950 border-zinc-800 text-white max-w-md">
+                <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-md">
                     <DialogHeader>
                         <DialogTitle>Thêm khách hàng mới</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Tên khách hàng *</label>
+                            <label className="text-sm font-medium text-gray-600">Tên khách hàng *</label>
                             <Input
                                 placeholder="VD: Nguyễn Văn A"
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Số CCCD / Passport</label>
+                            <label className="text-sm font-medium text-gray-600">Số CCCD / Passport</label>
                             <Input
                                 placeholder="Nhập số CCCD"
-                                className="bg-zinc-900 border-zinc-800 font-mono"
+                                className="bg-gray-50 border-gray-200 font-mono"
                                 value={formData.idNumber}
                                 onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Số điện thoại *</label>
+                            <label className="text-sm font-medium text-gray-600">Số điện thoại *</label>
                             <Input
                                 placeholder="VD: 0987654321"
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Email</label>
+                            <label className="text-sm font-medium text-gray-600">Email</label>
                             <Input
                                 placeholder="VD: email@example.com"
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" className="border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white" onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
+                        <Button variant="outline" className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-700" onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
                         <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleAddGuest}>Lưu khách hàng</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -320,50 +320,50 @@ export default function CustomersPage() {
 
             {/* Edit Guest Modal */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="bg-zinc-950 border-zinc-800 text-white max-w-md">
+                <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-md">
                     <DialogHeader>
                         <DialogTitle>Chỉnh sửa hồ sơ khách hàng</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Tên khách hàng *</label>
+                            <label className="text-sm font-medium text-gray-600">Tên khách hàng *</label>
                             <Input
                                 placeholder="VD: Nguyễn Văn A"
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Số CCCD / Passport</label>
+                            <label className="text-sm font-medium text-gray-600">Số CCCD / Passport</label>
                             <Input
                                 placeholder="Nhập số CCCD"
-                                className="bg-zinc-900 border-zinc-800 font-mono"
+                                className="bg-gray-50 border-gray-200 font-mono"
                                 value={formData.idNumber}
                                 onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Số điện thoại *</label>
+                            <label className="text-sm font-medium text-gray-600">Số điện thoại *</label>
                             <Input
                                 placeholder="VD: 0987654321"
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Email</label>
+                            <label className="text-sm font-medium text-gray-600">Email</label>
                             <Input
                                 placeholder="VD: email@example.com"
-                                className="bg-zinc-900 border-zinc-800"
+                                className="bg-gray-50 border-gray-200"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" className="border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white" onClick={() => setIsEditModalOpen(false)}>Hủy</Button>
+                        <Button variant="outline" className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-700" onClick={() => setIsEditModalOpen(false)}>Hủy</Button>
                         <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleEditGuest}>Cập nhật lại</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -371,7 +371,7 @@ export default function CustomersPage() {
 
             {/* View History Modal */}
             <Dialog open={isHistoryModalOpen} onOpenChange={setIsHistoryModalOpen}>
-                <DialogContent className="bg-zinc-950 border-zinc-800 text-white max-w-3xl">
+                <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-3xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <FileText className="w-5 h-5 text-blue-500" />
@@ -381,35 +381,50 @@ export default function CustomersPage() {
 
                     <div className="mt-4 max-h-[60vh] overflow-y-auto pr-2">
                         {guestHistory.length === 0 ? (
-                            <div className="text-center py-8 text-zinc-500">Khách hàng này chưa có đơn đặt phòng nào.</div>
+                            <div className="text-center py-8 text-gray-400">Khách hàng này chưa có đơn đặt phòng nào.</div>
                         ) : (
                             <div className="space-y-4">
                                 {guestHistory.map((booking: any) => (
-                                    <div key={booking.id} className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex flex-col gap-3">
+                                    <div key={booking.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-3">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <h4 className="font-bold text-blue-400">{booking.code}</h4>
-                                                <p className="text-xs text-zinc-500">Nguồn: <span className="uppercase">{booking.source}</span></p>
+                                                <h4 className="font-bold text-blue-400">{booking.bookingCode || booking.code}</h4>
+                                                <p className="text-xs text-gray-400">Nguồn: <span className="uppercase">{booking.source}</span></p>
                                             </div>
                                             <div className="flex gap-2">
-                                                <Badge variant="outline" className="bg-zinc-800 text-zinc-300 border-zinc-700">
-                                                    {booking.status}
+                                                <Badge variant="outline" style={(() => {
+                                                    const s: Record<string, { bg: string; text: string; border: string }> = {
+                                                        PENDING: { bg: '#F59E0B20', text: '#F59E0B', border: '#F59E0B40' },
+                                                        CONFIRMED: { bg: '#8B5CF620', text: '#8B5CF6', border: '#8B5CF640' },
+                                                        CHECKED_IN: { bg: '#10B98120', text: '#10B981', border: '#10B98140' },
+                                                        CHECKED_OUT: { bg: '#6B728020', text: '#9CA3AF', border: '#4B5563' },
+                                                        CANCELLED: { bg: '#EF444420', text: '#EF4444', border: '#EF444440' },
+                                                        NO_SHOW: { bg: '#6B728020', text: '#9CA3AF', border: '#4B5563' },
+                                                    };
+                                                    const c = s[booking.status] || { bg: '#3F3F46', text: '#fff', border: '#52525B' };
+                                                    return { backgroundColor: c.bg, color: c.text, borderColor: c.border };
+                                                })()}>
+                                                    {{ PENDING: 'Chờ xác nhận', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đang lưu trú', CHECKED_OUT: 'Đã trả phòng', CANCELLED: 'Đã hủy', NO_SHOW: 'Không đến' }[booking.status as string] || booking.status}
                                                 </Badge>
-                                                <Badge variant="outline" className="bg-zinc-800 text-zinc-300 border-zinc-700">
-                                                    {booking.paymentStatus}
+                                                <Badge variant="outline" className={
+                                                    booking.paymentStatus === 'PAID' ? 'text-emerald-400 border-emerald-400/30' :
+                                                    booking.paymentStatus === 'PARTIAL' ? 'text-amber-400 border-amber-400/30' :
+                                                    'text-red-400 border-red-400/30'
+                                                }>
+                                                    {{ PAID: 'Đã thanh toán', PARTIAL: 'Lệch toán', UNPAID: 'Chưa thanh toán' }[booking.paymentStatus as string] || booking.paymentStatus}
                                                 </Badge>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 text-sm mt-2">
-                                            <div className="bg-zinc-950 rounded p-2">
-                                                <span className="block text-xs uppercase text-zinc-500 mb-1">Thời gian</span>
-                                                <div className="text-zinc-300">
+                                            <div className="bg-white rounded p-2">
+                                                <span className="block text-xs uppercase text-gray-400 mb-1">Thời gian</span>
+                                                <div className="text-gray-600">
                                                     {format(new Date(booking.checkIn), "dd/MM/yyyy")} &rarr; {format(new Date(booking.checkOut), "dd/MM/yyyy")}
                                                 </div>
                                             </div>
-                                            <div className="bg-zinc-950 rounded p-2 text-right">
-                                                <span className="block text-xs uppercase text-zinc-500 mb-1">Tổng tiền</span>
+                                            <div className="bg-white rounded p-2 text-right">
+                                                <span className="block text-xs uppercase text-gray-400 mb-1">Tổng tiền</span>
                                                 <div className="text-orange-400 font-bold">
                                                     {booking.totalAmount?.toLocaleString('vi-VN')} VND
                                                 </div>

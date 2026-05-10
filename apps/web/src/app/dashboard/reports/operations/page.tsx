@@ -59,11 +59,11 @@ export default function OperationsReportPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <Hotel className="w-6 h-6 text-indigo-500" />
                         Báo cáo Vận hành
                     </h1>
-                    <p className="text-zinc-400 mt-1">Thông số hoạt động phòng, check-in, check-out và dọn dẹp.</p>
+                    <p className="text-gray-500 mt-1">Thông số hoạt động phòng, check-in, check-out và dọn dẹp.</p>
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -73,11 +73,11 @@ export default function OperationsReportPage() {
                         </div>
                     )}
                     <Select value={period} onValueChange={setPeriod}>
-                        <SelectTrigger className="w-[160px] bg-zinc-900 border-zinc-800 text-white">
-                            <CalendarIcon className="w-4 h-4 mr-2 text-zinc-400" />
+                        <SelectTrigger className="w-[160px] bg-gray-50 border-gray-200 text-gray-700">
+                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
                             <SelectValue placeholder="Chọn thời gian" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectContent className="bg-gray-50 border-gray-200 text-gray-900">
                             <SelectItem value="7days">7 ngày qua</SelectItem>
                             <SelectItem value="30days">30 ngày qua</SelectItem>
                             <SelectItem value="thisMonth">Tháng này</SelectItem>
@@ -85,7 +85,7 @@ export default function OperationsReportPage() {
                             <SelectItem value="custom">Tùy chỉnh...</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300">
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
                         <Download className="w-4 h-4 mr-2" />
                         Xuất báo cáo
                     </Button>
@@ -94,12 +94,12 @@ export default function OperationsReportPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Công suất TB</p>
-                                <h3 className="text-3xl font-bold text-white mt-2">{kpi.avgOcc}%</h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Công suất TB</p>
+                                <h3 className="text-3xl font-bold text-gray-900 mt-2">{kpi.avgOcc}%</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
                                 <Hotel className="w-5 h-5 text-indigo-400" />
@@ -108,12 +108,12 @@ export default function OperationsReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Khách đến (Check-In)</p>
-                                <h3 className="text-3xl font-bold text-white mt-2">{kpi.totalCheckIn} <span className="text-lg font-normal text-zinc-500">lượt</span></h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Khách đến (Check-In)</p>
+                                <h3 className="text-3xl font-bold text-gray-900 mt-2">{kpi.totalCheckIn} <span className="text-lg font-normal text-gray-400">lượt</span></h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                 <LogIn className="w-5 h-5 text-blue-400" />
@@ -122,12 +122,12 @@ export default function OperationsReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Khách đi (Check-Out)</p>
-                                <h3 className="text-3xl font-bold text-white mt-2">{kpi.totalCheckOut} <span className="text-lg font-normal text-zinc-500">lượt</span></h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Khách đi (Check-Out)</p>
+                                <h3 className="text-3xl font-bold text-gray-900 mt-2">{kpi.totalCheckOut} <span className="text-lg font-normal text-gray-400">lượt</span></h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
                                 <LogOut className="w-5 h-5 text-amber-400" />
@@ -136,12 +136,12 @@ export default function OperationsReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Phòng sạch / Ngày</p>
-                                <h3 className="text-3xl font-bold text-white mt-2">{kpi.cleanPercent}%</h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Phòng sạch / Ngày</p>
+                                <h3 className="text-3xl font-bold text-gray-900 mt-2">{kpi.cleanPercent}%</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
                                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
@@ -151,9 +151,9 @@ export default function OperationsReportPage() {
                 </Card>
             </div>
 
-            <Card className="bg-zinc-950 border-zinc-900 shadow-lg">
-                <CardHeader className="border-b border-zinc-800/50 pb-4">
-                    <CardTitle className="text-lg font-semibold text-white">Lưu lượng Lưu trú (7 ngày qua)</CardTitle>
+            <Card className="bg-white border-zinc-900 shadow-lg">
+                <CardHeader className="border-b border-gray-200/50 pb-4">
+                    <CardTitle className="text-lg font-semibold text-gray-900">Lưu lượng Lưu trú (7 ngày qua)</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <div className="h-[400px] w-full">

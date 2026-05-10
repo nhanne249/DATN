@@ -64,11 +64,11 @@ export default function RevenueReportPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <DollarSign className="w-6 h-6 text-blue-500" />
                         Báo cáo Doanh thu
                     </h1>
-                    <p className="text-zinc-400 mt-1">Phân tích chi tiết doanh thu theo nguồn và thời gian.</p>
+                    <p className="text-gray-500 mt-1">Phân tích chi tiết doanh thu theo nguồn và thời gian.</p>
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -78,11 +78,11 @@ export default function RevenueReportPage() {
                         </div>
                     )}
                     <Select value={period} onValueChange={setPeriod}>
-                        <SelectTrigger className="w-[160px] bg-zinc-900 border-zinc-800 text-white">
-                            <CalendarIcon className="w-4 h-4 mr-2 text-zinc-400" />
+                        <SelectTrigger className="w-[160px] bg-gray-50 border-gray-200 text-gray-700">
+                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
                             <SelectValue placeholder="Chọn thời gian" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectContent className="bg-gray-50 border-gray-200 text-gray-900">
                             <SelectItem value="7days">7 ngày qua</SelectItem>
                             <SelectItem value="30days">30 ngày qua</SelectItem>
                             <SelectItem value="thisMonth">Tháng này</SelectItem>
@@ -91,7 +91,7 @@ export default function RevenueReportPage() {
                             <SelectItem value="custom">Tùy chỉnh...</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300">
+                    <Button variant="outline" className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
                         <Download className="w-4 h-4 mr-2" />
                         Xuất báo cáo
                     </Button>
@@ -100,12 +100,12 @@ export default function RevenueReportPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Tổng Doanh Thu</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.totalRevenue)}</h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Tổng Doanh Thu</p>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.totalRevenue)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                 <DollarSign className="w-5 h-5 text-blue-400" />
@@ -114,12 +114,12 @@ export default function RevenueReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Doanh thu phòng</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.roomRevenue)}</h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Doanh thu phòng</p>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.roomRevenue)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
                                 <Building className="w-5 h-5 text-indigo-400" />
@@ -128,12 +128,12 @@ export default function RevenueReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Doanh thu dịch vụ</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.serviceRevenue)}</h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Doanh thu dịch vụ</p>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.serviceRevenue)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
                                 <ShoppingCart className="w-5 h-5 text-emerald-400" />
@@ -142,12 +142,12 @@ export default function RevenueReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900 transition-colors">
+                <Card className="bg-gray-50 border-gray-200/50 hover:bg-gray-50 transition-colors">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Thực Thu</p>
-                                <h3 className="text-2xl font-bold text-white mt-2">{formatVND(kpi.totalCollected)}</h3>
+                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Thực Thu</p>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-2">{formatVND(kpi.totalCollected)}</h3>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
                                 <CreditCard className="w-5 h-5 text-amber-400" />
@@ -159,9 +159,9 @@ export default function RevenueReportPage() {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="bg-zinc-950 border-zinc-900 lg:col-span-2 shadow-lg">
-                    <CardHeader className="border-b border-zinc-800/50 pb-4">
-                        <CardTitle className="text-lg font-semibold text-white">Biểu đồ Doanh thu (Theo ngày)</CardTitle>
+                <Card className="bg-white border-zinc-900 lg:col-span-2 shadow-lg">
+                    <CardHeader className="border-b border-gray-200/50 pb-4">
+                        <CardTitle className="text-lg font-semibold text-gray-900">Biểu đồ Doanh thu (Theo ngày)</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="h-[350px] w-full">
@@ -192,9 +192,9 @@ export default function RevenueReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-950 border-zinc-900 shadow-lg">
-                    <CardHeader className="border-b border-zinc-800/50 pb-4">
-                        <CardTitle className="text-lg font-semibold text-white">Cơ cấu Doanh thu</CardTitle>
+                <Card className="bg-white border-zinc-900 shadow-lg">
+                    <CardHeader className="border-b border-gray-200/50 pb-4">
+                        <CardTitle className="text-lg font-semibold text-gray-900">Cơ cấu Doanh thu</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="h-[250px] w-full mt-2">
@@ -227,9 +227,9 @@ export default function RevenueReportPage() {
                                 <div key={index} className="flex items-center justify-between text-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                                        <span className="text-zinc-300">{item.name}</span>
+                                        <span className="text-gray-600">{item.name}</span>
                                     </div>
-                                    <span className="font-medium text-white">{formatVND(item.value)}</span>
+                                    <span className="font-medium text-gray-900">{formatVND(item.value)}</span>
                                 </div>
                             ))}
                         </div>

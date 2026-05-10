@@ -77,7 +77,7 @@ export function VehicleModal({ isOpen, onClose, vehicle, onSaved }: any) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white">
+      <DialogContent className="sm:max-w-[425px] bg-white border-gray-200 text-gray-900">
         <DialogHeader>
           <DialogTitle>{vehicle ? 'Update Vehicle' : 'Create Vehicle'}</DialogTitle>
         </DialogHeader>
@@ -85,45 +85,45 @@ export function VehicleModal({ isOpen, onClose, vehicle, onSaved }: any) {
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label className="text-zinc-200">Plate Number</Label>
+              <Label className="text-gray-700">Plate Number</Label>
               <Input
                 value={formData.plateNumber}
                 onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
                 placeholder="29A-123.45"
                 required
-                className="bg-zinc-900 border-zinc-800 text-white"
+                className="bg-gray-50 border-gray-200 text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-zinc-200">Provider</Label>
+              <Label className="text-gray-700">Provider</Label>
               <Input
                 value={formData.provider}
                 onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
                 placeholder="Internal / Partner"
-                className="bg-zinc-900 border-zinc-800 text-white"
+                className="bg-gray-50 border-gray-200 text-white"
               />
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-zinc-200">Vehicle Name</Label>
+            <Label className="text-gray-700">Vehicle Name</Label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Honda Vision 2023"
               required
-              className="bg-zinc-900 border-zinc-800 text-white"
+              className="bg-gray-50 border-gray-200 text-white"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label className="text-zinc-200">Type</Label>
+              <Label className="text-gray-700">Type</Label>
               <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-                <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+                <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                <SelectContent className="bg-gray-50 border-gray-200 text-white">
                   <SelectItem value="SCOOTER">Scooter</SelectItem>
                   <SelectItem value="MANUAL">Manual</SelectItem>
                   <SelectItem value="OTHER">Other</SelectItem>
@@ -131,25 +131,25 @@ export function VehicleModal({ isOpen, onClose, vehicle, onSaved }: any) {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label className="text-zinc-200">Daily Price</Label>
+              <Label className="text-gray-700">Daily Price</Label>
               <Input
                 type="number"
                 value={formData.dailyPrice}
                 onChange={(e) => setFormData({ ...formData, dailyPrice: e.target.value })}
                 placeholder="150000"
                 required
-                className="bg-zinc-900 border-zinc-800 text-white"
+                className="bg-gray-50 border-gray-200 text-white"
               />
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-zinc-200">Status</Label>
+            <Label className="text-gray-700">Status</Label>
             <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-              <SelectTrigger className="bg-zinc-900 border-zinc-800 text-white">
+              <SelectTrigger className="bg-gray-50 border-gray-200 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+              <SelectContent className="bg-gray-50 border-gray-200 text-white">
                 <SelectItem value="AVAILABLE">Available</SelectItem>
                 <SelectItem value="RENTED">Rented</SelectItem>
                 <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
@@ -158,7 +158,7 @@ export function VehicleModal({ isOpen, onClose, vehicle, onSaved }: any) {
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="border-zinc-800 text-white hover:bg-zinc-800">
+            <Button type="button" variant="outline" onClick={onClose} className="border-gray-200 text-white hover:bg-gray-100">
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">

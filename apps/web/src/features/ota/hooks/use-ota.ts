@@ -89,11 +89,51 @@ export const useOtaMutation = () => {
     },
   });
 
+  const refreshChannel = useMutation({
+    mutationFn: (id: string) => otaService.refreshChannel(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['ota-channels'] });
+      queryClient.invalidateQueries({ queryKey: ['ota-logs', id] });
+      toast.success('Đã làm mới trạng thái kênh');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Không thể làm mới kênh');
+    },
+  });
+
+  const pushARI = useMutation({
+    mutationFn: ({ channelId, body }: { channelId: string; body?: Record<string, string> }) =>
+      otaService.pushARI(channelId, body),
+    onSuccess: (_, { channelId }) => {
+      queryClient.invalidateQueries({ queryKey: ['ota-logs', channelId] });
+      toast.success('Đã đẩy giá & tình trạng phòng lên Channex thành công');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Không thể push ARI lên Channex');
+    },
+  });
+
+  const pullReservations = useMutation({
+    mutationFn: (channelId: string) => otaService.pullReservations(channelId),
+    onSuccess: (data, channelId) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['ota-logs', channelId] });
+      queryClient.invalidateQueries({ queryKey: ['ota-channels'] });
+      toast.success(`Đồng bộ xong: ${data.created} mới, ${data.updated} cập nhật, ${data.ignored} bỏ qua`);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Không thể pull reservations từ Channex');
+    },
+  });
+
   return {
     createChannel,
     updateChannel,
     deleteChannel,
     createMapping,
     deleteMapping,
+    refreshChannel,
+    pushARI,
+    pullReservations,
   };
 };

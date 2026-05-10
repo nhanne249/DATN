@@ -66,7 +66,7 @@ export function TaskModal({ isOpen, onClose, task, onSubmit, isPending, property
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-white">
+      <DialogContent className="sm:max-w-[500px] bg-white border-gray-200 text-gray-900">
         <DialogHeader>
           <DialogTitle>{task ? 'Chỉnh sửa công việc' : 'Tạo công việc mới'}</DialogTitle>
         </DialogHeader>
@@ -77,7 +77,7 @@ export function TaskModal({ isOpen, onClose, task, onSubmit, isPending, property
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="bg-zinc-900 border-zinc-800"
+              className="bg-gray-50 border-gray-200"
               placeholder="Nhập tiêu đề công việc"
             />
           </div>
@@ -89,10 +89,10 @@ export function TaskModal({ isOpen, onClose, task, onSubmit, isPending, property
                 value={formData.type}
                 onValueChange={(value: TaskType) => setFormData({ ...formData, type: value })}
               >
-                <SelectTrigger className="bg-zinc-900 border-zinc-800">
+                <SelectTrigger className="bg-gray-50 border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                <SelectContent className="bg-white border-gray-200 text-gray-900">
                   <SelectItem value={TaskType.HOUSEKEEPING}>Dọn phòng</SelectItem>
                   <SelectItem value={TaskType.MAINTENANCE}>Bảo trì</SelectItem>
                   <SelectItem value={TaskType.OTHER}>Khác</SelectItem>
@@ -105,10 +105,10 @@ export function TaskModal({ isOpen, onClose, task, onSubmit, isPending, property
                 value={formData.status}
                 onValueChange={(value: TaskStatus) => setFormData({ ...formData, status: value })}
               >
-                <SelectTrigger className="bg-zinc-900 border-zinc-800">
+                <SelectTrigger className="bg-gray-50 border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                <SelectContent className="bg-white border-gray-200 text-gray-900">
                   <SelectItem value={TaskStatus.PENDING}>Chờ thực hiện</SelectItem>
                   <SelectItem value={TaskStatus.IN_PROGRESS}>Đang làm</SelectItem>
                   <SelectItem value={TaskStatus.COMPLETED}>Đã xong</SelectItem>
@@ -123,7 +123,7 @@ export function TaskModal({ isOpen, onClose, task, onSubmit, isPending, property
               type="datetime-local"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className="bg-zinc-900 border-zinc-800 [color-scheme:dark]"
+              className="bg-gray-50 border-gray-200 text-gray-900 [color-scheme:light]"
             />
           </div>
 
@@ -132,14 +132,14 @@ export function TaskModal({ isOpen, onClose, task, onSubmit, isPending, property
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-zinc-900 border-zinc-800 resize-none"
+              className="bg-gray-50 border-gray-200 resize-none"
               rows={3}
               placeholder="Chi tiết công việc..."
             />
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} className="text-zinc-400">
+            <Button type="button" variant="ghost" onClick={onClose} className="text-gray-500">
               Hủy
             </Button>
             <Button type="submit" disabled={isPending} className="bg-blue-600 hover:bg-blue-700">

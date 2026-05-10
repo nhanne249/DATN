@@ -19,7 +19,8 @@ export class CreateRoomTypeDto {
 
   @ApiProperty({ enum: RoomTypeKind, default: RoomTypeKind.ROOM })
   @IsEnum(RoomTypeKind)
-  kind: RoomTypeKind;
+  @IsOptional()
+  kind?: RoomTypeKind;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -54,6 +55,11 @@ export class CreateRoomTypeDto {
   @IsArray()
   @IsOptional()
   amenities?: string[];
+
+  @ApiProperty({ example: ['AC', 'WiFi'], default: [] })
+  @IsArray()
+  @IsOptional()
+  photos?: string[];
 
   @ApiProperty()
   @IsString()

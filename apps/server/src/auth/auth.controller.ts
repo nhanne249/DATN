@@ -6,6 +6,7 @@ import {
   Req,
   Res,
   UseGuards,
+  Request as NestRequest,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -203,5 +204,43 @@ export class AuthController {
     const id = req?.user?.id;
     res.clearCookie('accessToken');
     return this.auth.logout(id || '');
+  }
+
+  // ── 2FA ────────────────────────────────────────────────────────────────────
+
+  @Post('2fa/generate')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Generate 2FA secret and QR code' })
+  generate2FA(@NestRequest() req: any) {
+    return this.auth.generate2FASecret(req.user.id);
+  }
+
+  @Post('2fa/enable')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Enable 2FA by verifying the first TOTP code' })
+  @ApiBody({ schema: { properties: { token: { type: 'string' } } } })
+  enable2FA(@NestRequest() req: any, @Body('token') token: string) {
+    return this.auth.enable2FA(req.user.id, token);
+  }
+
+  @Post('2fa/disable')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Disable 2FA' })
+  @ApiBody({ schema: { properties: { token: { type: 'string' } } } })
+  disable2FA(@NestRequest() req: any, @Body('token') token: string) {
+    return this.auth.disable2FA(req.user.id, token);
+  }
+
+  @Post('2fa/verify')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Verify a TOTP code' })
+  @ApiBody({ schema: { properties: { token: { type: 'string' } } } })
+  async verify2FA(@NestRequest() req: any, @Body('token') token: string) {
+    const valid = await this.auth.verify2FAToken(req.user.id, token);
+    return { valid };
   }
 }

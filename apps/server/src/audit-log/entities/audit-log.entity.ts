@@ -13,6 +13,9 @@ export class AuditLog {
   @Column({ type: 'varchar', nullable: true })
   userId?: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  userName?: string;
+
   @Column({ type: 'varchar' })
   action: string; // e.g., 'LOGIN_SUCCESS', 'LOGIN_FAIL', 'LOCK_ACCOUNT'
 

@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { BookingRoom } from './entities/booking-room.entity';
 import { Payment, PaymentMethod } from './entities/payment.entity';
 import { Service } from './entities/service.entity';
 import { ServiceUsage } from './entities/service-usage.entity';
+import { MinibarTransaction, MinibarTransactionType } from '../minibar/entities/minibar-transaction.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -25,6 +26,8 @@ export class BookingService {
     private readonly serviceRepo: Repository<Service>,
     @InjectRepository(ServiceUsage)
     private readonly serviceUsageRepo: Repository<ServiceUsage>,
+    @InjectRepository(MinibarTransaction)
+    private readonly minibarTxRepo: Repository<MinibarTransaction>,
     private dataSource: DataSource,
   ) {}
 
@@ -104,8 +107,17 @@ export class BookingService {
     try {
       const { rooms = [], ...bookingData } = dto;
 
-      // Calculate total amount from room prices
-      const totalAmount = rooms.reduce((acc, r) => acc + r.priceAtBooking, 0);
+      const nights = Math.max(
+        1,
+        Math.ceil(
+          (new Date(dto.checkOut).getTime() - new Date(dto.checkIn).getTime()) /
+            86_400_000,
+        ),
+      );
+      const totalAmount = rooms.reduce(
+        (acc, r) => acc + r.priceAtBooking * nights,
+        0,
+      );
 
       const booking = this.bookingRepo.create({
         ...bookingData,
@@ -363,6 +375,37 @@ export class BookingService {
 
     await this.bookingRepo.save(booking);
     return this.findOne(id);
+  }
+
+  // Minibar consumption for a booking
+  async getMinibarForBooking(bookingId: string) {
+    const bookingRooms = await this.bookingRoomRepo.find({
+      where: { bookingId },
+      relations: ['room'],
+    });
+
+    if (bookingRooms.length === 0) {
+      return { totalAmount: 0, transactions: [], bookingRooms: [] };
+    }
+
+    const bookingRoomIds = bookingRooms.map((br) => br.id);
+
+    const transactions = await this.minibarTxRepo.find({
+      where: {
+        bookingRoomId: In(bookingRoomIds),
+        type: MinibarTransactionType.CONSUME,
+      },
+      relations: ['item', 'staff'],
+      order: { createdAt: 'DESC' },
+    });
+
+    const enriched = transactions.map((tx) => ({
+      ...tx,
+      roomNumber: bookingRooms.find((br) => br.id === tx.bookingRoomId)?.room?.roomNumber ?? null,
+    }));
+
+    const totalAmount = transactions.reduce((sum, t) => sum + t.totalPrice, 0);
+    return { totalAmount, transactions: enriched };
   }
 
   // Service CRUD

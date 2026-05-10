@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { bookingService, Booking } from '../services/booking.service';
+import { bookingService } from '../services/booking.service';
 import { toast } from 'sonner';
 
 export const useBookings = (propertyId: string, params?: { startDate?: string; endDate?: string; limit?: number }) => {
@@ -25,10 +25,10 @@ export const useBookingMutation = () => {
     mutationFn: (data: any) => bookingService.createBooking(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      toast.success('Booking created successfully');
+      toast.success('Tạo đặt phòng thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create booking');
+      toast.error(error.message || 'Không thể tạo đặt phòng');
     },
   });
 
@@ -38,10 +38,10 @@ export const useBookingMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking'] });
-      toast.success('Booking updated successfully');
+      toast.success('Cập nhật đặt phòng thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update booking');
+      toast.error(error.response?.data?.message || 'Không thể cập nhật đặt phòng');
     },
   });
 
@@ -49,10 +49,10 @@ export const useBookingMutation = () => {
     mutationFn: (id: string) => bookingService.deleteBooking(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      toast.success('Booking deleted successfully');
+      toast.success('Xóa đặt phòng thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete booking');
+      toast.error(error.response?.data?.message || 'Không thể xóa đặt phòng');
     },
   });
 
@@ -61,7 +61,7 @@ export const useBookingMutation = () => {
       bookingService.addPayment(bookingId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['booking', variables.bookingId] });
-      toast.success('Payment recorded successfully');
+      toast.success('Ghi nhận thanh toán thành công');
     },
   });
 
@@ -70,7 +70,7 @@ export const useBookingMutation = () => {
       bookingService.addServiceUsage(bookingId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['booking', variables.bookingId] });
-      toast.success('Service usage recorded successfully');
+      toast.success('Ghi nhận dịch vụ thành công');
     },
   });
 
@@ -80,14 +80,14 @@ export const useBookingMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking'] });
-      toast.success('Booking cancelled');
+      toast.success('Đã hủy đặt phòng');
     },
   });
 
   const createTaskMutation = useMutation({
     mutationFn: (data: any) => bookingService.createTask(data),
     onSuccess: () => {
-      toast.success('Task created successfully');
+      toast.success('Tạo nhiệm vụ thành công');
     },
   });
 

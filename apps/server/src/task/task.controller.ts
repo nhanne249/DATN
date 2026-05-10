@@ -8,12 +8,10 @@ import {
   Delete,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { TaskService } from './task.service';
 import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
-import { AuditLogInterceptor } from '../audit-log/interceptors/audit-log.interceptor';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -27,7 +25,6 @@ import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
 @Roles(...STAFF_ROLES)
-@UseInterceptors(AuditLogInterceptor)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
@@ -65,6 +62,7 @@ export class TaskController {
   }
 
   @Post('templates')
+  @AuditLog('CREATE_TASK_TEMPLATE')
   @ApiOperation({ summary: 'Create a task template' })
   createTemplate(@Body() templateDto: any) {
     return this.taskService.createTemplate(templateDto);

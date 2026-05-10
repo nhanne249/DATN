@@ -24,6 +24,9 @@ import {
     ChevronDown,
     PanelLeftClose,
     PanelLeft,
+    Wine,
+    WashingMachine,
+    Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -56,7 +59,6 @@ const menuItems: MenuItem[] = [
             { label: 'Lịch dọn phòng', href: '/dashboard/calendar/housekeeping' },
             { label: 'Lịch tháng', href: '/dashboard/calendar/monthly' },
             { label: 'Khách lưu trú', href: '/dashboard/calendar/guests' },
-            { label: 'Chia sẻ lịch', href: '/dashboard/calendar/share' },
         ],
     },
     {
@@ -110,6 +112,21 @@ const menuItems: MenuItem[] = [
         href: '/dashboard/services',
     },
     {
+        label: 'Minibar',
+        icon: Wine,
+        href: '/dashboard/minibar',
+    },
+    {
+        label: 'Giặt ủi',
+        icon: WashingMachine,
+        href: '/dashboard/laundry',
+    },
+    {
+        label: 'Kho hàng',
+        icon: Package,
+        href: '/dashboard/inventory',
+    },
+    {
         label: 'Thuê xe',
         icon: Bike,
         href: '/dashboard/rentals',
@@ -144,7 +161,7 @@ const menuItems: MenuItem[] = [
             { label: 'PT Thanh toán', href: '/dashboard/settings/payment-methods' },
             { label: 'TK Ngân hàng', href: '/dashboard/settings/bank-accounts' },
             { label: 'Mẫu in ấn', href: '/dashboard/settings/templates' },
-            { label: 'Nhật ký hệ thống', href: '/audit-logs' },
+            { label: 'Nhật ký hệ thống', href: '/dashboard/audit-logs' },
         ],
     },
     {
@@ -177,20 +194,22 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const pathname = usePathname();
     const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
-    const { user } = useAuthStore();
+    const { user, allowedModules } = useAuthStore();
 
     const visibleMenuItems = React.useMemo(() => {
         return menuItems
             .map((item) => {
                 if (item.href) {
-                    return canAccessPath(user?.role, item.href) ? item : null;
+                    return canAccessPath(user?.role, item.href, allowedModules) ? item : null;
                 }
 
                 if (!item.children?.length) {
                     return item;
                 }
 
-                const children = item.children.filter((child) => canAccessPath(user?.role, child.href));
+                const children = item.children.filter((child) =>
+                    canAccessPath(user?.role, child.href, allowedModules)
+                );
                 if (!children.length) {
                     return null;
                 }
@@ -201,7 +220,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 };
             })
             .filter(Boolean) as MenuItem[];
-    }, [user?.role]);
+    }, [user?.role, allowedModules]);
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) =>
@@ -222,23 +241,23 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'fixed left-0 top-0 z-40 h-screen border-r border-zinc-800 bg-zinc-950 transition-all duration-300 flex flex-col',
+                'fixed left-0 top-0 z-40 h-screen border-r border-gray-200 bg-white transition-all duration-300 flex flex-col',
                 collapsed ? 'w-[68px]' : 'w-[260px]'
             )}
         >
             {/* Logo */}
-            <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4">
+            <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
                 {!collapsed && (
                     <Link href="/dashboard" className="flex items-center gap-2">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600">
-                            <span className="text-sm font-bold text-white">HT</span>
+                            <span className="text-sm font-bold text-gray-900">HT</span>
                         </div>
-                        <span className="text-lg font-semibold text-white">HTsys</span>
+                        <span className="text-lg font-semibold text-blue-700">HTsys</span>
                     </Link>
                 )}
                 <button
                     onClick={onToggle}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-blue-700 transition-colors"
                 >
                     {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
                 </button>
@@ -263,7 +282,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                                     'flex h-10 w-10 items-center justify-center rounded-lg mx-auto transition-colors',
                                                     active
                                                         ? 'bg-blue-600/20 text-blue-400'
-                                                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                                                        : 'text-gray-500 hover:bg-gray-100 hover:text-blue-700'
                                                 )}
                                             >
                                                 <Icon size={20} />
@@ -275,14 +294,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                                     'flex h-10 w-10 items-center justify-center rounded-lg mx-auto transition-colors',
                                                     active
                                                         ? 'bg-blue-600/20 text-blue-400'
-                                                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                                                        : 'text-gray-500 hover:bg-gray-100 hover:text-blue-700'
                                                 )}
                                             >
                                                 <Icon size={20} />
                                             </Link>
                                         )}
                                     </TooltipTrigger>
-                                    <TooltipContent side="right" className="bg-zinc-800 text-white border-zinc-700">
+                                    <TooltipContent side="right" className="bg-gray-800 text-white border-gray-700">
                                         {item.label}
                                     </TooltipContent>
                                 </Tooltip>
@@ -298,7 +317,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                             'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                                             active
                                                 ? 'bg-blue-600/10 text-blue-400'
-                                                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                                : 'text-gray-500 hover:bg-gray-100/50 hover:text-blue-700'
                                         )}
                                     >
                                         <Icon size={20} />
@@ -318,7 +337,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                             'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                                             active
                                                 ? 'bg-blue-600/10 text-blue-400'
-                                                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                                : 'text-gray-500 hover:bg-gray-100/50 hover:text-blue-700'
                                         )}
                                     >
                                         <Icon size={20} />
@@ -328,7 +347,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
                                 {/* Sub-items */}
                                 {hasChildren && expanded && (
-                                    <div className="ml-5 mt-1 flex flex-col gap-0.5 border-l border-zinc-800 pl-4">
+                                    <div className="ml-5 mt-1 flex flex-col gap-0.5 border-l border-gray-200 pl-4">
                                         {item.children!.map((child) => (
                                             <Link
                                                 key={child.href}
@@ -337,7 +356,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                                     'rounded-md px-3 py-2 text-sm transition-colors',
                                                     pathname === child.href
                                                         ? 'bg-blue-600/10 text-blue-400 font-medium'
-                                                        : 'text-zinc-500 hover:bg-zinc-800/30 hover:text-zinc-300'
+                                                        : 'text-gray-400 hover:bg-gray-100/30 hover:text-gray-600'
                                                 )}
                                             >
                                                 {child.label}
@@ -353,8 +372,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
             {/* Footer */}
             {!collapsed && (
-                <div className="border-t border-zinc-800 px-4 py-3">
-                    <p className="text-xs text-zinc-600">HTsys PMS v1.0</p>
+                <div className="border-t border-gray-200 px-4 py-3">
+                    <p className="text-xs text-gray-400">HTsys PMS v1.0</p>
                 </div>
             )}
         </aside>
