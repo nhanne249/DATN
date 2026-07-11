@@ -20,13 +20,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
-    const { refreshToken, user, hasHydrated, allowedModules, setAllowedModules, setPermissionsMap } = useAuthStore();
+    const { user, hasHydrated, allowedModules, setAllowedModules, setPermissionsMap } = useAuthStore();
     const fetchedRef = useRef(false);
 
     // Fetch allowed modules once on mount for non-full-access roles
     React.useEffect(() => {
         if (!hasHydrated) return;
-        if (!refreshToken) return;
+        if (!user) return;
         if (!user?.role) return;
         if (user.role === 'admin') return;
         if (fetchedRef.current) return;
@@ -47,12 +47,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         }).catch(() => {
             // silently fail — use persisted modules/permissions
         });
-    }, [hasHydrated, refreshToken, user?.role, setAllowedModules, setPermissionsMap]);
+    }, [hasHydrated, user, setAllowedModules, setPermissionsMap]);
 
     React.useEffect(() => {
         if (!hasHydrated) return;
 
-        if (!refreshToken) {
+        if (!user) {
             router.replace('/login');
             return;
         }
@@ -60,7 +60,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         if (!canAccessPath(user?.role, pathname, allowedModules)) {
             router.replace(getDefaultPathForRole(user?.role, allowedModules));
         }
-    }, [hasHydrated, pathname, refreshToken, router, user?.role, allowedModules]);
+    }, [hasHydrated, pathname, user, router, allowedModules]);
 
     if (!hasHydrated) {
         return (
@@ -68,7 +68,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         );
     }
 
-    if (!refreshToken) {
+    if (!user) {
         return null;
     }
 

@@ -160,15 +160,15 @@ function DetailsDialog({ log, onClose }: { log: AuditLogItem | null; onClose: ()
 
 export default function AuditLogPage() {
     const router = useRouter();
-    const { refreshToken, user, hasHydrated } = useAuthStore();
+    const { user, hasHydrated } = useAuthStore();
 
     useEffect(() => {
         if (!hasHydrated) return;
-        if (!refreshToken) { router.replace('/login'); return; }
+        if (!user) { router.replace('/login'); return; }
         if (!canAccessPath(user?.role, '/dashboard/audit-logs')) {
             router.replace(getDefaultPathForRole(user?.role));
         }
-    }, [hasHydrated, refreshToken, router, user?.role]);
+    }, [hasHydrated, user, router]);
 
     const [params, setParams] = useState({
         limit: 50,
@@ -181,7 +181,7 @@ export default function AuditLogPage() {
 
     const { data, isLoading, refetch } = useAuditLogs(params);
 
-    if (!hasHydrated || !refreshToken || !canAccessPath(user?.role, '/dashboard/audit-logs')) {
+    if (!hasHydrated || !user || !canAccessPath(user?.role, '/dashboard/audit-logs')) {
         return null;
     }
 
