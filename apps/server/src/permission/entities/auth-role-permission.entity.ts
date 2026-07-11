@@ -20,15 +20,15 @@ export class AuthRolePermission {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   roleId: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   resourceId: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   actionId: string;
 
   @Column({ type: 'boolean', default: true })

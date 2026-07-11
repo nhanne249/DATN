@@ -19,11 +19,11 @@ export class AuthUserRole {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   userId: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   roleId: string;
 
   @Column({ type: 'boolean', default: true })
