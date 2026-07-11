@@ -43,7 +43,7 @@ describe('OtaService', () => {
 
   const actor = {
     id: 'user-1',
-    role: ROLE.HOTEL_OWNER,
+    role: ROLE.INTERNAL_USER,
     propertyId: 'property-1',
   };
 

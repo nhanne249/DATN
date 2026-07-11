@@ -1,7 +1,10 @@
-import { IsEnum, IsOptional, IsString, IsUUID, Length, Matches } from 'class-validator';
-import { ROLE } from '../enum/role';
+import { IsOptional, IsString, IsUUID, Length, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * DTO for admin-level user creation (via POST /users).
+ * Role is NOT accepted via API — assigned internally by the service.
+ */
 export class CreateUserDto {
   @ApiPropertyOptional({ example: 'le-van-b', description: 'Tên đăng nhập, unique trong property' })
   @IsOptional()
@@ -21,21 +24,19 @@ export class CreateUserDto {
   @Length(2, 100)
   name: string;
 
-  @ApiProperty({ example: 'Password123', minLength: 6 })
+  @ApiProperty({ example: 'Password@123', minLength: 6 })
   @IsString()
   @Length(6, 100)
   password: string;
 
-  @ApiPropertyOptional({
-    enum: ROLE,
-    description: 'Only ADMIN can set admin/employee; default customer',
-  })
-  @IsOptional()
-  @IsEnum(ROLE)
-  role?: ROLE;
-
-  @ApiPropertyOptional({ example: 'uuid-of-property' })
+  @ApiPropertyOptional({ example: 'uuid-of-property', description: 'Property ID to assign user to' })
   @IsOptional()
   @IsUUID()
   propertyId?: string;
+
+  @ApiPropertyOptional({ example: 'uuid-of-role', description: 'Custom role ID to assign to this user' })
+  @IsOptional()
+  @IsUUID()
+  customRoleId?: string;
 }
+

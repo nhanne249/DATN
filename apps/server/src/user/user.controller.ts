@@ -13,11 +13,13 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateStaffDto } from './dto/create-staff.dto';
-import { UpdateStaffDto } from './dto/update-staff.dto';
+import { CreateInternalUserDto } from './dto/create-internal-user.dto';
+import { UpdateInternalUserDto } from './dto/update-internal-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { ROLE } from './enum/role';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CreateUserAddressDto } from './dto/create-user-address.dto';
@@ -30,24 +32,57 @@ import { RequestWithUser } from '../common/interfaces/request-with-user.interfac
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // ── Admin-only user management ────────────────────────────────────────────
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLE.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create user (Admin only)' })
+  @ApiOperation({ summary: 'Create user — Admin only' })
   @AuditLog('CREATE_USER')
-  create(@Body() dto: CreateUserDto, @Request() req: RequestWithUser) {
-    return this.userService.create(dto, req.user.role);
+  create(@Body() dto: CreateUserDto) {
+    return this.userService.create(dto, ROLE.CUSTOMER);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLE.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all users (Admin only)' })
+  @ApiOperation({ summary: 'List all users — Admin only' })
   findAll() {
     return this.userService.findAll();
   }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get user by ID — Admin only' })
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user — Admin only' })
+  @AuditLog('UPDATE_USER')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.userService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(ROLE.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete user — Admin only' })
+  @AuditLog('DELETE_USER')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
+  }
+
+  // ── Current user profile ──────────────────────────────────────────────────
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
@@ -57,116 +92,84 @@ export class UserController {
     return this.userService.findOne(req.user.id);
   }
 
-  // ── Property-scoped staff management (must be before :id routes) ──────────
+  // ── Internal user (staff) management scoped to property ──────────────────
 
-  @Get('staff')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @Get('internal')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
+  @Roles(ROLE.INTERNAL_USER, ROLE.ADMIN)
+  @RequirePermission('entity.user', 'view')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List staff for current property' })
-  listStaff(@Request() req: RequestWithUser) {
+  @ApiOperation({ summary: 'List internal users for current property' })
+  listInternalUsers(@Request() req: RequestWithUser) {
     const propertyId = req.user.propertyId;
     if (!propertyId) throw new ForbiddenException('No property associated with this account');
-    return this.userService.findStaffByProperty(propertyId);
+    return this.userService.findInternalUsersByProperty(propertyId);
   }
 
-  @Post('staff')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @Post('internal')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
+  @Roles(ROLE.INTERNAL_USER, ROLE.ADMIN)
+  @RequirePermission('entity.user', 'create')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create staff account for current property' })
-  @AuditLog('CREATE_STAFF')
-  createStaff(@Body() dto: CreateStaffDto, @Request() req: RequestWithUser) {
+  @ApiOperation({ summary: 'Create internal user (staff) for current property' })
+  @AuditLog('CREATE_INTERNAL_USER')
+  createInternalUser(@Body() dto: CreateInternalUserDto, @Request() req: RequestWithUser) {
     const propertyId = req.user.propertyId;
     if (!propertyId) throw new ForbiddenException('No property associated with this account');
-    return this.userService.createStaff(propertyId, dto, req.user.role);
+    return this.userService.createInternalUser(propertyId, dto);
   }
 
-  @Patch('staff/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @Patch('internal/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
+  @Roles(ROLE.INTERNAL_USER, ROLE.ADMIN)
+  @RequirePermission('entity.user', 'update')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update staff account' })
-  @AuditLog('UPDATE_STAFF')
-  updateStaff(
+  @ApiOperation({ summary: 'Update internal user' })
+  @AuditLog('UPDATE_INTERNAL_USER')
+  updateInternalUser(
     @Param('id') id: string,
-    @Body() dto: UpdateStaffDto,
+    @Body() dto: UpdateInternalUserDto,
     @Request() req: RequestWithUser,
   ) {
     const propertyId = req.user.propertyId;
     if (!propertyId) throw new ForbiddenException('No property associated with this account');
-    return this.userService.updateStaff(id, propertyId, dto, req.user.role);
+    return this.userService.updateInternalUser(id, propertyId, dto);
   }
 
-  @Delete('staff/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @Delete('internal/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
+  @Roles(ROLE.INTERNAL_USER, ROLE.ADMIN)
+  @RequirePermission('entity.user', 'delete')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete staff account' })
-  @AuditLog('DELETE_STAFF')
-  removeStaff(@Param('id') id: string, @Request() req: RequestWithUser) {
+  @ApiOperation({ summary: 'Delete internal user' })
+  @AuditLog('DELETE_INTERNAL_USER')
+  removeInternalUser(@Param('id') id: string, @Request() req: RequestWithUser) {
     const propertyId = req.user.propertyId;
     if (!propertyId) throw new ForbiddenException('No property associated with this account');
-    return this.userService.removeStaff(id, propertyId);
+    return this.userService.removeInternalUser(id, propertyId);
   }
 
-  @Post('staff/:id/toggle-lock')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.HOTEL_OWNER, ROLE.HOTEL_MANAGER, ROLE.ADMIN)
+  @Post('internal/:id/toggle-lock')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionGuard)
+  @Roles(ROLE.INTERNAL_USER, ROLE.ADMIN)
+  @RequirePermission('entity.user', 'manage')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Lock/unlock staff account' })
-  @AuditLog('TOGGLE_LOCK_STAFF')
-  toggleStaffLock(@Param('id') id: string, @Request() req: RequestWithUser) {
+  @ApiOperation({ summary: 'Lock/unlock internal user account' })
+  @AuditLog('TOGGLE_LOCK_INTERNAL_USER')
+  toggleInternalUserLock(@Param('id') id: string, @Request() req: RequestWithUser) {
     const propertyId = req.user.propertyId;
     if (!propertyId) throw new ForbiddenException('No property associated with this account');
-    return this.userService.toggleStaffLock(id, propertyId);
+    return this.userService.toggleInternalUserLock(id, propertyId);
   }
 
-  // ── Generic :id routes (must be after all named routes) ──────────────────
+  // ── Address management ────────────────────────────────────────────────────
 
-  @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get user by ID (Admin only)' })
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update user (Admin only)' })
-  @AuditLog('UPDATE_USER')
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateUserDto,
-    @Request() req: RequestWithUser,
-  ) {
-    return this.userService.update(id, dto, req.user.role);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(ROLE.ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete user (Admin only)' })
-  @AuditLog('DELETE_USER')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
-  }
-
-  // Address endpoints
   @Post('address')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add a new address' })
   @AuditLog('CREATE_USER_ADDRESS')
-  addAddress(
-    @Request() req: RequestWithUser,
-    @Body() dto: CreateUserAddressDto,
-  ) {
+  addAddress(@Request() req: RequestWithUser, @Body() dto: CreateUserAddressDto) {
     return this.userService.createUserAddress(req.user.id, dto);
   }
 
@@ -204,10 +207,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete address' })
   @AuditLog('DELETE_USER_ADDRESS')
-  deleteAddress(
-    @Request() req: RequestWithUser,
-    @Param('id') addressId: string,
-  ) {
+  deleteAddress(@Request() req: RequestWithUser, @Param('id') addressId: string) {
     return this.userService.deleteUserAddress(req.user.id, addressId);
   }
 }

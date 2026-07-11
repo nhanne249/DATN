@@ -1,7 +1,7 @@
 import { getModuleKeyForPath, MODULES } from './modules';
 import { UserRole } from '@/store/use-auth-store';
 
-const FULL_ACCESS_ROLES: UserRole[] = ['admin', 'hotel_owner'];
+const FULL_ACCESS_ROLES: UserRole[] = ['admin'];
 
 // Always accessible regardless of modules
 const ALWAYS_ALLOWED: string[] = ['/dashboard', '/dashboard/account', '/dashboard/help'];
@@ -17,12 +17,16 @@ export const canAccessPath = (
   if (!role) return false;
   if (FULL_ACCESS_ROLES.includes(role)) return true;
 
-  // hotel_manager also gets settings access
-  if (
-    role === 'hotel_manager' &&
-    MANAGER_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
-  ) {
-    return true;
+  // Let internal_user access settings subpaths if they have users or permissions permission
+  if (role === 'internal_user' && pathname.startsWith('/dashboard/settings')) {
+    if (pathname.startsWith('/dashboard/settings/users')) {
+      return allowedModules ? allowedModules.includes('users') : true;
+    }
+    if (pathname.startsWith('/dashboard/settings/permissions')) {
+      return allowedModules ? allowedModules.includes('permissions') : true;
+    }
+    // Allow general settings if they have either user or permission management access
+    return allowedModules ? (allowedModules.includes('users') || allowedModules.includes('permissions')) : true;
   }
 
   // Always allowed paths
@@ -47,7 +51,7 @@ export const getDefaultPathForRole = (
   allowedModules?: string[] | null,
 ): string => {
   if (!role) return '/login';
-  if (FULL_ACCESS_ROLES.includes(role) || role === 'hotel_manager') return '/dashboard';
+  if (FULL_ACCESS_ROLES.includes(role)) return '/dashboard';
   if (!allowedModules?.length) return '/dashboard';
   const first = MODULES.find((m) => allowedModules.includes(m.key));
   return first ? first.route : '/dashboard';

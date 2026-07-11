@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
+import { randomBytes } from 'crypto';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { BookingRoom } from './entities/booking-room.entity';
 import { Payment, PaymentMethod } from './entities/payment.entity';
@@ -31,9 +32,27 @@ export class BookingService {
     private dataSource: DataSource,
   ) {}
 
-  private generateBookingCode() {
-    const stamp = Date.now().toString().slice(-6);
-    return `BK-${stamp}`;
+  private generateRandomSuffix(): string {
+    // 6 chars from alphanumeric set (uppercase) via crypto random bytes
+    const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/I/1 to avoid confusion
+    const bytes = randomBytes(6);
+    return Array.from(bytes)
+      .map((b) => CHARSET[b % CHARSET.length])
+      .join('');
+  }
+
+  private async generateBookingCode(): Promise<string> {
+    // Retry up to 10 times until a unique code is found
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const code = `BK-${this.generateRandomSuffix()}`;
+      const existing = await this.bookingRepo.findOne({
+        where: { bookingCode: code },
+        select: ['id'],
+      });
+      if (!existing) return code;
+    }
+    // Extremely unlikely fallback: timestamp + random suffix
+    return `BK-${Date.now().toString(36).toUpperCase().slice(-4)}${this.generateRandomSuffix().slice(0, 2)}`;
   }
 
   private mapPaymentMethod(method?: string): PaymentMethod {
@@ -121,7 +140,7 @@ export class BookingService {
 
       const booking = this.bookingRepo.create({
         ...bookingData,
-        bookingCode: bookingData.bookingCode || this.generateBookingCode(),
+        bookingCode: bookingData.bookingCode || (await this.generateBookingCode()),
         totalAmount,
         remainingAmount: totalAmount,
       });

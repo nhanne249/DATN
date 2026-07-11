@@ -47,7 +47,7 @@ describe('PropertyAccessGuard', () => {
 
   it('allows access when propertyId in query matches user property', async () => {
     const context = createContext({
-      user: { id: 'user-1', role: ROLE.HOTEL_OWNER, propertyId: 'property-1' },
+      user: { id: 'user-1', role: ROLE.INTERNAL_USER, propertyId: 'property-1' },
       query: { propertyId: 'property-1' },
     });
 
@@ -60,7 +60,7 @@ describe('PropertyAccessGuard', () => {
       propertyId: 'property-2',
     });
     const context = createContext({
-      user: { id: 'user-1', role: ROLE.HOTEL_OWNER, propertyId: 'property-1' },
+      user: { id: 'user-1', role: ROLE.INTERNAL_USER, propertyId: 'property-1' },
       method: 'GET',
       baseUrl: '/api/ota',
       originalUrl: '/api/ota/channels/channel-2',
@@ -76,7 +76,7 @@ describe('PropertyAccessGuard', () => {
       propertyId: 'property-1',
     });
     const context = createContext({
-      user: { id: 'user-1', role: ROLE.HOTEL_OWNER, propertyId: 'property-1' },
+      user: { id: 'user-1', role: ROLE.INTERNAL_USER, propertyId: 'property-1' },
       method: 'POST',
       baseUrl: '/api/ota',
       originalUrl: '/api/ota/mappings',

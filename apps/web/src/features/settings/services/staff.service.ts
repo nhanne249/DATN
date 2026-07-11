@@ -23,23 +23,21 @@ export interface CreateStaffDto {
   username: string;
   name: string;
   password: string;
-  role?: StaffRole;
-  customRoleId?: string;
+  customRoleId?: string | null;
   phone?: string;
 }
 
 export interface UpdateStaffDto {
   name?: string;
-  role?: StaffRole;
   customRoleId?: string | null;
   phone?: string;
   newPassword?: string;
 }
 
 export const staffService = {
-  list: () => axiosInstance.get<StaffMember[]>('/users/staff'),
-  create: (dto: CreateStaffDto) => axiosInstance.post<StaffMember>('/users/staff', dto),
-  update: (id: string, dto: UpdateStaffDto) => axiosInstance.patch<StaffMember>(`/users/staff/${id}`, dto),
-  remove: (id: string) => axiosInstance.delete(`/users/staff/${id}`),
-  toggleLock: (id: string) => axiosInstance.post<{ isLocked: boolean }>(`/users/staff/${id}/toggle-lock`),
+  list: () => axiosInstance.get<StaffMember[]>('/users/internal'),
+  create: (dto: CreateStaffDto) => axiosInstance.post<StaffMember>('/users/internal', dto),
+  update: (id: string, dto: UpdateStaffDto) => axiosInstance.patch<StaffMember>(`/users/internal/${id}`, dto),
+  remove: (id: string) => axiosInstance.delete(`/users/internal/${id}`),
+  toggleLock: (id: string) => axiosInstance.post<{ isLocked: boolean }>(`/users/internal/${id}/toggle-lock`),
 };

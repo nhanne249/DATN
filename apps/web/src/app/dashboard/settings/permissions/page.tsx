@@ -31,26 +31,16 @@ import {
 } from '@/components/ui/select';
 import {
   permissionService,
-  RolePermission,
   CustomRole,
 } from '@/features/settings/services/permission.service';
-import { MODULES, CONFIGURABLE_ROLES, DEFAULT_ROLE_MODULES } from '@/lib/modules';
+import { MODULES } from '@/lib/modules';
 import { toast } from 'sonner';
 import { RefreshCw, Shield, ShieldCheck, Plus, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ROLE_COLORS: Record<string, string> = {
-  hotel_manager: 'bg-purple-100 text-purple-700 border-purple-200',
-  front_desk: 'bg-blue-100 text-blue-700 border-blue-200',
-  housekeeping: 'bg-green-100 text-green-700 border-green-200',
-  maintenance: 'bg-orange-100 text-orange-700 border-orange-200',
-  laundry: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-  warehouse: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-};
 
 interface CustomRoleFormData {
   name: string;
-  baseRole: string;
   modules: string[];
 }
 
@@ -68,13 +58,11 @@ function CustomRoleDialog({
   saving: boolean;
 }) {
   const [name, setName] = useState('');
-  const [baseRole, setBaseRole] = useState<string>(CONFIGURABLE_ROLES[0]?.value ?? '');
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       setName(initial?.name ?? '');
-      setBaseRole(initial?.baseRole ?? CONFIGURABLE_ROLES[0]?.value ?? '');
       setSelectedModules(initial?.modules ?? []);
     }
   }, [open, initial]);
@@ -95,7 +83,7 @@ function CustomRoleDialog({
       toast.error('Vui lòng nhập tên vai trò');
       return;
     }
-    await onSave({ name: name.trim(), baseRole, modules: selectedModules });
+    await onSave({ name: name.trim(), modules: selectedModules });
   };
 
   return (
@@ -109,29 +97,10 @@ function CustomRoleDialog({
           <div className="space-y-1.5">
             <Label>Tên vai trò</Label>
             <Input
-              placeholder="VD: Bảo vệ, Đầu bếp..."
+              placeholder="VD: Lễ tân, Kế toán, Buồng phòng..."
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Vai trò cơ sở (dùng cho API)</Label>
-            <Select value={baseRole} onValueChange={setBaseRole}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CONFIGURABLE_ROLES.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500">
-              Xác định quyền API gốc; module truy cập sẽ ghi đè cho UI
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -178,11 +147,8 @@ function CustomRoleDialog({
 }
 
 export default function PermissionsPage() {
-  const [matrix, setMatrix] = useState<RolePermission[]>([]);
   const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<Record<string, boolean>>({});
-  const [resetting, setResetting] = useState<Record<string, boolean>>({});
 
   // Custom role dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -200,11 +166,7 @@ export default function PermissionsPage() {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
-      const [matrixRes, customRes] = await Promise.all([
-        permissionService.getMatrix(),
-        permissionService.getCustomRoles(),
-      ]);
-      setMatrix(matrixRes.data);
+      const customRes = await permissionService.getCustomRoles();
       setCustomRoles(customRes.data);
       // Seed inline module state from fetched custom roles
       const initial: Record<string, string[]> = {};
@@ -222,57 +184,6 @@ export default function PermissionsPage() {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
-
-  const getModulesForRole = (role: string): string[] => {
-    const entry = matrix.find((r) => r.role === role);
-    return entry ? entry.modules : (DEFAULT_ROLE_MODULES[role] ?? []);
-  };
-
-  // Built-in role toggle
-  const handleToggle = async (role: string, moduleKey: string, checked: boolean) => {
-    const currentModules = getModulesForRole(role);
-    const newModules = checked
-      ? [...currentModules, moduleKey]
-      : currentModules.filter((m) => m !== moduleKey);
-
-    setMatrix((prev) =>
-      prev.map((r) =>
-        r.role === role ? { ...r, modules: newModules, isCustom: true } : r
-      )
-    );
-
-    setSaving((prev) => ({ ...prev, [role]: true }));
-    try {
-      await permissionService.updateRoleModules(role, newModules);
-    } catch {
-      toast.error('Lưu thất bại, đang hoàn tác');
-      setMatrix((prev) =>
-        prev.map((r) =>
-          r.role === role ? { ...r, modules: currentModules } : r
-        )
-      );
-    } finally {
-      setSaving((prev) => ({ ...prev, [role]: false }));
-    }
-  };
-
-  const handleReset = async (role: string) => {
-    setResetting((prev) => ({ ...prev, [role]: true }));
-    try {
-      const res = await permissionService.resetRoleModules(role);
-      const defaultModules = (res.data as { modules: string[] }).modules;
-      setMatrix((prev) =>
-        prev.map((r) =>
-          r.role === role ? { ...r, modules: defaultModules, isCustom: false } : r
-        )
-      );
-      toast.success('Đã khôi phục về mặc định');
-    } catch {
-      toast.error('Khôi phục thất bại');
-    } finally {
-      setResetting((prev) => ({ ...prev, [role]: false }));
-    }
-  };
 
   // Custom role inline toggle
   const handleCustomToggle = async (roleId: string, moduleKey: string, checked: boolean) => {
@@ -299,14 +210,21 @@ export default function PermissionsPage() {
     setDialogSaving(true);
     try {
       if (editingRole) {
-        const res = await permissionService.updateCustomRole(editingRole.id, data);
+        const res = await permissionService.updateCustomRole(editingRole.id, {
+          name: data.name,
+          modules: data.modules,
+        });
         setCustomRoles((prev) =>
           prev.map((cr) => (cr.id === editingRole.id ? res.data : cr))
         );
         setCustomModules((prev) => ({ ...prev, [editingRole.id]: res.data.modules }));
         toast.success('Đã cập nhật vai trò');
       } else {
-        const res = await permissionService.createCustomRole(data);
+        const res = await permissionService.createCustomRole({
+          name: data.name,
+          baseRole: 'internal_user',
+          modules: data.modules,
+        });
         setCustomRoles((prev) => [...prev, res.data]);
         setCustomModules((prev) => ({ ...prev, [res.data.id]: res.data.modules }));
         toast.success('Đã tạo vai trò mới');
@@ -341,9 +259,6 @@ export default function PermissionsPage() {
     }
   };
 
-  const getRoleLabel = (roleValue: string) =>
-    CONFIGURABLE_ROLES.find((r) => r.value === roleValue)?.label ?? roleValue;
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -374,21 +289,33 @@ export default function PermissionsPage() {
       <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
         <ShieldCheck className="h-4 w-4 shrink-0" />
         <span>
-          <strong>Chủ khách sạn (Hotel Owner)</strong> và <strong>Quản trị viên (Admin)</strong>{' '}
-          luôn có quyền truy cập toàn bộ hệ thống và không thể bị giới hạn.
+          <strong>Quản trị viên hệ thống (Admin)</strong> luôn có quyền truy cập toàn bộ hệ thống và không thể bị giới hạn.
         </span>
       </div>
 
       {/* Matrix card */}
       <Card className="border-gray-200">
         <CardHeader className="border-b border-gray-100 pb-4">
-          <CardTitle className="text-base text-gray-900">Ma trận phân quyền</CardTitle>
+          <CardTitle className="text-base text-gray-900">Danh sách vai trò & Quyền hạn</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-gray-400">
               <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
               Đang tải...
+            </div>
+          ) : customRoles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+              <Shield className="h-10 w-10 text-gray-300 mb-2" />
+              <p className="text-sm">Chưa có vai trò tuỳ chỉnh nào.</p>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => setDialogOpen(true)}
+                className="mt-1 text-blue-600"
+              >
+                Tạo vai trò đầu tiên
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -413,89 +340,6 @@ export default function PermissionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Built-in roles */}
-                  {CONFIGURABLE_ROLES.map(({ value: roleValue, label: roleLabel }) => {
-                    const modules = getModulesForRole(roleValue);
-                    const isSavingRow = saving[roleValue];
-                    const isResettingRow = resetting[roleValue];
-                    const rowEntry = matrix.find((r) => r.role === roleValue);
-                    const isCustom = rowEntry?.isCustom ?? false;
-
-                    return (
-                      <tr
-                        key={roleValue}
-                        className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
-                      >
-                        <td className="sticky left-0 z-10 bg-white px-4 py-3 hover:bg-gray-50/50">
-                          <div className="flex flex-col gap-1">
-                            <span
-                              className={cn(
-                                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold',
-                                ROLE_COLORS[roleValue] ?? 'bg-gray-100 text-gray-700 border-gray-200'
-                              )}
-                            >
-                              {roleLabel}
-                            </span>
-                            {isCustom && (
-                              <span className="text-[10px] text-amber-500 font-medium">
-                                Tuỳ chỉnh
-                              </span>
-                            )}
-                            {isSavingRow && (
-                              <span className="text-[10px] text-blue-500">Đang lưu...</span>
-                            )}
-                          </div>
-                        </td>
-
-                        {MODULES.map((m) => {
-                          const checked = modules.includes(m.key);
-                          return (
-                            <td key={m.key} className="px-2 py-3 text-center">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                disabled={isSavingRow || isResettingRow}
-                                onChange={(e) => handleToggle(roleValue, m.key, e.target.checked)}
-                                className="h-4 w-4 cursor-pointer accent-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                aria-label={`${roleLabel} - ${m.label}`}
-                              />
-                            </td>
-                          );
-                        })}
-
-                        <td className="px-3 py-3 text-center">
-                          {isCustom ? (
-                            <button
-                              onClick={() => handleReset(roleValue)}
-                              disabled={isSavingRow || isResettingRow}
-                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-                              title="Khôi phục về mặc định"
-                            >
-                              <RefreshCw
-                                className={cn('h-3 w-3', isResettingRow && 'animate-spin')}
-                              />
-                              <span>Đặt lại</span>
-                            </button>
-                          ) : (
-                            <span className="text-xs text-gray-300">Mặc định</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {/* Separator */}
-                  {customRoles.length > 0 && (
-                    <tr className="bg-gray-50/70">
-                      <td
-                        colSpan={MODULES.length + 2}
-                        className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide"
-                      >
-                        Vai trò tuỳ chỉnh
-                      </td>
-                    </tr>
-                  )}
-
                   {/* Custom roles */}
                   {customRoles.map((cr) => {
                     const modules = customModules[cr.id] ?? cr.modules;
@@ -510,9 +354,6 @@ export default function PermissionsPage() {
                           <div className="flex flex-col gap-0.5">
                             <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-violet-100 text-violet-700 border-violet-200">
                               {cr.name}
-                            </span>
-                            <span className="text-[10px] text-gray-400">
-                              Dựa trên: {getRoleLabel(cr.baseRole)}
                             </span>
                             {isSaving && (
                               <span className="text-[10px] text-blue-500">Đang lưu...</span>
@@ -573,15 +414,13 @@ export default function PermissionsPage() {
       <div className="flex flex-wrap gap-3 text-xs text-gray-500">
         <span className="font-medium text-gray-600">Ghi chú:</span>
         <span>
-          <span className="inline-block h-3 w-3 rounded-sm border border-blue-400 bg-blue-600 align-middle mr-1" />
+          <span className="inline-block h-3 w-3 rounded-sm border border-violet-400 bg-violet-600 align-middle mr-1" />
           = Được phép truy cập
         </span>
         <span>
           <span className="inline-block h-3 w-3 rounded-sm border border-gray-300 bg-white align-middle mr-1" />
           = Không có quyền
         </span>
-        <span className="text-amber-500 font-medium">Tuỳ chỉnh</span>
-        <span>= Đã thay đổi so với mặc định (có thể đặt lại)</span>
       </div>
 
       {/* Custom role create/edit dialog */}
@@ -602,8 +441,7 @@ export default function PermissionsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xóa vai trò &quot;{deleteTarget?.name}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>
-              Nhân viên đang được gán vai trò này sẽ bị xóa liên kết và giữ nguyên vai trò cơ
-              sở. Hành động này không thể hoàn tác.
+              Nhân viên đang được gán vai trò này sẽ bị xóa liên kết quyền hạn. Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

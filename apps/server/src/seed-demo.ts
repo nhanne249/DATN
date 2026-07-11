@@ -14,6 +14,7 @@ import { ServiceUsage } from './booking/entities/service-usage.entity';
 import { Expense } from './finance/entities/expense.entity';
 import { Task, TaskType, TaskStatus } from './task/entities/task.entity';
 import { ROLE } from './user/enum/role';
+import { PermissionService } from './permission/permission.service';
 import * as bcrypt from 'bcrypt';
 import { addDays, subDays, setHours } from 'date-fns';
 
@@ -24,10 +25,7 @@ function bookingCode() {
   return 'BK' + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 5).toUpperCase();
 }
 
-async function bootstrap() {
-  const app = await NestFactory.createApplicationContext(AppModule, { logger: false });
-  const ds = app.get(DataSource);
-
+export async function seedDemoData(ds: DataSource, permissionService: PermissionService) {
   // ── Xác định property để seed ──────────────────────────────────────────────
   const propertyRepo = ds.getRepository(Property);
   const targetPropertyId = process.env.SEED_PROPERTY_ID;
@@ -63,33 +61,150 @@ async function bootstrap() {
   const pid = property.id;
   console.log(`\n→ Seed vào property: ${property.name} (${pid})\n`);
 
-  // ── Staff accounts ──────────────────────────────────────────────────────────
+  // ── Custom roles (fine-grained permission system) ──────────────────────────
+  // All staff are INTERNAL_USER; access is controlled by custom roles + permissions.
+  const customRoleDefinitions = [
+    {
+      name: 'Quản lý',
+      description: 'Toàn quyền quản lý khách sạn',
+      permissions: [
+        { resourceKey: 'page.dashboard',    actions: ['view'] },
+        { resourceKey: 'page.calendar',     actions: ['view'] },
+        { resourceKey: 'page.bookings',     actions: ['view'] },
+        { resourceKey: 'page.finance',      actions: ['view'] },
+        { resourceKey: 'page.reports',      actions: ['view'] },
+        { resourceKey: 'page.tasks',        actions: ['view'] },
+        { resourceKey: 'page.services',     actions: ['view'] },
+        { resourceKey: 'page.minibar',      actions: ['view'] },
+        { resourceKey: 'page.laundry',      actions: ['view'] },
+        { resourceKey: 'page.inventory',    actions: ['view'] },
+        { resourceKey: 'page.rooms',        actions: ['view'] },
+        { resourceKey: 'page.customers',    actions: ['view'] },
+        { resourceKey: 'page.users',        actions: ['view'] },
+        { resourceKey: 'page.permissions',  actions: ['view'] },
+        { resourceKey: 'entity.booking',    actions: ['view', 'create', 'update', 'delete', 'manage'] },
+        { resourceKey: 'entity.finance',    actions: ['view', 'create', 'update', 'delete', 'export'] },
+        { resourceKey: 'entity.report',     actions: ['view', 'export'] },
+        { resourceKey: 'entity.task',       actions: ['view', 'create', 'update', 'delete', 'manage'] },
+        { resourceKey: 'entity.service',    actions: ['view', 'create', 'update', 'delete'] },
+        { resourceKey: 'entity.room',       actions: ['view', 'create', 'update', 'delete', 'manage'] },
+        { resourceKey: 'entity.customer',   actions: ['view', 'create', 'update', 'delete', 'export'] },
+        { resourceKey: 'entity.user',       actions: ['view', 'create', 'update', 'delete', 'manage'] },
+        { resourceKey: 'entity.permission', actions: ['view', 'create', 'update', 'delete', 'manage'] },
+        { resourceKey: 'entity.invoice',    actions: ['view', 'create', 'update', 'delete'] },
+        { resourceKey: 'entity.inventory',  actions: ['view', 'create', 'update', 'delete'] },
+        { resourceKey: 'entity.laundry',    actions: ['view', 'create', 'update', 'delete'] },
+        { resourceKey: 'entity.minibar',    actions: ['view', 'create', 'update', 'delete'] },
+      ],
+    },
+    {
+      name: 'Lễ tân',
+      description: 'Quản lý đặt phòng, khách hàng, hóa đơn',
+      permissions: [
+        { resourceKey: 'page.dashboard',  actions: ['view'] },
+        { resourceKey: 'page.calendar',   actions: ['view'] },
+        { resourceKey: 'page.bookings',   actions: ['view'] },
+        { resourceKey: 'page.customers',  actions: ['view'] },
+        { resourceKey: 'page.invoices',   actions: ['view'] },
+        { resourceKey: 'entity.booking',  actions: ['view', 'create', 'update'] },
+        { resourceKey: 'entity.customer', actions: ['view', 'create', 'update'] },
+        { resourceKey: 'entity.invoice',  actions: ['view', 'create', 'update'] },
+      ],
+    },
+    {
+      name: 'Buồng phòng',
+      description: 'Xem và cập nhật nhiệm vụ dọn phòng',
+      permissions: [
+        { resourceKey: 'page.dashboard', actions: ['view'] },
+        { resourceKey: 'page.tasks',     actions: ['view'] },
+        { resourceKey: 'entity.task',    actions: ['view', 'update'] },
+      ],
+    },
+    {
+      name: 'Kỹ thuật',
+      description: 'Xem và cập nhật nhiệm vụ bảo trì',
+      permissions: [
+        { resourceKey: 'page.dashboard', actions: ['view'] },
+        { resourceKey: 'page.tasks',     actions: ['view'] },
+        { resourceKey: 'entity.task',    actions: ['view', 'update'] },
+      ],
+    },
+    {
+      name: 'Giặt ủi',
+      description: 'Quản lý dịch vụ giặt ủi',
+      permissions: [
+        { resourceKey: 'page.dashboard', actions: ['view'] },
+        { resourceKey: 'page.laundry',   actions: ['view'] },
+        { resourceKey: 'entity.laundry', actions: ['view', 'create', 'update'] },
+      ],
+    },
+    {
+      name: 'Kho',
+      description: 'Quản lý kho hàng vật tư',
+      permissions: [
+        { resourceKey: 'page.dashboard',  actions: ['view'] },
+        { resourceKey: 'page.inventory',  actions: ['view'] },
+        { resourceKey: 'entity.inventory',actions: ['view', 'create', 'update'] },
+      ],
+    },
+  ];
+
+  // Create custom roles if they don't exist
+  const customRoleMap: Record<string, string> = {}; // name → id
+  const existingCustomRoles = await permissionService.getCustomRoles(pid);
+  for (const def of customRoleDefinitions) {
+    const existing = existingCustomRoles.find(r => r.name === def.name);
+    if (existing) {
+      customRoleMap[def.name] = existing.id;
+    } else {
+      const created = await permissionService.createCustomRole(pid, def.name, def.description, def.permissions);
+      customRoleMap[def.name] = created.id;
+    }
+  }
+  console.log(`✓ ${customRoleDefinitions.length} custom roles`);
+
+  // ── Staff accounts (all INTERNAL_USER, role governed by customRoleId) ────────
   const userRepo = ds.getRepository(User);
   const staffData = [
-    { phone: '+84901111001', username: 'manager', name: 'Nguyễn Văn Bình', role: ROLE.HOTEL_MANAGER },
-    { phone: '+84901111002', username: 'frontdesk1', name: 'Trần Thị Lan', role: ROLE.FRONT_DESK },
-    { phone: '+84901111003', username: 'frontdesk2', name: 'Lê Văn Cường', role: ROLE.FRONT_DESK },
-    { phone: '+84901111004', username: 'hk1', name: 'Phạm Thị Hoa', role: ROLE.HOUSEKEEPING },
-    { phone: '+84901111005', username: 'hk2', name: 'Võ Văn Dũng', role: ROLE.HOUSEKEEPING },
-    { phone: '+84901111006', username: 'hk3', name: 'Đặng Thị Mai', role: ROLE.HOUSEKEEPING },
-    { phone: '+84901111007', username: 'maintenance1', name: 'Bùi Văn Tài', role: ROLE.MAINTENANCE },
-    { phone: '+84901111008', username: 'laundry1', name: 'Huỳnh Thị Thu', role: ROLE.LAUNDRY },
-    { phone: '+84901111009', username: 'warehouse1', name: 'Ngô Văn Khoa', role: ROLE.WAREHOUSE },
+    { phone: '+84901111001', username: 'manager',      name: 'Nguyễn Văn Bình', customRole: 'Quản lý'   },
+    { phone: '+84901111002', username: 'frontdesk1',   name: 'Trần Thị Lan',    customRole: 'Lễ tân'    },
+    { phone: '+84901111003', username: 'frontdesk2',   name: 'Lê Văn Cường',    customRole: 'Lễ tân'    },
+    { phone: '+84901111004', username: 'hk1',          name: 'Phạm Thị Hoa',    customRole: 'Buồng phòng'},
+    { phone: '+84901111005', username: 'hk2',          name: 'Võ Văn Dũng',     customRole: 'Buồng phòng'},
+    { phone: '+84901111006', username: 'hk3',          name: 'Đặng Thị Mai',    customRole: 'Buồng phòng'},
+    { phone: '+84901111007', username: 'maintenance1', name: 'Bùi Văn Tài',     customRole: 'Kỹ thuật'  },
+    { phone: '+84901111008', username: 'laundry1',     name: 'Huỳnh Thị Thu',   customRole: 'Giặt ủi'   },
+    { phone: '+84901111009', username: 'warehouse1',   name: 'Ngô Văn Khoa',    customRole: 'Kho'       },
   ];
-  const staffMap: Record<string, User> = {};
+  const staffMap: Record<string, User> = {}; // username → User
   for (const s of staffData) {
     let u = await userRepo.findOne({ where: { username: s.username, propertyId: pid } });
     if (!u) u = await userRepo.findOne({ where: { phone: s.phone } });
+    const customRoleId = customRoleMap[s.customRole] ?? null;
     if (!u) {
       const hash = await bcrypt.hash('Password@123', 10);
-      u = await userRepo.save(userRepo.create({ ...s, password: hash, propertyId: pid }));
-    } else if (!u.username) {
-      await userRepo.update(u.id, { username: s.username });
-      u.username = s.username;
+      u = await userRepo.save(userRepo.create({
+        phone: s.phone,
+        username: s.username,
+        name: s.name,
+        password: hash,
+        role: ROLE.INTERNAL_USER,
+        propertyId: pid,
+        customRoleId,
+      }));
+    } else {
+      // Update role and customRoleId for existing users
+      await userRepo.update(u.id, {
+        role: ROLE.INTERNAL_USER,
+        customRoleId,
+        ...(u.username ? {} : { username: s.username }),
+      });
+      u.customRoleId = customRoleId;
+      u.username = u.username ?? s.username;
     }
-    staffMap[s.role] = u;
+    staffMap[s.username] = u;
   }
-  console.log(`✓ ${staffData.length} nhân viên`);
+  console.log(`✓ ${staffData.length} nhân viên (role: internal_user + custom role)`);
 
   // ── Room Types ──────────────────────────────────────────────────────────────
   const rtRepo = ds.getRepository(RoomType);
@@ -436,8 +551,9 @@ async function bootstrap() {
       { title: 'Bổ sung minibar phòng 901', type: TaskType.OTHER, status: TaskStatus.PENDING, roomId: createdRooms[17].id },
       { title: 'Chuẩn bị hoa chào mừng phòng Suite', type: TaskType.OTHER, status: TaskStatus.PENDING, roomId: createdRooms[18].id },
     ];
-    const hkUser = Object.values(staffMap).find(u => u.role === ROLE.HOUSEKEEPING);
-    const mtUser = Object.values(staffMap).find(u => u.role === ROLE.MAINTENANCE);
+    // Use username-based lookup (role is no longer a reliable identifier)
+    const hkUser = staffMap['hk1'];
+    const mtUser = staffMap['maintenance1'];
     for (const t of tasksData) {
       const assigneeId = t.type === TaskType.MAINTENANCE ? mtUser?.id : hkUser?.id;
       await taskRepo.save(taskRepo.create({
@@ -454,15 +570,32 @@ async function bootstrap() {
   const freshProp = await propertyRepo.findOne({ where: { id: pid } });
   console.log('─────────────────────────────────────────');
   console.log('Tài khoản đăng nhập:');
-  console.log(`  Khách sạn slug: ${freshProp?.slug ?? 'phuong-nam'}`);
-  const ownerUser = await userRepo.findOne({ where: { propertyId: pid, role: ROLE.HOTEL_OWNER } })
-    ?? await userRepo.findOne({ where: { propertyId: pid } });
-  if (ownerUser) console.log(`  Chủ khách sạn: username=${ownerUser.username ?? ownerUser.phone} / Password@123`);
-  console.log('  Quản lý:      username=manager / Password@123');
-  console.log('  Lễ tân:       username=frontdesk1 / Password@123');
+  console.log(`  Khách sạn slug : ${freshProp?.slug ?? 'phuong-nam'}`);
+  console.log('  Mật khẩu chung : Password@123');
+  console.log('');
+  console.log('  username=manager      → Custom role: Quản lý');
+  console.log('  username=frontdesk1   → Custom role: Lễ tân');
+  console.log('  username=frontdesk2   → Custom role: Lễ tân');
+  console.log('  username=hk1          → Custom role: Buồng phòng');
+  console.log('  username=hk2          → Custom role: Buồng phòng');
+  console.log('  username=hk3          → Custom role: Buồng phòng');
+  console.log('  username=maintenance1 → Custom role: Kỹ thuật');
+  console.log('  username=laundry1     → Custom role: Giặt ủi');
+  console.log('  username=warehouse1   → Custom role: Kho');
   console.log('─────────────────────────────────────────\n');
 
-  await app.close();
+}
+
+async function bootstrap() {
+  const app = await NestFactory.createApplicationContext(AppModule, { logger: false });
+  const ds = app.get(DataSource);
+  const permissionService = app.get(PermissionService);
+
+  try {
+    await seedDemoData(ds, permissionService);
+  } finally {
+    await app.close();
+  }
 }
 
 bootstrap().catch(err => {

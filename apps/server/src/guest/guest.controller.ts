@@ -24,13 +24,15 @@ import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 
 @ApiTags('Guests')
 @Controller('guests')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard, PermissionGuard)
 @Roles(...STAFF_ROLES)
 export class GuestController {
   constructor(private readonly guestService: GuestService) {}
@@ -39,6 +41,7 @@ export class GuestController {
   @AuditLog('CREATE_GUEST')
   @ApiOperation({ summary: 'Create a new guest' })
   @ApiResponse({ status: 201, type: Guest })
+  @RequirePermission('entity.customer', 'create')
   create(@Body() dto: CreateGuestDto) {
     return this.guestService.create(dto);
   }
@@ -47,6 +50,7 @@ export class GuestController {
   @ApiOperation({ summary: 'Get all guests' })
   @ApiQuery({ name: 'propertyId', required: false })
   @ApiResponse({ status: 200, type: [Guest] })
+  @RequirePermission('entity.customer', 'view')
   findAll(@Query('propertyId') propertyId?: string) {
     return this.guestService.findAll(propertyId);
   }
@@ -54,6 +58,7 @@ export class GuestController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a guest by ID' })
   @ApiResponse({ status: 200, type: Guest })
+  @RequirePermission('entity.customer', 'view')
   findOne(@Param('id') id: string) {
     return this.guestService.findOne(id);
   }
@@ -62,6 +67,7 @@ export class GuestController {
   @AuditLog('UPDATE_GUEST')
   @ApiOperation({ summary: 'Update a guest' })
   @ApiResponse({ status: 200, type: Guest })
+  @RequirePermission('entity.customer', 'update')
   update(@Param('id') id: string, @Body() dto: UpdateGuestDto) {
     return this.guestService.update(id, dto);
   }
@@ -70,6 +76,7 @@ export class GuestController {
   @AuditLog('DELETE_GUEST')
   @ApiOperation({ summary: 'Delete a guest' })
   @ApiResponse({ status: 200, description: 'Guest deleted successfully' })
+  @RequirePermission('entity.customer', 'delete')
   remove(@Param('id') id: string) {
     return this.guestService.remove(id);
   }

@@ -35,7 +35,7 @@ describe('PortalService OTA delegation', () => {
 
   const actor = {
     id: 'user-1',
-    role: ROLE.HOTEL_MANAGER,
+    role: ROLE.INTERNAL_USER,
     propertyId: 'property-1',
   };
 

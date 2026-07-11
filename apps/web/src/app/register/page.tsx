@@ -39,7 +39,7 @@ type FieldErrors = {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { refreshToken, user, hasHydrated, setSession, setAllowedModules } = useAuthStore();
+  const { user, hasHydrated, setSession, setAllowedModules } = useAuthStore();
   const [hotelName, setHotelName] = useState('');
   const [hotelSlug, setHotelSlug] = useState('');
   const [ownerName, setOwnerName] = useState('');
@@ -50,10 +50,10 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!hasHydrated) return;
-    if (refreshToken) {
+    if (user) {
       router.replace(getDefaultPathForRole(user?.role));
     }
-  }, [hasHydrated, refreshToken, router, user?.role]);
+  }, [hasHydrated, user, router]);
 
   // Auto-generate slug from hotel name
   const handleHotelNameChange = (value: string) => {
@@ -99,11 +99,8 @@ export default function RegisterPage() {
       });
       const payload = response.data;
 
-      if (!payload?.refreshToken) {
-        throw new Error('Đăng ký thất bại: không nhận được token');
-      }
-
-      setSession(payload.refreshToken, payload.user || null);
+      // refreshToken is now stored in httpOnly cookie by the backend
+      setSession(payload.user || null);
       // Register always creates a hotel_owner — grant full access
       setAllowedModules(null);
       toast.success(`Đăng ký khách sạn "${hotelName}" thành công! Chào mừng bạn.`);

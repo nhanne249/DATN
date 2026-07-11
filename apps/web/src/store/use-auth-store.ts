@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export type UserRole =
   | 'admin'
+  | 'internal_user'
   | 'hotel_owner'
   | 'hotel_manager'
   | 'front_desk'
@@ -22,76 +23,43 @@ export interface AuthUser {
   propertySlug?: string;
 }
 
-const FULL_ACCESS_ROLES: UserRole[] = ['admin', 'hotel_owner'];
-
-const decodeJwtPayload = (token: string | null): Record<string, unknown> | null => {
-  if (!token) return null;
-
-  const parts = token.split('.');
-  if (parts.length < 2) return null;
-
-  try {
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-
-    if (typeof window === 'undefined' || typeof window.atob !== 'function') {
-      return null;
-    }
-
-    return JSON.parse(window.atob(padded)) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-};
-
 interface AuthState {
-  refreshToken: string | null;
   activePropertyId: string | null;
   user: AuthUser | null;
   hasHydrated: boolean;
   allowedModules: string[] | null;
-  setRefreshToken: (token: string | null) => void;
+  permissionsMap: Record<string, string[]>;
+  /** @deprecated refreshToken is now stored in httpOnly cookie; kept only for backward-compat reads during migration */
+  refreshToken?: string | null;
   setUser: (user: AuthUser | null) => void;
-  setSession: (refreshToken: string | null, user?: AuthUser | null) => void;
+  setSession: (user: AuthUser | null) => void;
   setActivePropertyId: (id: string | null) => void;
   setHasHydrated: (hydrated: boolean) => void;
   setAllowedModules: (modules: string[] | null) => void;
+  setPermissionsMap: (map: Record<string, string[]>) => void;
+  hasPermission: (resource: string, action: string) => boolean;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
-      refreshToken: null,
+    (set, get) => ({
       activePropertyId: process.env.NEXT_PUBLIC_DEFAULT_PROPERTY_ID || null,
       user: null,
       hasHydrated: false,
       allowedModules: null,
-      setRefreshToken: (token) => set({ refreshToken: token }),
+      permissionsMap: {},
+      refreshToken: null, // kept for backward-compat — will be removed after migration
       setUser: (user) => set({ user }),
-      setSession: (refreshToken, user) => {
-        const payload = decodeJwtPayload(refreshToken);
-        const tokenUserId = typeof payload?.sub === 'string' ? payload.sub : '';
-        const tokenRole = typeof payload?.role === 'string' ? (payload.role as UserRole) : undefined;
-        const tokenPropertyId = typeof payload?.propertyId === 'string' ? payload.propertyId : null;
-
-        const derivedUser =
-          user ||
-          (tokenUserId && tokenRole
-            ? {
-                id: tokenUserId,
-                role: tokenRole,
-              }
-            : null);
-
-        const activePropertyId = user?.propertyId || tokenPropertyId;
-
-        const resolvedRole = derivedUser?.role ?? tokenRole;
-        const allowedModules = resolvedRole && FULL_ACCESS_ROLES.includes(resolvedRole) ? null : undefined;
+      setSession: (user) => {
+        const activePropertyId = user?.propertyId || null;
+        const resolvedRole = user?.role;
+        const allowedModules =
+          resolvedRole === 'admin' ? null : undefined;
 
         set({
-          refreshToken,
-          user: derivedUser,
+          user,
+          refreshToken: null, // clear any legacy stored token
           ...(activePropertyId ? { activePropertyId } : {}),
           ...(allowedModules === null ? { allowedModules: null } : {}),
         });
@@ -99,21 +67,32 @@ export const useAuthStore = create<AuthState>()(
       setActivePropertyId: (id) => set({ activePropertyId: id }),
       setHasHydrated: (hydrated) => set({ hasHydrated: hydrated }),
       setAllowedModules: (modules) => set({ allowedModules: modules }),
+      setPermissionsMap: (map) => set({ permissionsMap: map }),
+      hasPermission: (resource, action) => {
+        const state = get();
+        const user = state.user;
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+        return state.permissionsMap?.[resource]?.includes(action) ?? false;
+      },
       logout: () =>
-        set({ refreshToken: null, activePropertyId: null, user: null, allowedModules: null }),
+        set({
+          refreshToken: null,
+          activePropertyId: null,
+          user: null,
+          allowedModules: null,
+          permissionsMap: {},
+        }),
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        refreshToken: state.refreshToken,
         activePropertyId: state.activePropertyId,
         user: state.user,
         allowedModules: state.allowedModules,
+        permissionsMap: state.permissionsMap,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.refreshToken && !state.user) {
-          state.setSession(state.refreshToken, null);
-        }
         state?.setHasHydrated(true);
       },
     }

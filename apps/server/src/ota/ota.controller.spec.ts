@@ -41,7 +41,7 @@ describe('OtaController', () => {
 
   it('passes user context into service for property-scoped listing', async () => {
     const req: any = {
-      user: { id: 'user-1', role: ROLE.HOTEL_OWNER, propertyId: 'property-1' },
+      user: { id: 'user-1', role: ROLE.INTERNAL_USER, propertyId: 'property-1' },
     };
     otaServiceMock.findAllChannels.mockResolvedValue([]);
 

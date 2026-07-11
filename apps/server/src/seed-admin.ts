@@ -5,32 +5,32 @@ import { ROLE } from './user/enum/role';
 
 async function bootstrap() {
   console.log('Khởi tạo context ứng dụng...');
-  // Tắt logging để output gọn gàng
   const app = await NestFactory.createApplicationContext(AppModule, { logger: false });
   const userService = app.get(UserService);
 
-  const phone = '+84999999999';
-  const name = 'Admin Tối Cao';
-  const password = 'Password@123'; // Mật khẩu mẫu
+  // Read from env vars with fallbacks
+  const username = 'admin';
+  const phone = process.env.SEED_ADMIN_PHONE ?? '+84999999999';
+  const name  = process.env.SEED_ADMIN_NAME  ?? 'Super Admin';
+  const password = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123@';
 
   try {
     let user = await userService.findByPhone(phone);
     if (!user) {
       console.log('Tạo mới tài khoản admin...');
-      await userService.create({ phone, name, password, role: ROLE.ADMIN }, ROLE.ADMIN);
-      console.log('Đã tạo thành công!');
+      await userService.create({ username, phone, name, password }, ROLE.ADMIN);
+      console.log('✅ Đã tạo thành công!');
     } else {
-      console.log('Tài khoản đã tồn tại, đang nâng cấp quyền admin...');
-      await userService.update(user.id, { role: ROLE.ADMIN }, ROLE.ADMIN);
-      console.log('Đã nâng cấp quyền thành công!');
+      console.log('ℹ️  Tài khoản đã tồn tại với phone:', phone);
     }
 
-    console.log('-----------------------------------');
-    console.log('Thông tin tài khoản:');
-    console.log(`Số điện thoại: ${phone}`);
-    console.log(`Mật khẩu: ${password}`);
-    console.log('-----------------------------------');
-
+    console.log('─────────────────────────────────────────');
+    console.log('Thông tin tài khoản admin:');
+    console.log(`  Username      : ${username}`);
+    console.log(`  Số điện thoại : ${phone}`);
+    console.log(`  Tên           : ${name}`);
+    console.log(`  Role          : ${ROLE.ADMIN}`);
+    console.log('─────────────────────────────────────────');
   } catch (err) {
     console.error('Lỗi khi tạo user:', err);
   } finally {

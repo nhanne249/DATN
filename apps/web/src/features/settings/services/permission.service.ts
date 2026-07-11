@@ -19,6 +19,8 @@ export const permissionService = {
   // Built-in role matrix
   getMatrix: () => axiosInstance.get<RolePermission[]>('/permissions'),
   getMyModules: () => axiosInstance.get<{ modules: string[] | null }>('/permissions/my-modules'),
+  getMyPermissions: () =>
+    axiosInstance.get<{ role: string; permissions: { resourceKey: string; actions: string[] }[] }>('/permissions/me'),
   updateRoleModules: (role: string, modules: string[]) =>
     axiosInstance.put(`/permissions/${role}`, { modules }),
   resetRoleModules: (role: string) => axiosInstance.delete<{ modules: string[] }>(`/permissions/${role}`),

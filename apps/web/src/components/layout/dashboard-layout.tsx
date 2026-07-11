@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/use-auth-store';
 import { canAccessPath, getDefaultPathForRole } from '@/lib/route-access';
 import { permissionService } from '@/features/settings/services/permission.service';
 
-const FULL_ACCESS_ROLES = ['admin', 'hotel_owner'];
+const FULL_ACCESS_ROLES = ['admin'];
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -20,7 +20,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
-    const { refreshToken, user, hasHydrated, allowedModules, setAllowedModules } = useAuthStore();
+    const { refreshToken, user, hasHydrated, allowedModules, setAllowedModules, setPermissionsMap } = useAuthStore();
     const fetchedRef = useRef(false);
 
     // Fetch allowed modules once on mount for non-full-access roles
@@ -28,16 +28,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         if (!hasHydrated) return;
         if (!refreshToken) return;
         if (!user?.role) return;
-        if (FULL_ACCESS_ROLES.includes(user.role)) return;
+        if (user.role === 'admin') return;
         if (fetchedRef.current) return;
         fetchedRef.current = true;
 
-        permissionService.getMyModules().then((res) => {
-            setAllowedModules(res.data.modules);
+        permissionService.getMyPermissions().then((permsRes) => {
+            const map: Record<string, string[]> = {};
+            const modules: string[] = [];
+            for (const item of permsRes.data.permissions) {
+                map[item.resourceKey] = item.actions;
+                if (item.resourceKey.startsWith('page.') && item.actions.includes('view')) {
+                    const moduleKey = item.resourceKey.replace('page.', '');
+                    modules.push(moduleKey);
+                }
+            }
+            setPermissionsMap(map);
+            setAllowedModules(modules);
         }).catch(() => {
-            // silently fail — use persisted modules
+            // silently fail — use persisted modules/permissions
         });
-    }, [hasHydrated, refreshToken, user?.role, setAllowedModules]);
+    }, [hasHydrated, refreshToken, user?.role, setAllowedModules, setPermissionsMap]);
 
     React.useEffect(() => {
         if (!hasHydrated) return;

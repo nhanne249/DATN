@@ -18,7 +18,7 @@ interface RegisterDto {
 
 interface AuthResponse {
   user: AuthUser;
-  refreshToken: string;
+  // refreshToken is no longer in body — stored in httpOnly cookie by backend
 }
 
 export const authService = {

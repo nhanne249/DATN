@@ -37,44 +37,15 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/store/use-auth-store';
 
 const ROLE_LABELS: Record<string, string> = {
-  hotel_owner: 'Chủ khách sạn',
-  hotel_manager: 'Quản lý',
-  front_desk: 'Lễ tân',
-  housekeeping: 'Buồng phòng',
-  maintenance: 'Kỹ thuật',
-  laundry: 'Giặt ủi',
-  warehouse: 'Kho',
+  admin: 'Admin hệ thống',
+  internal_user: 'Nhân viên',
+  customer: 'Khách hàng',
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  hotel_owner: 'bg-purple-100 text-purple-700 border-purple-200',
-  hotel_manager: 'bg-blue-100 text-blue-700 border-blue-200',
-  front_desk: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  housekeeping: 'bg-amber-100 text-amber-700 border-amber-200',
-  maintenance: 'bg-orange-100 text-orange-700 border-orange-200',
-  laundry: 'bg-sky-100 text-sky-700 border-sky-200',
-  warehouse: 'bg-gray-100 text-gray-700 border-gray-200',
-};
-
-const ASSIGNABLE_ROLES: { value: StaffRole; label: string }[] = [
-  { value: 'hotel_manager', label: 'Quản lý' },
-  { value: 'front_desk', label: 'Lễ tân' },
-  { value: 'housekeeping', label: 'Buồng phòng' },
-  { value: 'maintenance', label: 'Kỹ thuật' },
-  { value: 'laundry', label: 'Giặt ủi' },
-  { value: 'warehouse', label: 'Kho' },
-];
-
-const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
-const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
-
-// Encode/decode role select value to distinguish built-in vs custom
-const encodeRole = (role?: string, customRoleId?: string) =>
-  customRoleId ? `custom:${customRoleId}` : `role:${role ?? 'front_desk'}`;
-
-const decodeRole = (val: string): { role?: StaffRole; customRoleId?: string } => {
-  if (val.startsWith('custom:')) return { customRoleId: val.slice(7) };
-  return { role: val.slice(5) as StaffRole };
+  admin: 'bg-red-100 text-red-700 border-red-200',
+  internal_user: 'bg-blue-100 text-blue-700 border-blue-200',
+  customer: 'bg-emerald-100 text-emerald-700 border-emerald-200',
 };
 
 // ── Role select shared component ──────────────────────────────────────────────
@@ -83,38 +54,27 @@ function RoleSelect({
   value,
   onChange,
   customRoles,
-  canAssignManager = true,
   disabled = false,
 }: {
   value: string;
   onChange: (val: string) => void;
   customRoles: CustomRole[];
-  canAssignManager?: boolean;
   disabled?: boolean;
 }) {
-  const roles = canAssignManager
-    ? ASSIGNABLE_ROLES
-    : ASSIGNABLE_ROLES.filter((r) => r.value !== 'hotel_manager');
-
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="text-gray-900">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectGroup>
-          <SelectLabel className="text-xs text-gray-400">Vai trò hệ thống</SelectLabel>
-          {roles.map((r) => (
-            <SelectItem key={r.value} value={`role:${r.value}`}>
-              {r.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
+        <SelectItem value="default">
+          Nhân viên (Mặc định)
+        </SelectItem>
         {customRoles.length > 0 && (
           <SelectGroup>
             <SelectLabel className="text-xs text-gray-400">Vai trò tuỳ chỉnh</SelectLabel>
             {customRoles.map((cr) => (
-              <SelectItem key={cr.id} value={`custom:${cr.id}`}>
+              <SelectItem key={cr.id} value={cr.id}>
                 {cr.name}
               </SelectItem>
             ))}
@@ -127,25 +87,27 @@ function RoleSelect({
 
 // ── Create dialog ─────────────────────────────────────────────────────────────
 
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+
+
 function CreateStaffDialog({
   open,
   onClose,
   onCreated,
   customRoles,
-  canAssignManager,
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: (s: StaffMember) => void;
   customRoles: CustomRole[];
-  canAssignManager: boolean;
 }) {
   const [form, setForm] = useState({
     username: '',
     name: '',
     password: '',
     phone: '',
-    roleVal: 'role:front_desk',
+    roleVal: 'default',
   });
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -168,12 +130,12 @@ function CreateStaffDialog({
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    const { role, customRoleId } = decodeRole(form.roleVal);
+    const customRoleId = form.roleVal === 'default' ? null : form.roleVal;
     const dto: CreateStaffDto = {
       username: form.username,
       name: form.name,
       password: form.password,
-      ...(customRoleId ? { customRoleId } : { role: role! }),
+      customRoleId,
       ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
     };
     try {
@@ -182,7 +144,7 @@ function CreateStaffDialog({
       onCreated(res.data);
       toast.success(`Đã tạo tài khoản cho ${form.name}`);
       onClose();
-      setForm({ username: '', name: '', password: '', phone: '', roleVal: 'role:front_desk' });
+      setForm({ username: '', name: '', password: '', phone: '', roleVal: 'default' });
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Tạo tài khoản thất bại';
       toast.error(Array.isArray(msg) ? msg[0] : msg);
@@ -229,7 +191,6 @@ function CreateStaffDialog({
               value={form.roleVal}
               onChange={(v) => setForm((p) => ({ ...p, roleVal: v }))}
               customRoles={customRoles}
-              canAssignManager={canAssignManager}
             />
           </Field>
           <Field label="Số điện thoại" error={errors.phone}>
@@ -258,19 +219,17 @@ function EditStaffDialog({
   staff,
   onClose,
   onUpdated,
-  canAssignManager,
   customRoles,
 }: {
   staff: StaffMember | null;
   onClose: () => void;
   onUpdated: (s: StaffMember) => void;
-  canAssignManager: boolean;
   customRoles: CustomRole[];
 }) {
   const [form, setForm] = useState({
     name: '',
     phone: '',
-    roleVal: 'role:front_desk',
+    roleVal: 'default',
     newPassword: '',
     changePassword: false,
   });
@@ -282,7 +241,7 @@ function EditStaffDialog({
       setForm({
         name: staff.name,
         phone: staff.phone ?? '',
-        roleVal: encodeRole(staff.role, staff.customRoleId ?? undefined),
+        roleVal: staff.customRoleId ?? 'default',
         newPassword: '',
         changePassword: false,
       });
@@ -301,13 +260,11 @@ function EditStaffDialog({
 
   const handleSubmit = async () => {
     if (!staff || !validate()) return;
-    const { role, customRoleId } = decodeRole(form.roleVal);
+    const customRoleId = form.roleVal === 'default' ? null : form.roleVal;
     const dto: UpdateStaffDto = {
       name: form.name,
       phone: form.phone || undefined,
-      ...(customRoleId
-        ? { customRoleId }
-        : { role: role as StaffRole, customRoleId: null }),
+      customRoleId,
     };
     if (form.changePassword && form.newPassword) dto.newPassword = form.newPassword;
     try {
@@ -343,7 +300,6 @@ function EditStaffDialog({
               value={form.roleVal}
               onChange={(v) => setForm((p) => ({ ...p, roleVal: v }))}
               customRoles={customRoles}
-              canAssignManager={canAssignManager}
               disabled={staff?.role === 'hotel_owner'}
             />
           </Field>
@@ -411,8 +367,6 @@ export default function SettingsUsersPage() {
   const [editTarget, setEditTarget] = useState<StaffMember | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StaffMember | null>(null);
   const [lockingId, setLockingId] = useState<string | null>(null);
-
-  const canAssignManager = user?.role === 'hotel_owner' || user?.role === 'admin';
 
   useEffect(() => {
     Promise.all([staffService.list(), permissionService.getCustomRoles()])
@@ -539,7 +493,7 @@ export default function SettingsUsersPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end gap-1">
-                            {s.role !== 'hotel_owner' && (
+                            {s.id !== user?.id && (
                               <>
                                 <Button
                                   variant="ghost"
@@ -585,14 +539,12 @@ export default function SettingsUsersPage() {
         onClose={() => setCreateOpen(false)}
         onCreated={handleCreated}
         customRoles={customRoles}
-        canAssignManager={canAssignManager}
       />
 
       <EditStaffDialog
         staff={editTarget}
         onClose={() => setEditTarget(null)}
         onUpdated={handleUpdated}
-        canAssignManager={canAssignManager}
         customRoles={customRoles}
       />
 

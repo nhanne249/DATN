@@ -19,7 +19,9 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import {
   MANAGEMENT_ROLES,
   STAFF_ROLES,
@@ -34,7 +36,7 @@ import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 
 @ApiTags('Minibar')
 @Controller('minibar')
-@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard, PermissionGuard)
 @ApiBearerAuth()
 export class MinibarController {
   constructor(private readonly minibarService: MinibarService) {}
@@ -44,6 +46,7 @@ export class MinibarController {
   @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Get all minibar items for property' })
   @ApiQuery({ name: 'propertyId', required: true })
+  @RequirePermission('entity.minibar', 'view')
   findAllItems(@Query('propertyId') propertyId: string) {
     return this.minibarService.findAllItems(propertyId);
   }
@@ -52,6 +55,7 @@ export class MinibarController {
   @Roles(...MANAGEMENT_ROLES)
   @AuditLog('CREATE_MINIBAR_ITEM')
   @ApiOperation({ summary: 'Create minibar item' })
+  @RequirePermission('entity.minibar', 'create')
   createItem(@Body() dto: CreateMinibarItemDto) {
     return this.minibarService.createItem(dto);
   }
@@ -60,6 +64,7 @@ export class MinibarController {
   @Roles(...MANAGEMENT_ROLES)
   @AuditLog('UPDATE_MINIBAR_ITEM')
   @ApiOperation({ summary: 'Update minibar item' })
+  @RequirePermission('entity.minibar', 'update')
   updateItem(@Param('id') id: string, @Body() dto: UpdateMinibarItemDto) {
     return this.minibarService.updateItem(id, dto);
   }
@@ -68,6 +73,7 @@ export class MinibarController {
   @Roles(...MANAGEMENT_ROLES)
   @AuditLog('DELETE_MINIBAR_ITEM')
   @ApiOperation({ summary: 'Delete minibar item' })
+  @RequirePermission('entity.minibar', 'delete')
   deleteItem(@Param('id') id: string) {
     return this.minibarService.deleteItem(id);
   }
@@ -79,6 +85,7 @@ export class MinibarController {
   @ApiQuery({ name: 'propertyId', required: true })
   @ApiQuery({ name: 'roomId', required: false })
   @ApiQuery({ name: 'bookingRoomId', required: false })
+  @RequirePermission('entity.minibar', 'view')
   findTransactions(
     @Query('propertyId') propertyId: string,
     @Query('roomId') roomId?: string,
@@ -91,6 +98,7 @@ export class MinibarController {
   @Roles(...STAFF_ROLES)
   @AuditLog('MINIBAR_TRANSACTION')
   @ApiOperation({ summary: 'Record minibar consumption or restock' })
+  @RequirePermission('entity.minibar', 'update')
   createTransaction(
     @Body() dto: CreateMinibarTransactionDto,
     @Request() req: any,
@@ -102,6 +110,7 @@ export class MinibarController {
   @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Get minibar consumption summary for a booking room' })
   @ApiQuery({ name: 'propertyId', required: true })
+  @RequirePermission('entity.minibar', 'view')
   getConsumptionSummary(
     @Param('bookingRoomId') bookingRoomId: string,
     @Query('propertyId') propertyId: string,

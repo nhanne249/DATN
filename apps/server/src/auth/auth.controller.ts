@@ -42,24 +42,34 @@ export class AuthController {
     private readonly config: ConfigService,
   ) {}
 
+  private parseDurationMs(str: string, defaultMs: number): number {
+    if (str.endsWith('h')) return parseInt(str) * 60 * 60 * 1000;
+    if (str.endsWith('d')) return parseInt(str) * 24 * 60 * 60 * 1000;
+    if (str.endsWith('m')) return parseInt(str) * 60 * 1000;
+    if (str.endsWith('s')) return parseInt(str) * 1000;
+    return defaultMs;
+  }
+
   private setTokenCookie(res: Response, accessToken: string) {
     const expiresInStr = this.config.get<string>('JWT_ACCESS_EXPIRES', '25h');
-    let maxAge = 25 * 60 * 60 * 1000; // default 25h in ms
-    if (expiresInStr.endsWith('h')) {
-      maxAge = parseInt(expiresInStr) * 60 * 60 * 1000;
-    } else if (expiresInStr.endsWith('d')) {
-      maxAge = parseInt(expiresInStr) * 24 * 60 * 60 * 1000;
-    } else if (expiresInStr.endsWith('m')) {
-      maxAge = parseInt(expiresInStr) * 60 * 1000;
-    } else if (expiresInStr.endsWith('s')) {
-      maxAge = parseInt(expiresInStr) * 1000;
-    }
-
+    const maxAge = this.parseDurationMs(expiresInStr, 25 * 60 * 60 * 1000);
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: maxAge,
+      maxAge,
+    });
+  }
+
+  private setRefreshTokenCookie(res: Response, refreshToken: string) {
+    const expiresInStr = this.config.get<string>('JWT_REFRESH_EXPIRES', '90d');
+    const maxAge = this.parseDurationMs(expiresInStr, 90 * 24 * 60 * 60 * 1000);
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge,
+      path: '/',
     });
   }
 
@@ -77,8 +87,9 @@ export class AuthController {
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, ...rest } = await this.auth.register(dto);
+    const { accessToken, refreshToken, ...rest } = await this.auth.register(dto);
     this.setTokenCookie(res, accessToken);
+    this.setRefreshTokenCookie(res, refreshToken);
     return rest;
   }
 
@@ -103,8 +114,9 @@ export class AuthController {
         ? ipstr.split(',')[0]
         : ipstr;
 
-    const { accessToken, ...rest } = await this.auth.login(dto, ipAddress);
+    const { accessToken, refreshToken, ...rest } = await this.auth.login(dto, ipAddress);
     this.setTokenCookie(res, accessToken);
+    this.setRefreshTokenCookie(res, refreshToken);
     return rest;
   }
 
@@ -136,7 +148,7 @@ export class AuthController {
     if (!googleUser) {
       throw new Error('Google user not found in request');
     }
-    const { accessToken, ...result } = await this.auth.googleLogin({
+    const { accessToken, refreshToken, ...result } = await this.auth.googleLogin({
       googleId: googleUser.googleId,
       email: googleUser.email,
       firstName: googleUser.firstName,
@@ -145,6 +157,7 @@ export class AuthController {
     });
 
     this.setTokenCookie(res, accessToken);
+    this.setRefreshTokenCookie(res, refreshToken);
     return result;
   }
 
@@ -163,10 +176,11 @@ export class AuthController {
     @Body() dto: GoogleSignInDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, ...rest } = await this.auth.verifyGoogleToken(
+    const { accessToken, refreshToken, ...rest } = await this.auth.verifyGoogleToken(
       dto.idToken,
     );
     this.setTokenCookie(res, accessToken);
+    this.setRefreshTokenCookie(res, refreshToken);
     return rest;
   }
 
@@ -174,18 +188,27 @@ export class AuthController {
   @ApiOperation({
     summary: 'Làm mới access token',
     description:
-      'Sử dụng refresh token để lấy access token và refresh token mới khi access token hết hạn.',
+      'Đọc refresh token từ httpOnly cookie hoặc body. Trả về access token & refresh token mới.',
   })
-  @ApiBody({ schema: { properties: { refreshToken: { type: 'string' } } } })
+  @ApiBody({
+    schema: { properties: { refreshToken: { type: 'string' } } },
+    required: false,
+  })
   @ApiOkResponse({ description: 'New access & refresh tokens' })
   @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
   async refresh(
-    @Body('refreshToken') refreshToken: string,
+    @Req() req: Request,
+    @Body('refreshToken') bodyRefreshToken: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, ...rest } =
-      await this.auth.refreshTokens(refreshToken);
+    // Prefer cookie, fall back to request body for backward-compat / mobile clients
+    const cookieRefreshToken = (req as Request & { cookies?: Record<string, string> }).cookies
+      ?.['refreshToken'];
+    const token = cookieRefreshToken || bodyRefreshToken;
+    const { accessToken, refreshToken, ...rest } =
+      await this.auth.refreshTokens(token as string);
     this.setTokenCookie(res, accessToken);
+    this.setRefreshTokenCookie(res, refreshToken);
     return rest;
   }
 
@@ -203,6 +226,7 @@ export class AuthController {
   ) {
     const id = req?.user?.id;
     res.clearCookie('accessToken');
+    res.clearCookie('refreshToken', { path: '/' });
     return this.auth.logout(id || '');
   }
 

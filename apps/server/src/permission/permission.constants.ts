@@ -1,3 +1,7 @@
+/**
+ * All resource module keys available in the permission catalog.
+ * Used as reference when assigning permissions to custom roles.
+ */
 export const ALL_MODULE_KEYS = [
   'calendar', 'bookings', 'tasks', 'channel_manager', 'finance', 'reports',
   'services', 'minibar', 'laundry', 'inventory', 'rentals', 'rooms',
@@ -5,16 +9,3 @@ export const ALL_MODULE_KEYS = [
 ] as const;
 
 export type ModuleKey = typeof ALL_MODULE_KEYS[number];
-
-export const CONFIGURABLE_ROLES = [
-  'hotel_manager', 'front_desk', 'housekeeping', 'maintenance', 'laundry', 'warehouse',
-] as const;
-
-export const DEFAULT_ROLE_MODULES: Record<string, string[]> = {
-  hotel_manager: [...ALL_MODULE_KEYS],
-  front_desk: ['calendar', 'bookings', 'customers', 'services', 'reports'],
-  housekeeping: ['calendar', 'tasks'],
-  maintenance: ['tasks'],
-  laundry: ['tasks', 'laundry'],
-  warehouse: ['services', 'inventory'],
-};

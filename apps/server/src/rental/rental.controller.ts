@@ -13,7 +13,9 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import {
   MANAGEMENT_ROLES,
   STAFF_ROLES,
@@ -29,7 +31,7 @@ import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 
 @ApiTags('Rental')
 @Controller('rentals')
-@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard, PermissionGuard)
 @ApiBearerAuth()
 @Roles(...STAFF_ROLES)
 export class RentalController {
@@ -37,6 +39,7 @@ export class RentalController {
 
   @Get('vehicles')
   @ApiOperation({ summary: 'Get all vehicles for a property' })
+  @RequirePermission('entity.rental', 'view')
   findAllVehicles(@Query('propertyId') propertyId: string) {
     return this.rentalService.findAllVehicles(propertyId);
   }
@@ -45,6 +48,7 @@ export class RentalController {
   @Roles(...MANAGEMENT_ROLES)
   @AuditLog('CREATE_VEHICLE')
   @ApiOperation({ summary: 'Create a new vehicle' })
+  @RequirePermission('entity.rental', 'create')
   createVehicle(@Body() dto: CreateVehicleDto) {
     return this.rentalService.createVehicle(dto);
   }
@@ -53,12 +57,14 @@ export class RentalController {
   @Roles(...MANAGEMENT_ROLES)
   @AuditLog('UPDATE_VEHICLE')
   @ApiOperation({ summary: 'Update vehicle information' })
+  @RequirePermission('entity.rental', 'update')
   updateVehicle(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
     return this.rentalService.updateVehicle(id, dto);
   }
 
   @Get('rentals')
   @ApiOperation({ summary: 'Get all rental records' })
+  @RequirePermission('entity.rental', 'view')
   findAllRentals(@Query('propertyId') propertyId: string) {
     return this.rentalService.findAllRentals(propertyId);
   }
@@ -66,6 +72,7 @@ export class RentalController {
   @Post('rentals')
   @AuditLog('CREATE_RENTAL')
   @ApiOperation({ summary: 'Create a new rental record' })
+  @RequirePermission('entity.rental', 'create')
   createRental(@Body() dto: CreateRentalDto) {
     return this.rentalService.createRental(dto);
   }
@@ -73,6 +80,7 @@ export class RentalController {
   @Put('rentals/:id/pickup')
   @AuditLog('RENTAL_PICKUP')
   @ApiOperation({ summary: 'Record vehicle pickup' })
+  @RequirePermission('entity.rental', 'update')
   recordPickup(@Param('id') id: string) {
     return this.rentalService.recordPickup(id);
   }
@@ -80,6 +88,7 @@ export class RentalController {
   @Put('rentals/:id/return')
   @AuditLog('RENTAL_RETURN')
   @ApiOperation({ summary: 'Record vehicle return' })
+  @RequirePermission('entity.rental', 'update')
   recordReturn(@Param('id') id: string) {
     return this.rentalService.recordReturn(id);
   }
@@ -87,6 +96,7 @@ export class RentalController {
   @Patch('rentals/:id/status')
   @AuditLog('UPDATE_RENTAL_STATUS')
   @ApiOperation({ summary: 'Update rental status' })
+  @RequirePermission('entity.rental', 'update')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateRentalStatusDto) {
     return this.rentalService.updateStatus(id, dto.status);
   }

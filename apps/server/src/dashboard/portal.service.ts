@@ -355,7 +355,7 @@ export class PortalService {
         const idx = channelIndex + roomTypeIndex;
         restrictions.push({
           id: `${channel.id}-${roomType.id}`,
-          rule: ruleNames[idx % ruleNames.length],
+          rule: `[Auto/Fallback] ${ruleNames[idx % ruleNames.length]}`,
           channel: channel.name,
           scope: roomType.name,
           value:
@@ -506,13 +506,11 @@ export class PortalService {
       take: 40,
     });
 
+    // NOTE: This application does not currently integrate with an external review API.
+    // We parse local guest bookings to list reviews. Defaulting to 5.0 since no rating exists.
     return bookings
       .filter((booking) => !!booking.source)
       .map((booking) => {
-        const hash = booking.id
-          .split('')
-          .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const rating = (3 + (hash % 21) / 10).toFixed(1);
         const channel =
           booking.source && booking.source.toLowerCase() !== 'walk-in'
             ? booking.source
@@ -522,7 +520,7 @@ export class PortalService {
           id: booking.id,
           bookingCode: booking.bookingCode,
           channel,
-          rating: Number(rating),
+          rating: 5.0, // Default fallback rating
           status:
             booking.status === BookingStatus.CHECKED_OUT
               ? 'Replied'
@@ -732,7 +730,7 @@ export class PortalService {
         role: user.role,
       },
       security: {
-        twoFactorEnabled: false,
+        twoFactorEnabled: user.twoFactorEnabled ?? false,
         activeSessionsEstimate,
         lastLoginAt: recentLogin?.createdAt || null,
         lastKnownIp: recentLogin?.ipAddress || null,

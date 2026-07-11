@@ -19,7 +19,9 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import {
   MANAGEMENT_ROLES,
   STAFF_ROLES,
@@ -31,7 +33,7 @@ import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 
 @ApiTags('Laundry')
 @Controller('laundry')
-@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard, PermissionGuard)
 @ApiBearerAuth()
 export class LaundryController {
   constructor(private readonly laundryService: LaundryService) {}
@@ -41,6 +43,7 @@ export class LaundryController {
   @ApiOperation({ summary: 'Get all laundry orders' })
   @ApiQuery({ name: 'propertyId', required: true })
   @ApiQuery({ name: 'status', required: false, enum: LaundryStatus })
+  @RequirePermission('entity.laundry', 'view')
   findAll(
     @Query('propertyId') propertyId: string,
     @Query('status') status?: LaundryStatus,
@@ -51,6 +54,7 @@ export class LaundryController {
   @Get(':id')
   @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Get laundry order by id' })
+  @RequirePermission('entity.laundry', 'view')
   findOne(@Param('id') id: string) {
     return this.laundryService.findOne(id);
   }
@@ -59,6 +63,7 @@ export class LaundryController {
   @Roles(...STAFF_ROLES)
   @AuditLog('CREATE_LAUNDRY_ORDER')
   @ApiOperation({ summary: 'Create laundry order' })
+  @RequirePermission('entity.laundry', 'create')
   create(@Body() dto: CreateLaundryOrderDto, @Request() req: any) {
     return this.laundryService.create(dto, req.user.id);
   }
@@ -67,6 +72,7 @@ export class LaundryController {
   @Roles(...STAFF_ROLES)
   @AuditLog('UPDATE_LAUNDRY_STATUS')
   @ApiOperation({ summary: 'Update laundry order status' })
+  @RequirePermission('entity.laundry', 'update')
   updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateLaundryStatusDto,
@@ -79,6 +85,7 @@ export class LaundryController {
   @Roles(...MANAGEMENT_ROLES)
   @AuditLog('DELETE_LAUNDRY_ORDER')
   @ApiOperation({ summary: 'Delete laundry order (PENDING only)' })
+  @RequirePermission('entity.laundry', 'delete')
   delete(@Param('id') id: string) {
     return this.laundryService.delete(id);
   }

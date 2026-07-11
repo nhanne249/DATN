@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshToken, user, hasHydrated, setSession, setAllowedModules } = useAuthStore();
+  const { user, hasHydrated, setSession, setAllowedModules, setPermissionsMap } = useAuthStore();
   const [hotelSlug, setHotelSlug] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,10 +22,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!hasHydrated) return;
-    if (refreshToken) {
+    if (user) {
       router.replace(getDefaultPathForRole(user?.role));
     }
-  }, [hasHydrated, refreshToken, router, user?.role]);
+  }, [hasHydrated, user, router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,21 +44,29 @@ export default function LoginPage() {
       });
       const payload = response.data;
 
-      if (!payload?.refreshToken) {
-        throw new Error('Đăng nhập thất bại: không nhận được refresh token');
-      }
-
-      setSession(payload.refreshToken, payload.user || null);
+      // refreshToken is now stored in httpOnly cookie by the backend
+      setSession(payload.user || null);
 
       const role = payload.user?.role;
-      if (role === 'admin' || role === 'hotel_owner') {
+      if (role === 'admin') {
         setAllowedModules(null);
+        setPermissionsMap({});
       } else {
         try {
-          const res = await permissionService.getMyModules();
-          setAllowedModules(res.data.modules);
+          const permsRes = await permissionService.getMyPermissions();
+          const map: Record<string, string[]> = {};
+          const modules: string[] = [];
+          for (const item of permsRes.data.permissions) {
+            map[item.resourceKey] = item.actions;
+            if (item.resourceKey.startsWith('page.') && item.actions.includes('view')) {
+              const moduleKey = item.resourceKey.replace('page.', '');
+              modules.push(moduleKey);
+            }
+          }
+          setPermissionsMap(map);
+          setAllowedModules(modules);
         } catch {
-          // keep existing allowedModules
+          // silently fail — use persisted modules/permissions
         }
       }
 

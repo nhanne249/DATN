@@ -14,6 +14,7 @@ import { ROLE } from '../enum/role';
 import { UserPasswordHistory } from './user-password-history.entity';
 import { Property } from '../../property/entities/property.entity';
 import { Task } from '../../task/entities/task.entity';
+import { AuthUserRole } from '../../permission/entities/auth-user-role.entity';
 
 @Entity('users')
 @Unique('UQ_user_username_property', ['username', 'propertyId'])
@@ -75,13 +76,16 @@ export class User {
   @Column({ nullable: true })
   propertyId: string | null;
 
+  /** Fine-grained permission role assigned to this user within the property */
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  customRoleId: string | null;
+
   @ManyToOne(() => Property, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
 
-  // Custom role assigned by hotel owner (overrides default module access)
-  @Column({ type: 'varchar', length: 36, nullable: true })
-  customRoleId: string | null;
+  @OneToMany(() => AuthUserRole, (userRole: AuthUserRole) => userRole.user)
+  userRoles: AuthUserRole[];
 
   @OneToMany(() => Task, (task: Task) => task.assignee)
   assignedTasks: Task[];

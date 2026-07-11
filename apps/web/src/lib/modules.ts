@@ -15,6 +15,8 @@ export const MODULES = [
   { key: 'website', label: 'Website', route: '/dashboard/website' },
   { key: 'invoices', label: 'Hóa đơn', route: '/dashboard/invoices' },
   { key: 'e_invoices', label: 'Hóa đơn điện tử', route: '/dashboard/e-invoices' },
+  { key: 'users', label: 'Nhân viên', route: '/dashboard/settings/users' },
+  { key: 'permissions', label: 'Phân quyền', route: '/dashboard/settings/permissions' },
 ] as const;
 
 export type ModuleKey = typeof MODULES[number]['key'];

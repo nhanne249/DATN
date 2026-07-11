@@ -9,6 +9,7 @@ import { UserService } from '../user/user.service';
 import { PropertyService } from '../property/property.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { PermissionService } from '../permission/permission.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly properties: PropertyService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly permissionService: PermissionService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -47,17 +49,20 @@ export class AuthService {
       timezone: 'Asia/Ho_Chi_Minh',
     });
 
-    // Create hotel owner account
+    // Seed default custom roles for the property and get Manager role ID
+    const managerRoleId = await this.permissionService.seedDefaultRolesForProperty(property.id);
+
+    // Create the first internal user for this property (property owner / manager)
     const created = await this.users.create(
       {
         username: dto.username,
         phone: dto.phone,
         name: dto.ownerName,
         password: dto.password,
-        role: ROLE.HOTEL_OWNER,
         propertyId: property.id,
+        customRoleId: managerRoleId,
       },
-      ROLE.ADMIN,
+      ROLE.INTERNAL_USER,
     );
 
     const tokens = await this.generateTokens(
@@ -79,18 +84,34 @@ export class AuthService {
   }
 
   async login(dto: LoginDto, ipAddress?: string) {
-    // Find property by slug
-    const property = await this.properties.findBySlug(dto.hotelSlug);
-    if (!property) {
-      await this.users.logAction(undefined, 'LOGIN_FAIL', ipAddress, {
-        hotelSlug: dto.hotelSlug,
-        reason: 'Property not found',
-      });
-      throw new UnauthorizedException('Invalid credentials');
+    let user: any = null;
+    let property: any = null;
+
+    // Check if logging in as system ADMIN
+    if (dto.username === 'admin') {
+      user = await this.users.repo.findOne({ where: { username: 'admin', role: ROLE.ADMIN } });
     }
 
-    // Find user by username within this property
-    const user = await this.users.findByUsernameAndProperty(dto.username, property.id);
+    if (!user) {
+      // Find property by slug
+      property = await this.properties.findBySlug(dto.hotelSlug);
+      if (!property) {
+        await this.users.logAction(undefined, 'LOGIN_FAIL', ipAddress, {
+          hotelSlug: dto.hotelSlug,
+          reason: 'Property not found',
+        });
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Find user by username within this property
+      user = await this.users.findByUsernameAndProperty(dto.username, property.id);
+    } else {
+      // If global admin, try to resolve property context if a valid slug is provided
+      if (dto.hotelSlug) {
+        property = await this.properties.findBySlug(dto.hotelSlug);
+      }
+    }
+
     if (!user) {
       await this.users.logAction(undefined, 'LOGIN_FAIL', ipAddress, {
         hotelSlug: dto.hotelSlug,
@@ -126,7 +147,7 @@ export class AuthService {
     const tokens = await this.generateTokens(
       user.id,
       user.role,
-      user.propertyId ?? undefined,
+      user.propertyId || property?.id || undefined,
       user.name,
     );
     const refreshHash = await bcrypt.hash(tokens.refreshToken, 10);
@@ -138,7 +159,14 @@ export class AuthService {
     });
 
     const safe = this.stripSensitive(user);
-    return { user: { ...safe, propertyName: property.name, propertySlug: property.slug }, ...tokens };
+    return {
+      user: {
+        ...safe,
+        propertyName: property ? property.name : 'System Administration',
+        propertySlug: property ? property.slug : 'admin',
+      },
+      ...tokens,
+    };
   }
 
   async refreshTokens(refreshToken: string) {

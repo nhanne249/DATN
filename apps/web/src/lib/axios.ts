@@ -7,10 +7,6 @@ interface ApiEnvelope<T = unknown> {
   data: T;
 }
 
-interface RefreshPayload {
-  refreshToken: string;
-}
-
 interface RetriableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
@@ -98,32 +94,17 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const { refreshToken, setSession, logout } = useAuthStore.getState();
-
-      if (!refreshToken) {
-        logout();
-        return Promise.reject(error);
-      }
+      const { logout } = useAuthStore.getState();
 
       try {
-        const refreshResponse = await axios.post<ApiEnvelope<RefreshPayload> | RefreshPayload>(
+        // Refresh token is stored in httpOnly cookie — send empty body, browser sends cookie automatically
+        await axios.post(
           `${axiosInstance.defaults.baseURL}/auth/refresh`,
-          { refreshToken },
+          {},
           { withCredentials: true },
         );
 
-        const payload = isApiEnvelope(refreshResponse.data)
-          ? refreshResponse.data.data
-          : refreshResponse.data;
-
-        const newToken = typeof payload.refreshToken === 'string' ? payload.refreshToken : null;
-
-        if (!newToken) {
-          throw new Error('Invalid refresh token response');
-        }
-
-        setSession(newToken);
-        processQueue(null, newToken);
+        processQueue(null, null);
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);

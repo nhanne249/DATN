@@ -8,14 +8,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateStaffDto } from './dto/create-staff.dto';
-import { UpdateStaffDto } from './dto/update-staff.dto';
+import { CreateInternalUserDto } from './dto/create-internal-user.dto';
+import { UpdateInternalUserDto } from './dto/update-internal-user.dto';
 import { CreateUserAddressDto } from './dto/create-user-address.dto';
 import { UpdateUserAddressDto } from './dto/update-user-address.dto';
 import { User } from './entities/user.entity';
 import { UserAddress } from './entities/user-address.entity';
 import { UserPasswordHistory } from './entities/user-password-history.entity';
-import { PropertyCustomRole } from '../permission/entities/property-custom-role.entity';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { ROLE } from './enum/role';
 import * as bcrypt from 'bcrypt';
@@ -23,28 +22,21 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private readonly repo: Repository<User>,
+    @InjectRepository(User) public readonly repo: Repository<User>,
     @InjectRepository(UserAddress)
     private readonly addressRepo: Repository<UserAddress>,
     @InjectRepository(UserPasswordHistory)
     private readonly passwordHistoryRepo: Repository<UserPasswordHistory>,
-    @InjectRepository(PropertyCustomRole)
-    private readonly customRoleRepo: Repository<PropertyCustomRole>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
-  async create(dto: CreateUserDto, creatorRole: ROLE) {
-    // Only ADMIN can create users with roles other than CUSTOMER
-    let roleToSet = dto.role ?? ROLE.CUSTOMER;
-    if (dto.role && dto.role !== ROLE.CUSTOMER) {
-      if (creatorRole !== ROLE.ADMIN) {
-        throw new ForbiddenException(
-          'Only admin can create users with specific roles',
-        );
-      }
-      roleToSet = dto.role;
-    }
+  // ── Admin-level user management (ADMIN role only) ─────────────────────────
 
+  /**
+   * Create a user — for admin use only. Role defaults to CUSTOMER unless
+   * the caller explicitly sets it (admin bypass enforced at controller level).
+   */
+  async create(dto: CreateUserDto, assignedRole: ROLE = ROLE.CUSTOMER) {
     if (dto.phone) {
       const existing = await this.repo.findOne({ where: { phone: dto.phone } });
       if (existing) throw new ConflictException('Phone already registered');
@@ -56,8 +48,9 @@ export class UserService {
       ...(dto.phone ? { phone: dto.phone } : {}),
       name: dto.name,
       password: passwordHash,
-      role: roleToSet,
+      role: assignedRole,
       propertyId: dto.propertyId ?? null,
+      customRoleId: dto.customRoleId ?? null,
     });
     const saved = await this.repo.save(user);
     await this.addToPasswordHistory(saved.id, passwordHash);
@@ -95,6 +88,97 @@ export class UserService {
     return this.repo.findOne({ where: { username, propertyId } });
   }
 
+  async update(id: string, dto: UpdateUserDto) {
+    const user = await this.repo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    if (dto.name) user.name = dto.name;
+    const saved = await this.repo.save(user);
+    return this.stripSensitive(saved);
+  }
+
+  async remove(id: string) {
+    const user = await this.repo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    await this.repo.delete(id);
+    return { success: true };
+  }
+
+  // ── Internal user (staff) management scoped to a property ────────────────
+
+  async findInternalUsersByProperty(propertyId: string) {
+    const users = await this.repo.find({
+      where: { propertyId, role: ROLE.INTERNAL_USER },
+      order: { createdAt: 'ASC' },
+    });
+    return users.map((u) => this.stripSensitive(u));
+  }
+
+  async createInternalUser(propertyId: string, dto: CreateInternalUserDto) {
+    // Check username uniqueness within property
+    const existingUsername = await this.repo.findOne({
+      where: { username: dto.username, propertyId },
+    });
+    if (existingUsername) throw new ConflictException('Tên đăng nhập đã tồn tại trong property này');
+
+    if (dto.phone) {
+      const existingPhone = await this.repo.findOne({ where: { phone: dto.phone } });
+      if (existingPhone) throw new ConflictException('Số điện thoại đã được đăng ký');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const user = this.repo.create({
+      username: dto.username,
+      name: dto.name,
+      password: passwordHash,
+      role: ROLE.INTERNAL_USER,
+      propertyId,
+      customRoleId: dto.customRoleId ?? null,
+      ...(dto.phone ? { phone: dto.phone } : {}),
+    });
+    const saved = await this.repo.save(user);
+    await this.addToPasswordHistory(saved.id, passwordHash);
+    return this.stripSensitive(saved);
+  }
+
+  async updateInternalUser(userId: string, propertyId: string, dto: UpdateInternalUserDto) {
+    const user = await this.repo.findOne({ where: { id: userId, propertyId, role: ROLE.INTERNAL_USER } });
+    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
+
+    if (dto.name) user.name = dto.name;
+    if (dto.phone) user.phone = dto.phone;
+    if (dto.customRoleId !== undefined) user.customRoleId = dto.customRoleId ?? null;
+
+    if (dto.newPassword) {
+      const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+      user.password = passwordHash;
+      await this.addToPasswordHistory(userId, passwordHash);
+    }
+
+    const saved = await this.repo.save(user);
+    return this.stripSensitive(saved);
+  }
+
+  async removeInternalUser(userId: string, propertyId: string) {
+    const user = await this.repo.findOne({ where: { id: userId, propertyId, role: ROLE.INTERNAL_USER } });
+    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
+    await this.repo.delete(userId);
+    return { success: true };
+  }
+
+  async toggleInternalUserLock(userId: string, propertyId: string) {
+    const user = await this.repo.findOne({ where: { id: userId, propertyId, role: ROLE.INTERNAL_USER } });
+    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
+    user.isLocked = !user.isLocked;
+    if (!user.isLocked) {
+      user.failCount = 0;
+      user.lockedAt = null;
+    }
+    await this.repo.save(user);
+    return { isLocked: user.isLocked };
+  }
+
+  // ── Auth helpers ──────────────────────────────────────────────────────────
+
   async createOrUpdateGoogleUser(googleProfile: {
     googleId: string;
     email: string;
@@ -130,48 +214,17 @@ export class UserService {
     }
   }
 
-  async update(id: string, dto: UpdateUserDto, requesterRole: ROLE) {
-    const user = await this.repo.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
-
-    if (dto.role) {
-      if (requesterRole !== ROLE.ADMIN) {
-        throw new ForbiddenException('Only admin can change role');
-      }
-      user.role = dto.role;
-    }
-    if (dto.name) user.name = dto.name;
-    const saved = await this.repo.save(user);
-    return this.stripSensitive(saved);
-  }
-
-  async remove(id: string) {
-    const user = await this.repo.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
-    await this.repo.delete(id);
-    return { success: true };
-  }
-
   async setHashedRefreshToken(userId: string, hash: string | null) {
     await this.repo.update(userId, { hashedRefreshToken: hash });
   }
 
-  async changePassword(
-    userId: string,
-    currentPassword: string,
-    newPassword: string,
-  ) {
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
     const user = await this.repo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     if (!user.password)
-      throw new ForbiddenException(
-        'User registered with Google cannot change password',
-      );
+      throw new ForbiddenException('User registered with Google cannot change password');
 
-    const isPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password,
-    );
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isPasswordValid)
       throw new ForbiddenException('Current password is incorrect');
 
@@ -183,14 +236,9 @@ export class UserService {
     });
 
     for (const history of histories) {
-      const matchesOld = await bcrypt.compare(
-        newPassword,
-        history.passwordHash,
-      );
+      const matchesOld = await bcrypt.compare(newPassword, history.passwordHash);
       if (matchesOld) {
-        throw new ConflictException(
-          'New password cannot match any of the last 3 used passwords',
-        );
+        throw new ConflictException('New password cannot match any of the last 3 used passwords');
       }
     }
 
@@ -200,14 +248,6 @@ export class UserService {
     await this.addToPasswordHistory(userId, newPasswordHash);
 
     return { message: 'Password changed successfully' };
-  }
-
-  private async addToPasswordHistory(userId: string, passwordHash: string) {
-    const history = this.passwordHistoryRepo.create({
-      user: { id: userId },
-      passwordHash,
-    });
-    await this.passwordHistoryRepo.save(history);
   }
 
   async handleFailedLogin(userId: string) {
@@ -243,20 +283,23 @@ export class UserService {
     await this.auditLogService.logAction(userId, action, ipAddress, details);
   }
 
-  // User Address Management
-  async createUserAddress(userId: string, dto: CreateUserAddressDto) {
-    // If setting as default, unset other default addresses
-    if (dto.isDefault) {
-      await this.addressRepo.update(
-        { userId, isDefault: true },
-        { isDefault: false },
-      );
-    }
+  // ── 2FA ──────────────────────────────────────────────────────────────────
 
-    const address = this.addressRepo.create({
-      userId,
-      ...dto,
-    });
+  async update2FASecret(userId: string, secret: string | null) {
+    await this.repo.update(userId, { twoFactorSecret: secret });
+  }
+
+  async set2FAEnabled(userId: string, enabled: boolean) {
+    await this.repo.update(userId, { twoFactorEnabled: enabled });
+  }
+
+  // ── Address management ────────────────────────────────────────────────────
+
+  async createUserAddress(userId: string, dto: CreateUserAddressDto) {
+    if (dto.isDefault) {
+      await this.addressRepo.update({ userId, isDefault: true }, { isDefault: false });
+    }
+    const address = this.addressRepo.create({ userId, ...dto });
     return await this.addressRepo.save(address);
   }
 
@@ -265,173 +308,36 @@ export class UserService {
   }
 
   async getUserAddress(userId: string, addressId: string) {
-    const address = await this.addressRepo.findOne({
-      where: { id: addressId, userId },
-    });
+    const address = await this.addressRepo.findOne({ where: { id: addressId, userId } });
     if (!address) throw new NotFoundException('Address not found');
     return address;
   }
 
-  async updateUserAddress(
-    userId: string,
-    addressId: string,
-    dto: UpdateUserAddressDto,
-  ) {
-    const address = await this.addressRepo.findOne({
-      where: { id: addressId, userId },
-    });
+  async updateUserAddress(userId: string, addressId: string, dto: UpdateUserAddressDto) {
+    const address = await this.addressRepo.findOne({ where: { id: addressId, userId } });
     if (!address) throw new NotFoundException('Address not found');
-
-    // If setting as default, unset other default addresses
     if (dto.isDefault) {
-      await this.addressRepo.update(
-        { userId, isDefault: true },
-        { isDefault: false },
-      );
+      await this.addressRepo.update({ userId, isDefault: true }, { isDefault: false });
     }
-
     Object.assign(address, dto);
     return await this.addressRepo.save(address);
   }
 
   async deleteUserAddress(userId: string, addressId: string) {
-    const address = await this.addressRepo.findOne({
-      where: { id: addressId, userId },
-    });
+    const address = await this.addressRepo.findOne({ where: { id: addressId, userId } });
     if (!address) throw new NotFoundException('Address not found');
     await this.addressRepo.delete(addressId);
     return { message: 'Address deleted successfully' };
   }
 
-  // ── Property-scoped staff management ─────────────────────────────────────
+  // ── Private helpers ───────────────────────────────────────────────────────
 
-  async findStaffByProperty(propertyId: string) {
-    const users = await this.repo.find({
-      where: { propertyId },
-      order: { createdAt: 'ASC' },
+  private async addToPasswordHistory(userId: string, passwordHash: string) {
+    const history = this.passwordHistoryRepo.create({
+      user: { id: userId },
+      passwordHash,
     });
-    return users.map((u) => this.stripSensitive(u));
-  }
-
-  async createStaff(propertyId: string, dto: CreateStaffDto, requesterRole: ROLE) {
-    const existing = await this.repo.findOne({ where: { username: dto.username, propertyId } });
-    if (existing) throw new ConflictException('Tên đăng nhập đã tồn tại trong khách sạn này');
-
-    if (dto.phone) {
-      const phoneExists = await this.repo.findOne({ where: { phone: dto.phone } });
-      if (phoneExists) throw new ConflictException('Số điện thoại đã được đăng ký');
-    }
-
-    // Resolve role: custom role overrides base role
-    let resolvedRole = dto.role;
-    let customRoleId: string | null = null;
-
-    if (dto.customRoleId) {
-      const customRole = await this.customRoleRepo.findOne({
-        where: { id: dto.customRoleId, propertyId },
-      });
-      if (!customRole) throw new NotFoundException('Vai trò tuỳ chỉnh không tồn tại');
-      resolvedRole = customRole.baseRole;
-      customRoleId = customRole.id;
-    } else {
-      const STAFF_ROLES: ROLE[] = [
-        ROLE.HOTEL_MANAGER, ROLE.FRONT_DESK, ROLE.HOUSEKEEPING,
-        ROLE.MAINTENANCE, ROLE.LAUNDRY, ROLE.WAREHOUSE,
-      ];
-      if (!STAFF_ROLES.includes(dto.role)) {
-        throw new ForbiddenException('Không thể tạo tài khoản với vai trò này');
-      }
-      if (dto.role === ROLE.HOTEL_MANAGER && requesterRole !== ROLE.HOTEL_OWNER && requesterRole !== ROLE.ADMIN) {
-        throw new ForbiddenException('Chỉ chủ khách sạn mới có thể tạo tài khoản Quản lý');
-      }
-    }
-
-    const passwordHash = await bcrypt.hash(dto.password, 10);
-    const user = this.repo.create({
-      username: dto.username,
-      name: dto.name,
-      password: passwordHash,
-      role: resolvedRole,
-      propertyId,
-      customRoleId,
-      ...(dto.phone ? { phone: dto.phone } : {}),
-    });
-    const saved = await this.repo.save(user);
-    await this.addToPasswordHistory(saved.id, passwordHash);
-    return this.stripSensitive(saved);
-  }
-
-  async updateStaff(userId: string, propertyId: string, dto: UpdateStaffDto, requesterRole: ROLE) {
-    const user = await this.repo.findOne({ where: { id: userId, propertyId } });
-    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
-
-    if (user.role === ROLE.HOTEL_OWNER) {
-      throw new ForbiddenException('Không thể chỉnh sửa tài khoản chủ khách sạn');
-    }
-
-    if (dto.customRoleId !== undefined) {
-      if (dto.customRoleId === null) {
-        user.customRoleId = null;
-      } else {
-        const customRole = await this.customRoleRepo.findOne({
-          where: { id: dto.customRoleId, propertyId },
-        });
-        if (!customRole) throw new NotFoundException('Vai trò tuỳ chỉnh không tồn tại');
-        user.customRoleId = customRole.id;
-        user.role = customRole.baseRole;
-      }
-    } else if (dto.role) {
-      if (dto.role === ROLE.HOTEL_MANAGER && requesterRole !== ROLE.HOTEL_OWNER && requesterRole !== ROLE.ADMIN) {
-        throw new ForbiddenException('Chỉ chủ khách sạn mới có thể phân quyền Quản lý');
-      }
-      user.role = dto.role;
-      user.customRoleId = null;
-    }
-
-    if (dto.name) user.name = dto.name;
-    if (dto.phone) user.phone = dto.phone;
-
-    if (dto.newPassword) {
-      const passwordHash = await bcrypt.hash(dto.newPassword, 10);
-      user.password = passwordHash;
-      await this.addToPasswordHistory(userId, passwordHash);
-    }
-
-    const saved = await this.repo.save(user);
-    return this.stripSensitive(saved);
-  }
-
-  async removeStaff(userId: string, propertyId: string) {
-    const user = await this.repo.findOne({ where: { id: userId, propertyId } });
-    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
-    if (user.role === ROLE.HOTEL_OWNER) {
-      throw new ForbiddenException('Không thể xóa tài khoản chủ khách sạn');
-    }
-    await this.repo.delete(userId);
-    return { success: true };
-  }
-
-  async toggleStaffLock(userId: string, propertyId: string) {
-    const user = await this.repo.findOne({ where: { id: userId, propertyId } });
-    if (!user) throw new NotFoundException('Không tìm thấy nhân viên');
-    if (user.role === ROLE.HOTEL_OWNER) {
-      throw new ForbiddenException('Không thể khóa tài khoản chủ khách sạn');
-    }
-    user.isLocked = !user.isLocked;
-    if (!user.isLocked) {
-      user.failCount = 0;
-      user.lockedAt = null;
-    }
-    await this.repo.save(user);
-    return { isLocked: user.isLocked };
-  }
-
-  async update2FASecret(userId: string, secret: string | null) {
-    await this.repo.update(userId, { twoFactorSecret: secret });
-  }
-
-  async set2FAEnabled(userId: string, enabled: boolean) {
-    await this.repo.update(userId, { twoFactorEnabled: enabled });
+    await this.passwordHistoryRepo.save(history);
   }
 
   private stripSensitive(user: User) {

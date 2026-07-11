@@ -27,13 +27,15 @@ import { AuditLog } from '../audit-log/decorators/audit-log.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PropertyAccessGuard } from '../auth/guards/property-access.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { STAFF_ROLES } from '../auth/constants/role-groups.constant';
 
 @ApiTags('Rooms')
 @Controller('rooms')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PropertyAccessGuard, PermissionGuard)
 @Roles(...STAFF_ROLES)
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
@@ -43,6 +45,7 @@ export class RoomController {
   @AuditLog('CREATE_ROOM_TYPE')
   @ApiOperation({ summary: 'Create a new room type' })
   @ApiResponse({ status: 201, type: RoomType })
+  @RequirePermission('entity.room', 'create')
   createType(@Body() dto: CreateRoomTypeDto) {
     return this.roomService.createType(dto);
   }
@@ -51,6 +54,7 @@ export class RoomController {
   @ApiOperation({ summary: 'Get all room types' })
   @ApiQuery({ name: 'propertyId', required: false })
   @ApiResponse({ status: 200, type: [RoomType] })
+  @RequirePermission('entity.room', 'view')
   findAllTypes(@Query('propertyId') propertyId?: string) {
     return this.roomService.findAllTypes(propertyId);
   }
@@ -58,6 +62,7 @@ export class RoomController {
   @Get('types/:id')
   @ApiOperation({ summary: 'Get a room type by ID' })
   @ApiResponse({ status: 200, type: RoomType })
+  @RequirePermission('entity.room', 'view')
   findOneType(@Param('id') id: string) {
     return this.roomService.findOneType(id);
   }
@@ -66,6 +71,7 @@ export class RoomController {
   @AuditLog('UPDATE_ROOM_TYPE')
   @ApiOperation({ summary: 'Update a room type' })
   @ApiResponse({ status: 200, type: RoomType })
+  @RequirePermission('entity.room', 'update')
   updateType(@Param('id') id: string, @Body() dto: UpdateRoomTypeDto) {
     return this.roomService.updateType(id, dto);
   }
@@ -74,6 +80,7 @@ export class RoomController {
   @AuditLog('DELETE_ROOM_TYPE')
   @ApiOperation({ summary: 'Delete a room type' })
   @ApiResponse({ status: 200, description: 'Room type deleted successfully' })
+  @RequirePermission('entity.room', 'delete')
   removeType(@Param('id') id: string) {
     return this.roomService.removeType(id);
   }
@@ -83,6 +90,7 @@ export class RoomController {
   @AuditLog('CREATE_ROOM')
   @ApiOperation({ summary: 'Create a new room' })
   @ApiResponse({ status: 201, type: Room })
+  @RequirePermission('entity.room', 'create')
   createRoom(@Body() dto: CreateRoomDto) {
     return this.roomService.createRoom(dto);
   }
@@ -92,6 +100,7 @@ export class RoomController {
   @ApiQuery({ name: 'roomTypeId', required: false })
   @ApiQuery({ name: 'propertyId', required: false })
   @ApiResponse({ status: 200, type: [Room] })
+  @RequirePermission('entity.room', 'view')
   findAllRooms(
     @Query('roomTypeId') roomTypeId?: string,
     @Query('propertyId') propertyId?: string,
@@ -102,6 +111,7 @@ export class RoomController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a room by ID' })
   @ApiResponse({ status: 200, type: Room })
+  @RequirePermission('entity.room', 'view')
   findOneRoom(@Param('id') id: string) {
     return this.roomService.findOneRoom(id);
   }
@@ -110,6 +120,7 @@ export class RoomController {
   @AuditLog('UPDATE_ROOM')
   @ApiOperation({ summary: 'Update a room' })
   @ApiResponse({ status: 200, type: Room })
+  @RequirePermission('entity.room', 'update')
   updateRoom(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
     return this.roomService.updateRoom(id, dto);
   }
@@ -118,6 +129,7 @@ export class RoomController {
   @AuditLog('DELETE_ROOM')
   @ApiOperation({ summary: 'Delete a room' })
   @ApiResponse({ status: 200, description: 'Room deleted successfully' })
+  @RequirePermission('entity.room', 'delete')
   removeRoom(@Param('id') id: string) {
     return this.roomService.removeRoom(id);
   }

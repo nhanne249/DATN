@@ -9,10 +9,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiResponseDto } from './common/dto/api-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.use(cookieParser());  // Enable req.cookies parsing (needed for httpOnly refresh token)
 
   const configService = app.get(ConfigService);
 
